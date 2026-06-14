@@ -1,17 +1,17 @@
 from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
-# 入力テキストファイル
+# Windows のメイリオを登録
+pdfmetrics.registerFont(TTFont("Meiryo", "C:/Windows/Fonts/meiryo.ttc"))
+
 txt_path = "test.txt"
-# 出力PDFファイル
 pdf_path = "test.pdf"
 
-# PDFキャンバス作成
 c = canvas.Canvas(pdf_path)
+text = c.beginText(40, 800)
+text.setFont("Meiryo", 12)
 
-# テキストオブジェクト作成
-text = c.beginText(40, 800)  # 左40px、上800pxあたりから開始
-
-# テキストファイルを読み込んで1行ずつPDFへ
 with open(txt_path, "r", encoding="utf-8") as f:
     for line in f:
         text.textLine(line.rstrip("\n"))
