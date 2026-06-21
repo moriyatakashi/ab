@@ -12,8 +12,6 @@
     --text: #2b2b2b;
     --text-soft: #7a7568;
     --accent: #b5651d;
-    --accent-soft: #f1e3d3;
-    --danger: #b34444;
   }
   * { box-sizing: border-box; }
   body {
@@ -24,7 +22,7 @@
     padding: 24px 16px 80px;
   }
   .wrap {
-    max-width: 760px;
+    max-width: 480px;
     margin: 0 auto;
   }
   h1 {
@@ -36,280 +34,54 @@
   .sub {
     color: var(--text-soft);
     font-size: 0.85rem;
-    margin: 0 0 24px;
+    margin: 0 0 28px;
   }
-  .status {
-    font-size: 0.8rem;
-    color: var(--text-soft);
-    margin-bottom: 16px;
-  }
-  .add-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
-  .add-row input {
-    flex: 1 1 140px;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.9rem;
-    background: var(--panel);
-    color: var(--text);
-  }
-  .add-row input:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-  button {
-    cursor: pointer;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    padding: 10px 16px;
-    transition: opacity 0.15s ease;
-  }
-  button:hover { opacity: 0.85; }
-  button:active { opacity: 0.7; }
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-  }
-  .list {
+  .links {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
   }
-  .item {
+  a.link-card {
+    display: block;
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 12px 14px;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr auto;
-    gap: 10px;
-    align-items: center;
-  }
-  .item input {
-    border: 1px solid transparent;
-    background: transparent;
-    padding: 6px 8px;
-    border-radius: 6px;
-    font-size: 0.9rem;
+    padding: 16px 18px;
+    text-decoration: none;
     color: var(--text);
-    width: 100%;
+    transition: border-color 0.15s ease, transform 0.1s ease;
   }
-  .item input:hover {
-    border-color: var(--border);
-  }
-  .item input:focus {
-    outline: none;
+  a.link-card:hover {
     border-color: var(--accent);
-    background: var(--accent-soft);
   }
-  .col-label {
-    font-size: 0.65rem;
-    color: var(--text-soft);
-    display: block;
+  a.link-card:active {
+    transform: scale(0.99);
+  }
+  .link-title {
+    font-size: 1rem;
+    font-weight: 600;
     margin-bottom: 2px;
   }
-  .actions {
-    display: flex;
-    gap: 6px;
-  }
-  .btn-icon {
-    background: transparent;
-    padding: 6px 10px;
+  .link-desc {
     font-size: 0.8rem;
     color: var(--text-soft);
-    border: 1px solid var(--border);
-  }
-  .btn-icon:hover {
-    color: var(--danger);
-    border-color: var(--danger);
-  }
-  .btn-save {
-    background: transparent;
-    padding: 6px 10px;
-    font-size: 0.8rem;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    display: none;
-  }
-  .item.dirty .btn-save { display: inline-block; }
-  .empty {
-    text-align: center;
-    color: var(--text-soft);
-    font-size: 0.85rem;
-    padding: 40px 0;
-  }
-  @media (max-width: 560px) {
-    .item {
-      grid-template-columns: 1fr;
-    }
-    .actions {
-      justify-content: flex-end;
-    }
   }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>ab</h1>
-  <p class="sub">3カラム管理ツール</p>
-  <p class="status" id="status">読み込み中...</p>
-
-  <div class="add-row">
-    <input type="text" id="newCol1" placeholder="項目">
-    <input type="text" id="newCol2" placeholder="カテゴリ">
-    <input type="text" id="newCol3" placeholder="メモ">
-    <button class="btn-primary" id="addBtn">追加</button>
-  </div>
-
-  <div class="list" id="list"></div>
-  <p class="empty" id="emptyMsg" style="display:none;">データがありません</p>
-
-  <div style="margin-top:40px; padding-top:16px; border-top:1px dashed var(--border);">
-    <button id="seedBtn" class="btn-icon">初期データを投入（1回だけ使用）</button>
+  <p class="sub">ページ一覧</p>
+  <div class="links">
+    <a class="link-card" href="newpage/">
+      <div class="link-title">newpage</div>
+      <div class="link-desc">3カラム管理ツール（ab_items）</div>
+    </a>
+    <a class="link-card" href="newpage2/">
+      <div class="link-title">newpage2</div>
+      <div class="link-desc">3カラム管理ツール（ab_items2）</div>
+    </a>
   </div>
 </div>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import {
-    getFirestore, collection, onSnapshot, addDoc,
-    updateDoc, deleteDoc, doc, serverTimestamp, orderBy, query
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
-    authDomain: "ab01-9f35a.firebaseapp.com",
-    projectId: "ab01-9f35a",
-    storageBucket: "ab01-9f35a.firebasestorage.app",
-    messagingSenderId: "502154862201",
-    appId: "1:502154862201:web:4ca0c72225af6bd0147ea8",
-    measurementId: "G-4L8FF69B1B"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const COLLECTION = "ab_items";
-
-  const listEl = document.getElementById("list");
-  const emptyMsg = document.getElementById("emptyMsg");
-  const statusEl = document.getElementById("status");
-  const addBtn = document.getElementById("addBtn");
-  const newCol1 = document.getElementById("newCol1");
-  const newCol2 = document.getElementById("newCol2");
-  const newCol3 = document.getElementById("newCol3");
-
-  const colRef = collection(db, COLLECTION);
-  const q = query(colRef, orderBy("createdAt", "asc"));
-
-  onSnapshot(q, (snapshot) => {
-    listEl.innerHTML = "";
-    if (snapshot.empty) {
-      emptyMsg.style.display = "block";
-    } else {
-      emptyMsg.style.display = "none";
-      snapshot.forEach((docSnap) => {
-        renderItem(docSnap.id, docSnap.data());
-      });
-    }
-    statusEl.textContent = `${snapshot.size} 件 / 接続OK`;
-  }, (err) => {
-    statusEl.textContent = "接続エラー: " + err.message;
-    console.error(err);
-  });
-
-  function renderItem(id, data) {
-    const item = document.createElement("div");
-    item.className = "item";
-    item.dataset.id = id;
-
-    item.innerHTML = `
-      <div>
-        <span class="col-label">項目</span>
-        <input type="text" class="f-col1" value="${escapeAttr(data.col1 || "")}">
-      </div>
-      <div>
-        <span class="col-label">カテゴリ</span>
-        <input type="text" class="f-col2" value="${escapeAttr(data.col2 || "")}">
-      </div>
-      <div>
-        <span class="col-label">メモ</span>
-        <input type="text" class="f-col3" value="${escapeAttr(data.col3 || "")}">
-      </div>
-      <div class="actions">
-        <button class="btn-save">保存</button>
-        <button class="btn-icon btn-delete">削除</button>
-      </div>
-    `;
-
-    const inputs = item.querySelectorAll("input");
-    inputs.forEach((inp) => {
-      inp.addEventListener("input", () => item.classList.add("dirty"));
-    });
-
-    item.querySelector(".btn-save").addEventListener("click", async () => {
-      const col1 = item.querySelector(".f-col1").value;
-      const col2 = item.querySelector(".f-col2").value;
-      const col3 = item.querySelector(".f-col3").value;
-      await updateDoc(doc(db, COLLECTION, id), { col1, col2, col3 });
-      item.classList.remove("dirty");
-    });
-
-    item.querySelector(".btn-delete").addEventListener("click", async () => {
-      if (confirm("削除しますか？")) {
-        await deleteDoc(doc(db, COLLECTION, id));
-      }
-    });
-
-    listEl.appendChild(item);
-  }
-
-  addBtn.addEventListener("click", async () => {
-    const col1 = newCol1.value.trim();
-    const col2 = newCol2.value.trim();
-    const col3 = newCol3.value.trim();
-    if (!col1 && !col2 && !col3) return;
-    await addDoc(colRef, { col1, col2, col3, createdAt: serverTimestamp() });
-    newCol1.value = "";
-    newCol2.value = "";
-    newCol3.value = "";
-    newCol1.focus();
-  });
-
-  [newCol1, newCol2, newCol3].forEach((inp) => {
-    inp.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") addBtn.click();
-    });
-  });
-
-  const seedBtn = document.getElementById("seedBtn");
-  seedBtn.addEventListener("click", async () => {
-    if (!confirm("初期データを投入します。よろしいですか？")) return;
-    const seedData = [
-      { col1: "歯医者", col2: "予定", col3: "来月の検診" },
-      { col1: "Zaim連携", col2: "メモ", col3: "CSVをDriveに自動アップ" },
-      { col1: "ab repo", col2: "開発", col3: "PDFレイアウト調整中" },
-    ];
-    for (const d of seedData) {
-      await addDoc(colRef, { ...d, createdAt: serverTimestamp() });
-    }
-    seedBtn.disabled = true;
-    seedBtn.textContent = "投入済み";
-  });
-
-  function escapeAttr(str) {
-    return String(str)
-      .replaceAll("&", "&amp;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;");
-  }
-</script>
 </body>
 </html>
