@@ -21,26 +21,10 @@
     color: var(--text);
     padding: 24px 16px 80px;
   }
-  .wrap {
-    max-width: 480px;
-    margin: 0 auto;
-  }
-  h1 {
-    font-size: 1.4rem;
-    font-weight: 600;
-    margin: 0 0 4px;
-    letter-spacing: 0.02em;
-  }
-  .sub {
-    color: var(--text-soft);
-    font-size: 0.85rem;
-    margin: 0 0 28px;
-  }
-  .links {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+  .wrap { max-width: 480px; margin: 0 auto; }
+  h1 { font-size: 1.4rem; font-weight: 600; margin: 0 0 4px; }
+  .sub { color: var(--text-soft); font-size: 0.85rem; margin: 0 0 28px; }
+  .links { display: flex; flex-direction: column; gap: 10px; }
   a.link-card {
     display: block;
     background: var(--panel);
@@ -49,23 +33,11 @@
     padding: 16px 18px;
     text-decoration: none;
     color: var(--text);
-    transition: border-color 0.15s ease, transform 0.1s ease;
+    transition: border-color 0.15s ease;
   }
-  a.link-card:hover {
-    border-color: var(--accent);
-  }
-  a.link-card:active {
-    transform: scale(0.99);
-  }
-  .link-title {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 2px;
-  }
-  .link-desc {
-    font-size: 0.8rem;
-    color: var(--text-soft);
-  }
+  a.link-card:hover { border-color: var(--accent); }
+  .link-title { font-size: 1rem; font-weight: 600; margin-bottom: 2px; }
+  .link-desc { font-size: 0.8rem; color: var(--text-soft); }
 </style>
 </head>
 <body>
@@ -73,13 +45,13 @@
   <h1>ab</h1>
   <p class="sub">ページ一覧</p>
   <div class="links">
-    <a class="link-card" href="newpage/">
-      <div class="link-title">newpage</div>
-      <div class="link-desc">3カラム管理ツール（ab_items）</div>
+    <a class="link-card" href="sandbox/">
+      <div class="link-title">sandbox</div>
+      <div class="link-desc">実験用・壊してOK（ab_items）</div>
     </a>
-    <a class="link-card" href="newpage2/">
-      <div class="link-title">newpage2</div>
-      <div class="link-desc">3カラム管理ツール（ab_items2）</div>
+    <a class="link-card" href="main/">
+      <div class="link-title">main</div>
+      <div class="link-desc">本番用（ab_items2）</div>
     </a>
   </div>
 </div>
