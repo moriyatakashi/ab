@@ -16,7 +16,7 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const COLLECTION = "ab_items";
+  const COLLECTION = "ab_sandbox";
 
   const listEl = document.getElementById("list");
   const emptyMsg = document.getElementById("emptyMsg");
