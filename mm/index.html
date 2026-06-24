@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mm</title>
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --panel: #ffffff;
+    --border: #e2ded6;
+    --text: #2b2b2b;
+    --text-soft: #7a7568;
+    --accent: #b5651d;
+    --accent-soft: #f1e3d3;
+    --danger: #b34444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px 16px;
+    gap: 20px;
+  }
+  h1 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.04em; }
+  .date {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+  .current-score {
+    font-size: 0.85rem;
+    color: var(--text-soft);
+    min-height: 20px;
+  }
+  .input-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 280px;
+  }
+  input[type="number"] {
+    width: 100%;
+    font-size: 2.4rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 16px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: var(--panel);
+    color: var(--text);
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  input[type="number"]:focus { outline: none; border-color: var(--accent); }
+  .buttons {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+  }
+  button {
+    flex: 1;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 14px;
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.85; }
+  button:active { opacity: 0.7; }
+  .btn-submit { background: var(--accent); color: #fff; }
+  .btn-cancel { background: var(--panel); color: var(--danger); border: 1px solid var(--danger); }
+  .status { font-size: 0.78rem; color: var(--text-soft); min-height: 18px; }
+</style>
+</head>
+<body>
+<h1>mm</h1>
+<p class="date" id="dateLabel"></p>
+<p class="current-score" id="currentScore"></p>
+
+<div class="input-wrap">
+  <input type="number" id="scoreInput" min="0" max="100" placeholder="0〜100">
+  <div class="buttons">
+    <button class="btn-submit" id="btnSubmit">送信</button>
+    <button class="btn-cancel" id="btnCancel">取り消し</button>
+  </div>
+</div>
+
+<p class="status" id="status"></p>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
+    authDomain: "ab01-9f35a.firebaseapp.com",
+    projectId: "ab01-9f35a",
+    storageBucket: "ab01-9f35a.firebasestorage.app",
+    messagingSenderId: "502154862201",
+    appId: "1:502154862201:web:4ca0c72225af6bd0147ea8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // 今日の日付文字列 YYYY-MM-DD
+  const today = new Date();
+  const dateStr = today.getFullYear() + "-"
+    + String(today.getMonth() + 1).padStart(2, "0") + "-"
+    + String(today.getDate()).padStart(2, "0");
+
+  document.getElementById("dateLabel").textContent =
+    today.getFullYear() + "年" + (today.getMonth() + 1) + "月" + today.getDate() + "日";
+
+  const docRef = doc(db, "mm_scores", dateStr);
+
+  async function loadToday() {
+    try {
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const score = snap.data().score;
+        document.getElementById("currentScore").textContent = "本日の記録: " + score + " 点";
+        document.getElementById("scoreInput").value = score;
+      } else {
+        document.getElementById("currentScore").textContent = "本日の記録はまだありません";
+      }
+    } catch(e) {
+      document.getElementById("status").textContent = "読み込みエラー: " + e.message;
+    }
+  }
+
+  document.getElementById("btnSubmit").addEventListener("click", async () => {
+    const val = parseInt(document.getElementById("scoreInput").value);
+    if (isNaN(val) || val < 0 || val > 100) {
+      document.getElementById("status").textContent = "0〜100の数字を入力してください";
+      return;
+    }
+    document.getElementById("status").textContent = "送信中...";
+    try {
+      await setDoc(docRef, { score: val, updatedAt: new Date().toISOString() });
+      document.getElementById("currentScore").textContent = "本日の記録: " + val + " 点";
+      document.getElementById("status").textContent = "送信しました";
+    } catch(e) {
+      document.getElementById("status").textContent = "エラー: " + e.message;
+    }
+  });
+
+  document.getElementById("btnCancel").addEventListener("click", async () => {
+    if (!confirm("本日の記録を取り消しますか？")) return;
+    document.getElementById("status").textContent = "取り消し中...";
+    try {
+      await deleteDoc(docRef);
+      document.getElementById("currentScore").textContent = "本日の記録はまだありません";
+      document.getElementById("scoreInput").value = "";
+      document.getElementById("status").textContent = "取り消しました";
+    } catch(e) {
+      document.getElementById("status").textContent = "エラー: " + e.message;
+    }
+  });
+
+  loadToday();
+</script>
+</body>
+</html>
