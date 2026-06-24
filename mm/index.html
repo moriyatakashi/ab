@@ -125,13 +125,13 @@
   document.getElementById("dateLabel").textContent =
     today.getFullYear() + "年" + (today.getMonth() + 1) + "月" + today.getDate() + "日";
 
-  const docRef = doc(db, "mm_scores", dateStr);
+  const docRef = doc(db, "ab_items2", dateStr);
 
   async function loadToday() {
     try {
       const snap = await getDoc(docRef);
       if (snap.exists()) {
-        const score = snap.data().score;
+        const score = snap.data().col2;
         document.getElementById("currentScore").textContent = "本日の記録: " + score + " 点";
         document.getElementById("scoreInput").value = score;
       } else {
@@ -150,7 +150,7 @@
     }
     document.getElementById("status").textContent = "送信中...";
     try {
-      await setDoc(docRef, { score: val, updatedAt: new Date().toISOString() });
+      await setDoc(docRef, { col1: dateStr, col2: String(val), col3: "", createdAt: new Date().toISOString() });
       document.getElementById("currentScore").textContent = "本日の記録: " + val + " 点";
       document.getElementById("status").textContent = "送信しました";
     } catch(e) {
