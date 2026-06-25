@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>m1</title>
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --panel: #ffffff;
+    --border: #e2ded6;
+    --text: #2b2b2b;
+    --text-soft: #7a7568;
+    --accent: #b5651d;
+    --accent-soft: #f1e3d3;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    padding: 24px 16px 60px;
+  }
+  .wrap { max-width: 480px; margin: 0 auto; }
+  h1 { font-size: 1.2rem; font-weight: 600; margin-bottom: 4px; }
+  .sub { font-size: 0.78rem; color: var(--text-soft); margin-bottom: 20px; }
+  .status { font-size: 0.75rem; color: var(--text-soft); margin-bottom: 16px; min-height: 16px; }
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .item-date { font-size: 0.9rem; color: var(--text-soft); }
+  .item-score {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 60px;
+    text-align: right;
+  }
+  .bar-wrap {
+    flex: 1;
+    margin: 0 12px;
+    height: 6px;
+    background: var(--accent-soft);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+  .empty { text-align: center; color: var(--text-soft); font-size: 0.85rem; padding: 40px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>m1</h1>
+  <p class="sub">スコア履歴</p>
+  <p class="status" id="status">読み込み中...</p>
+  <div class="list" id="list"></div>
+  <p class="empty" id="emptyMsg" style="display:none;">有効なデータがありません</p>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
+    authDomain: "ab01-9f35a.firebaseapp.com",
+    projectId: "ab01-9f35a",
+    storageBucket: "ab01-9f35a.firebasestorage.app",
+    messagingSenderId: "502154862201",
+    appId: "1:502154862201:web:4ca0c72225af6bd0147ea8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+  function isValidDate(s) {
+    if (!DATE_RE.test(s)) return false;
+    const d = new Date(s);
+    return d instanceof Date && !isNaN(d);
+  }
+
+  function isValidScore(s) {
+    const n = Number(s);
+    return !isNaN(n) && n >= 0 && n <= 100 && String(s).trim() !== "";
+  }
+
+  function formatDate(s) {
+    const [y, m, d] = s.split("-");
+    return `${y}年${parseInt(m)}月${parseInt(d)}日`;
+  }
+
+  async function load() {
+    try {
+      const snap = await getDocs(collection(db, "ab_items2"));
+      const valid = [];
+
+      snap.forEach(doc => {
+        const { col1, col2 } = doc.data();
+        if (isValidDate(col1) && isValidScore(col2)) {
+          valid.push({ date: col1, score: Number(col2) });
+        }
+      });
+
+      // 同じ日付が複数あれば最後のもの（createdAtが無い場合はscoreが大きい方）を採用
+      const map = {};
+      valid.forEach(item => {
+        if (!map[item.date] || item.score >= map[item.date].score) {
+          map[item.date] = item;
+        }
+      });
+
+      const sorted = Object.values(map).sort((a, b) => b.date.localeCompare(a.date));
+
+      const listEl = document.getElementById("list");
+      const emptyMsg = document.getElementById("emptyMsg");
+
+      if (sorted.length === 0) {
+        emptyMsg.style.display = "block";
+        document.getElementById("status").textContent = "データなし";
+        return;
+      }
+
+      sorted.forEach(({ date, score }) => {
+        const item = document.createElement("div");
+        item.className = "item";
+        item.innerHTML = `
+          <span class="item-date">${formatDate(date)}</span>
+          <div class="bar-wrap"><div class="bar" style="width:${score}%"></div></div>
+          <span class="item-score">${score}</span>
+        `;
+        listEl.appendChild(item);
+      });
+
+      document.getElementById("status").textContent = `${sorted.length} 件`;
+    } catch(e) {
+      document.getElementById("status").textContent = "エラー: " + e.message;
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>
