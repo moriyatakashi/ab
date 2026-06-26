@@ -24,75 +24,71 @@
   }
   .wrap { max-width: 560px; margin: 0 auto; }
   h1 { font-size: 1.2rem; font-weight: 600; margin-bottom: 2px; }
-  .sub { font-size: 0.78rem; color: var(--text-soft); margin-bottom: 20px; }
+  .sub { font-size: 0.78rem; color: var(--text-soft); margin-bottom: 16px; }
   .status { font-size: 0.75rem; color: var(--text-soft); margin-bottom: 16px; min-height: 16px; }
-
-  .collection {
-    margin-bottom: 28px;
-  }
-  .collection-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 10px;
-    padding-bottom: 6px;
-    border-bottom: 2px solid var(--accent-soft);
-  }
-  .collection-name {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--accent);
-  }
-  .collection-count {
-    font-size: 0.72rem;
-    background: var(--tag-bg);
-    color: var(--text-soft);
-    padding: 2px 8px;
-    border-radius: 10px;
-  }
-
-  .doc-list { display: flex; flex-direction: column; gap: 6px; }
-  .doc {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 14px;
-  }
-  .doc-id {
-    font-size: 0.68rem;
-    color: var(--text-soft);
-    margin-bottom: 6px;
-    font-family: monospace;
-  }
-  .fields { display: flex; flex-direction: column; gap: 3px; }
-  .field {
-    display: flex;
-    gap: 8px;
-    font-size: 0.82rem;
-    align-items: baseline;
-  }
-  .field-key {
-    color: var(--text-soft);
-    min-width: 80px;
-    font-size: 0.72rem;
-    flex-shrink: 0;
-  }
-  .field-val {
-    color: var(--text);
-    word-break: break-all;
-  }
-  .empty { text-align: center; color: var(--text-soft); font-size: 0.82rem; padding: 20px 0; }
   .btn-reload {
-    cursor: pointer;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-size: 0.78rem;
-    padding: 5px 12px;
-    background: var(--panel);
-    color: var(--text);
-    margin-bottom: 16px;
+    cursor: pointer; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 0.78rem; padding: 5px 12px; background: var(--panel);
+    color: var(--text); margin-bottom: 16px;
   }
   .btn-reload:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* 構造サマリー */
+  .schema-section { margin-bottom: 28px; }
+  .schema-section h2 {
+    font-size: 0.8rem; font-weight: 600; color: var(--text-soft);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .schema-list { display: flex; flex-direction: column; gap: 6px; }
+  .schema-item {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px;
+  }
+  .schema-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+  }
+  .schema-col-name { font-size: 0.9rem; font-weight: 700; color: var(--accent); }
+  .schema-count {
+    font-size: 0.7rem; background: var(--tag-bg); color: var(--text-soft);
+    padding: 2px 8px; border-radius: 10px;
+  }
+  .schema-fields { display: flex; flex-direction: column; gap: 3px; }
+  .schema-field {
+    display: flex; gap: 8px; font-size: 0.8rem; align-items: center;
+  }
+  .schema-field-name { color: var(--text); min-width: 100px; font-family: monospace; font-size: 0.78rem; }
+  .type-tag {
+    font-size: 0.68rem; padding: 1px 7px; border-radius: 8px;
+    background: var(--accent-soft); color: var(--accent); font-family: monospace;
+  }
+  .schema-error { font-size: 0.78rem; color: #b34444; }
+
+  /* データ一覧 */
+  .data-section { margin-bottom: 28px; }
+  .data-section h2 {
+    font-size: 0.8rem; font-weight: 600; color: var(--text-soft);
+    letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;
+  }
+  .collection { margin-bottom: 20px; }
+  .collection-header {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 8px; padding-bottom: 6px;
+    border-bottom: 2px solid var(--accent-soft);
+  }
+  .collection-name { font-size: 0.9rem; font-weight: 700; color: var(--accent); }
+  .collection-count {
+    font-size: 0.7rem; background: var(--tag-bg); color: var(--text-soft);
+    padding: 2px 8px; border-radius: 10px;
+  }
+  .doc-list { display: flex; flex-direction: column; gap: 6px; }
+  .doc { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
+  .doc-id { font-size: 0.68rem; color: var(--text-soft); margin-bottom: 6px; font-family: monospace; }
+  .fields { display: flex; flex-direction: column; gap: 3px; }
+  .field { display: flex; gap: 8px; font-size: 0.82rem; align-items: baseline; }
+  .field-key { color: var(--text-soft); min-width: 80px; font-size: 0.72rem; flex-shrink: 0; font-family: monospace; }
+  .field-val { color: var(--text); word-break: break-all; }
+  .col-error { font-size: 0.78rem; color: #b34444; padding: 8px 0; }
 </style>
 </head>
 <body>
@@ -121,45 +117,112 @@
   const db = getFirestore(app);
 
   const COLLECTIONS = ["ab_items", "ab_items2", "mm_scores"];
-
-  // 表示しないフィールド
   const SKIP_FIELDS = ["createdAt", "updatedAt"];
+  const FIELD_ORDER = ["col1", "col2", "col3"];
+
+  function detectType(val) {
+    if (val instanceof Date) return "timestamp";
+    if (val === null || val === undefined) return "null";
+    if (typeof val === "boolean") return "boolean";
+    if (typeof val === "number") return Number.isInteger(val) ? "integer" : "double";
+    if (typeof val === "string") {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return "string (date-like)";
+      if (/^\d+$/.test(val)) return "string (numeric)";
+      return "string";
+    }
+    if (typeof val === "object") return "map";
+    return "unknown";
+  }
 
   function formatVal(val) {
     if (val === null || val === undefined || val === "") return "（空）";
+    if (val && val.toDate) return val.toDate().toLocaleString("ja-JP");
     return String(val);
+  }
+
+  function sortFields(fields) {
+    const ordered = FIELD_ORDER.filter(k => k in fields);
+    const rest = Object.keys(fields).filter(k => !FIELD_ORDER.includes(k) && !SKIP_FIELDS.includes(k));
+    return [...ordered, ...rest];
   }
 
   async function load() {
     const statusEl = document.getElementById("status");
     const contentEl = document.getElementById("content");
     contentEl.innerHTML = "";
-    statusEl.textContent = "読み込み中...";
+
+    // --- 構造サマリー ---
+    const schemaSection = document.createElement("div");
+    schemaSection.className = "schema-section";
+    schemaSection.innerHTML = '<h2>構造サマリー</h2>';
+    const schemaList = document.createElement("div");
+    schemaList.className = "schema-list";
+
+    // --- データ一覧 ---
+    const dataSection = document.createElement("div");
+    dataSection.className = "data-section";
+    dataSection.innerHTML = '<h2>データ一覧</h2>';
 
     let totalDocs = 0;
 
     for (const colName of COLLECTIONS) {
+      const schemaItem = document.createElement("div");
+      schemaItem.className = "schema-item";
+
+      const colDiv = document.createElement("div");
+      colDiv.className = "collection";
+
       try {
         const snap = await getDocs(collection(db, colName));
-        if (snap.empty) continue;
 
-        totalDocs += snap.size;
+        // スキーマ収集
+        const fieldTypes = {}; // { fieldName: Set<type> }
+        snap.forEach(d => {
+          const data = d.data();
+          Object.entries(data).forEach(([k, v]) => {
+            if (!fieldTypes[k]) fieldTypes[k] = new Set();
+            fieldTypes[k].add(detectType(v));
+          });
+        });
 
-        const colDiv = document.createElement("div");
-        colDiv.className = "collection";
-
-        const header = document.createElement("div");
-        header.className = "collection-header";
-        header.innerHTML = `
-          <span class="collection-name">${colName}</span>
-          <span class="collection-count">${snap.size} 件</span>
+        // スキーマ表示
+        schemaItem.innerHTML = `
+          <div class="schema-header">
+            <span class="schema-col-name">${colName}</span>
+            <span class="schema-count">${snap.size} 件</span>
+          </div>
         `;
-        colDiv.appendChild(header);
+        const schemaFields = document.createElement("div");
+        schemaFields.className = "schema-fields";
 
+        const allFields = [...FIELD_ORDER.filter(k => k in fieldTypes),
+          ...Object.keys(fieldTypes).filter(k => !FIELD_ORDER.includes(k))];
+
+        allFields.forEach(k => {
+          const types = [...fieldTypes[k]].join(" / ");
+          const isSkipped = SKIP_FIELDS.includes(k);
+          const row = document.createElement("div");
+          row.className = "schema-field";
+          row.innerHTML = `
+            <span class="schema-field-name">${k}</span>
+            <span class="type-tag">${types}</span>
+            ${isSkipped ? '<span style="font-size:0.68rem;color:var(--text-soft)">(管理用)</span>' : ''}
+          `;
+          schemaFields.appendChild(row);
+        });
+        schemaItem.appendChild(schemaFields);
+
+        // データ一覧
+        totalDocs += snap.size;
+        colDiv.innerHTML = `
+          <div class="collection-header">
+            <span class="collection-name">${colName}</span>
+            <span class="collection-count">${snap.size} 件</span>
+          </div>
+        `;
         const docList = document.createElement("div");
         docList.className = "doc-list";
 
-        // 日付っぽいIDは日付順、それ以外はcreatedAt順
         const docs = [];
         snap.forEach(d => docs.push({ id: d.id, data: d.data() }));
         docs.sort((a, b) => b.id.localeCompare(a.id));
@@ -167,7 +230,6 @@
         docs.forEach(({ id, data }) => {
           const docDiv = document.createElement("div");
           docDiv.className = "doc";
-
           const idEl = document.createElement("div");
           idEl.className = "doc-id";
           idEl.textContent = "ID: " + id;
@@ -176,31 +238,38 @@
           const fieldsEl = document.createElement("div");
           fieldsEl.className = "fields";
 
-          Object.entries(data)
-            .filter(([k]) => !SKIP_FIELDS.includes(k))
-            .forEach(([k, v]) => {
-              const row = document.createElement("div");
-              row.className = "field";
-              row.innerHTML = `<span class="field-key">${k}</span><span class="field-val">${formatVal(v)}</span>`;
-              fieldsEl.appendChild(row);
-            });
+          sortFields(data).forEach(k => {
+            const row = document.createElement("div");
+            row.className = "field";
+            row.innerHTML = `<span class="field-key">${k}</span><span class="field-val">${formatVal(data[k])}</span>`;
+            fieldsEl.appendChild(row);
+          });
 
           docDiv.appendChild(fieldsEl);
           docList.appendChild(docDiv);
         });
 
         colDiv.appendChild(docList);
-        contentEl.appendChild(colDiv);
 
       } catch(e) {
-        const errDiv = document.createElement("div");
-        errDiv.className = "collection";
-        errDiv.innerHTML = `<div class="collection-header"><span class="collection-name">${colName}</span></div><p class="empty">エラー: ${e.message}</p>`;
-        contentEl.appendChild(errDiv);
+        schemaItem.innerHTML = `
+          <div class="schema-header"><span class="schema-col-name">${colName}</span></div>
+          <p class="schema-error">エラー: ${e.message}</p>
+        `;
+        colDiv.innerHTML = `
+          <div class="collection-header"><span class="collection-name">${colName}</span></div>
+          <p class="col-error">エラー: ${e.message}</p>
+        `;
       }
+
+      schemaList.appendChild(schemaItem);
+      dataSection.appendChild(colDiv);
     }
 
-    statusEl.textContent = totalDocs > 0 ? `合計 ${totalDocs} 件` : "データなし";
+    schemaSection.appendChild(schemaList);
+    contentEl.appendChild(schemaSection);
+    contentEl.appendChild(dataSection);
+    statusEl.textContent = `合計 ${totalDocs} 件`;
   }
 
   document.getElementById("btnReload").addEventListener("click", load);
