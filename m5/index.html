@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>m5 / 訪問記録</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .add-block {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .add-block input, .add-block textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+  }
+  .add-block input:focus, .add-block textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .add-block textarea { resize: none; height: 64px; }
+  .btn-add {
+    background: var(--accent);
+    color: #fff;
+    padding: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+  }
+  .btn-add:hover { opacity: 0.85; }
+  .visit-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .visit-main { flex: 1; }
+  .visit-place {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .visit-date {
+    font-size: 0.75rem;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .visit-memo {
+    font-size: 0.82rem;
+    color: var(--text-soft);
+    line-height: 1.5;
+  }
+  .btn-del {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-soft);
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .btn-del:hover { border-color: var(--danger); color: var(--danger); }
+  .back-link { display: inline-block; font-size: 0.8rem; color: var(--text-soft); text-decoration: none; margin-bottom: 20px; }
+  .back-link:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="../">← ab トップ</a>
+  <h1>訪問記録</h1>
+  <p class="sub">行った場所を残す</p>
+
+  <div class="add-block">
+    <input type="text" id="placeInput" placeholder="場所名（例: 布施駅、道頓堀）" maxlength="60">
+    <input type="date" id="dateInput">
+    <textarea id="memoInput" placeholder="メモ（任意）"></textarea>
+    <button class="btn-add" id="btnAdd">追加</button>
+  </div>
+
+  <p class="status" id="status">読み込み中...</p>
+  <div class="list" id="list"></div>
+  <p class="empty" id="emptyMsg" style="display:none;">記録はまだありません</p>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, orderBy, query }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
+    authDomain: "ab01-9f35a.firebaseapp.com",
+    projectId: "ab01-9f35a"
+  });
+  const db = getFirestore(app);
+  const COL = "ab_visits";
+
+  // 今日の日付をデフォルト
+  const today = new Date();
+  document.getElementById("dateInput").value =
+    today.getFullYear() + "-" +
+    String(today.getMonth()+1).padStart(2,"0") + "-" +
+    String(today.getDate()).padStart(2,"0");
+
+  function formatDate(s) {
+    const [y,m,d] = s.split("-");
+    return `${y}年${parseInt(m)}月${parseInt(d)}日`;
+  }
+
+  function renderItem(id, place, date, memo) {
+    const div = document.createElement("div");
+    div.className = "visit-item";
+    div.dataset.id = id;
+    div.innerHTML = `
+      <div class="visit-main">
+        <div class="visit-place">${place}</div>
+        <div class="visit-date">${formatDate(date)}</div>
+        ${memo ? `<div class="visit-memo">${memo}</div>` : ""}
+      </div>
+      <button class="btn-del" onclick="del('${id}', this)">削除</button>
+    `;
+    return div;
+  }
+
+  async function load() {
+    try {
+      const q = query(collection(db, COL), orderBy("date","desc"));
+      const snap = await getDocs(q);
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+      if (snap.empty) {
+        document.getElementById("emptyMsg").style.display = "block";
+        document.getElementById("status").textContent = "0件";
+        return;
+      }
+      document.getElementById("emptyMsg").style.display = "none";
+      snap.forEach(d => {
+        const { place, date, memo } = d.data();
+        list.appendChild(renderItem(d.id, place, date, memo||""));
+      });
+      document.getElementById("status").textContent = `${snap.size}件`;
+    } catch(e) {
+      document.getElementById("status").textContent = "エラー: " + e.message;
+    }
+  }
+
+  document.getElementById("btnAdd").addEventListener("click", async () => {
+    const place = document.getElementById("placeInput").value.trim();
+    const date  = document.getElementById("dateInput").value;
+    const memo  = document.getElementById("memoInput").value.trim();
+    if (!place) { document.getElementById("status").textContent = "場所名を入力してください"; return; }
+    if (!date)  { document.getElementById("status").textContent = "日付を入力してください"; return; }
+    document.getElementById("status").textContent = "追加中...";
+    try {
+      await addDoc(collection(db, COL), { place, date, memo, createdAt: new Date().toISOString() });
+      document.getElementById("placeInput").value = "";
+      document.getElementById("memoInput").value = "";
+      document.getElementById("status").textContent = "追加しました";
+      await load();
+    } catch(e) {
+      document.getElementById("status").textContent = "エラー: " + e.message;
+    }
+  });
+
+  window.del = async (id, btn) => {
+    if (!confirm("この記録を削除しますか？")) return;
+    try {
+      await deleteDoc(doc(db, COL, id));
+      btn.closest(".visit-item").remove();
+      const remaining = document.getElementById("list").children.length;
+      document.getElementById("status").textContent = `${remaining}件`;
+      if (remaining === 0) document.getElementById("emptyMsg").style.display = "block";
+    } catch(e) {
+      alert("削除エラー: " + e.message);
+    }
+  };
+
+  load();
+</script>
+</body>
+</html>
