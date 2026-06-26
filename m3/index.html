@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>m3 - Firestore viewer</title>
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --panel: #ffffff;
+    --border: #e2ded6;
+    --text: #2b2b2b;
+    --text-soft: #7a7568;
+    --accent: #b5651d;
+    --accent-soft: #f1e3d3;
+    --tag-bg: #ede9e3;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    padding: 24px 16px 60px;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; }
+  h1 { font-size: 1.2rem; font-weight: 600; margin-bottom: 2px; }
+  .sub { font-size: 0.78rem; color: var(--text-soft); margin-bottom: 20px; }
+  .status { font-size: 0.75rem; color: var(--text-soft); margin-bottom: 16px; min-height: 16px; }
+
+  .collection {
+    margin-bottom: 28px;
+  }
+  .collection-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--accent-soft);
+  }
+  .collection-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .collection-count {
+    font-size: 0.72rem;
+    background: var(--tag-bg);
+    color: var(--text-soft);
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  .doc-list { display: flex; flex-direction: column; gap: 6px; }
+  .doc {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+  .doc-id {
+    font-size: 0.68rem;
+    color: var(--text-soft);
+    margin-bottom: 6px;
+    font-family: monospace;
+  }
+  .fields { display: flex; flex-direction: column; gap: 3px; }
+  .field {
+    display: flex;
+    gap: 8px;
+    font-size: 0.82rem;
+    align-items: baseline;
+  }
+  .field-key {
+    color: var(--text-soft);
+    min-width: 80px;
+    font-size: 0.72rem;
+    flex-shrink: 0;
+  }
+  .field-val {
+    color: var(--text);
+    word-break: break-all;
+  }
+  .empty { text-align: center; color: var(--text-soft); font-size: 0.82rem; padding: 20px 0; }
+  .btn-reload {
+    cursor: pointer;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.78rem;
+    padding: 5px 12px;
+    background: var(--panel);
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+  .btn-reload:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>m3</h1>
+  <p class="sub">Firestore ビューア（ab01-9f35a）</p>
+  <button class="btn-reload" id="btnReload">↻ 再読み込み</button>
+  <p class="status" id="status">読み込み中...</p>
+  <div id="content"></div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
+    authDomain: "ab01-9f35a.firebaseapp.com",
+    projectId: "ab01-9f35a",
+    storageBucket: "ab01-9f35a.firebasestorage.app",
+    messagingSenderId: "502154862201",
+    appId: "1:502154862201:web:4ca0c72225af6bd0147ea8"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const COLLECTIONS = ["ab_items", "ab_items2", "mm_scores"];
+
+  // 表示しないフィールド
+  const SKIP_FIELDS = ["createdAt", "updatedAt"];
+
+  function formatVal(val) {
+    if (val === null || val === undefined || val === "") return "（空）";
+    return String(val);
+  }
+
+  async function load() {
+    const statusEl = document.getElementById("status");
+    const contentEl = document.getElementById("content");
+    contentEl.innerHTML = "";
+    statusEl.textContent = "読み込み中...";
+
+    let totalDocs = 0;
+
+    for (const colName of COLLECTIONS) {
+      try {
+        const snap = await getDocs(collection(db, colName));
+        if (snap.empty) continue;
+
+        totalDocs += snap.size;
+
+        const colDiv = document.createElement("div");
+        colDiv.className = "collection";
+
+        const header = document.createElement("div");
+        header.className = "collection-header";
+        header.innerHTML = `
+          <span class="collection-name">${colName}</span>
+          <span class="collection-count">${snap.size} 件</span>
+        `;
+        colDiv.appendChild(header);
+
+        const docList = document.createElement("div");
+        docList.className = "doc-list";
+
+        // 日付っぽいIDは日付順、それ以外はcreatedAt順
+        const docs = [];
+        snap.forEach(d => docs.push({ id: d.id, data: d.data() }));
+        docs.sort((a, b) => b.id.localeCompare(a.id));
+
+        docs.forEach(({ id, data }) => {
+          const docDiv = document.createElement("div");
+          docDiv.className = "doc";
+
+          const idEl = document.createElement("div");
+          idEl.className = "doc-id";
+          idEl.textContent = "ID: " + id;
+          docDiv.appendChild(idEl);
+
+          const fieldsEl = document.createElement("div");
+          fieldsEl.className = "fields";
+
+          Object.entries(data)
+            .filter(([k]) => !SKIP_FIELDS.includes(k))
+            .forEach(([k, v]) => {
+              const row = document.createElement("div");
+              row.className = "field";
+              row.innerHTML = `<span class="field-key">${k}</span><span class="field-val">${formatVal(v)}</span>`;
+              fieldsEl.appendChild(row);
+            });
+
+          docDiv.appendChild(fieldsEl);
+          docList.appendChild(docDiv);
+        });
+
+        colDiv.appendChild(docList);
+        contentEl.appendChild(colDiv);
+
+      } catch(e) {
+        const errDiv = document.createElement("div");
+        errDiv.className = "collection";
+        errDiv.innerHTML = `<div class="collection-header"><span class="collection-name">${colName}</span></div><p class="empty">エラー: ${e.message}</p>`;
+        contentEl.appendChild(errDiv);
+      }
+    }
+
+    statusEl.textContent = totalDocs > 0 ? `合計 ${totalDocs} 件` : "データなし";
+  }
+
+  document.getElementById("btnReload").addEventListener("click", load);
+  load();
+</script>
+</body>
+</html>
