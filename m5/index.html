@@ -46,6 +46,10 @@
   .add-block input:focus, .add-block textarea:focus { outline: none; border-color: var(--accent); }
   .add-block textarea { resize: none; height: 60px; }
 
+  .date-time-row { display: flex; gap: 8px; }
+  .date-time-row > div { flex: 1; }
+  .date-time-row input { width: 100%; }
+
   .place-row { display: flex; gap: 8px; align-items: flex-end; }
   .place-row input { flex: 1; }
   .btn-gps {
@@ -74,7 +78,7 @@
   }
   .visit-main { flex: 1; min-width: 0; }
   .visit-place { font-size: 1rem; font-weight: 600; margin-bottom: 2px; }
-  .visit-date { font-size: 0.75rem; color: var(--accent); margin-bottom: 4px; }
+  .visit-when { font-size: 0.75rem; color: var(--accent); margin-bottom: 4px; }
   .visit-memo { font-size: 0.82rem; color: var(--text-soft); line-height: 1.5; }
   .visit-coord { font-size: 0.7rem; color: var(--text-soft); margin-top: 4px; opacity: 0.6; }
   .btn-del {
@@ -91,7 +95,6 @@
   <h1>訪問記録</h1>
   <p class="sub">写真のEXIF、または現在地から記録</p>
 
-  <!-- 写真ゾーン -->
   <div class="photo-zone">
     <input type="file" id="photoInput" accept="image/*">
     <div class="photo-icon">📷</div>
@@ -99,14 +102,12 @@
     <div class="photo-sub">写真はどこにも送りません</div>
   </div>
 
-  <!-- EXIF結果 -->
   <div class="exif-result" id="exifResult">
     <div class="exif-row"><span class="exif-key">日時</span><span class="exif-val" id="exifDate">—</span></div>
     <div class="exif-row"><span class="exif-key">座標</span><span class="exif-val" id="exifCoord">—</span></div>
     <div class="exif-row"><span class="exif-key">地名</span><span class="exif-val" id="exifPlace">—</span></div>
   </div>
 
-  <!-- 入力フォーム -->
   <div class="add-block">
     <div>
       <div class="field-label">場所名</div>
@@ -115,9 +116,15 @@
         <button class="btn-gps" id="btnGps" onclick="getLocation()">📍 現在地</button>
       </div>
     </div>
-    <div>
-      <div class="field-label">日付</div>
-      <input type="date" id="dateInput">
+    <div class="date-time-row">
+      <div>
+        <div class="field-label">日付</div>
+        <input type="date" id="dateInput">
+      </div>
+      <div>
+        <div class="field-label">時間（任意）</div>
+        <input type="time" id="timeInput">
+      </div>
     </div>
     <div>
       <div class="field-label">メモ（任意）</div>
@@ -148,11 +155,12 @@
   const db = getFirestore(app);
   const COL = "ab_visits";
 
-  const today = new Date();
+  const now = new Date();
   document.getElementById("dateInput").value =
-    today.getFullYear() + "-" + String(today.getMonth()+1).padStart(2,"0") + "-" + String(today.getDate()).padStart(2,"0");
+    now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0") + "-" + String(now.getDate()).padStart(2,"0");
+  document.getElementById("timeInput").value =
+    String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
 
-  // ── Nominatim ──
   async function reverseGeocode(lat, lng) {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ja`,
@@ -176,22 +184,15 @@
     return { latR, lngR };
   }
 
-  // ── 現在地ボタン ──
   window.getLocation = async () => {
     const btn = document.getElementById("btnGps");
-    if (!navigator.geolocation) {
-      document.getElementById("status").textContent = "Geolocation非対応";
-      return;
-    }
-    btn.disabled = true;
-    btn.textContent = "取得中...";
+    if (!navigator.geolocation) { document.getElementById("status").textContent = "Geolocation非対応"; return; }
+    btn.disabled = true; btn.textContent = "取得中...";
     document.getElementById("status").textContent = "現在地を取得中...";
     navigator.geolocation.getCurrentPosition(async pos => {
       const { latitude: lat, longitude: lng } = pos.coords;
-      const { latR, lngR } = setCoord(lat, lng);
-      document.getElementById("status").textContent = `座標取得: ${latR}, ${lngR}`;
-      btn.textContent = "📍 現在地";
-      btn.disabled = false;
+      setCoord(lat, lng);
+      btn.textContent = "📍 現在地"; btn.disabled = false;
       try {
         const place = await reverseGeocode(lat, lng);
         if (place) document.getElementById("placeInput").value = place;
@@ -201,12 +202,10 @@
       }
     }, err => {
       document.getElementById("status").textContent = "位置情報取得失敗: " + err.message;
-      btn.textContent = "📍 現在地";
-      btn.disabled = false;
+      btn.textContent = "📍 現在地"; btn.disabled = false;
     }, { enableHighAccuracy: true, timeout: 10000 });
   };
 
-  // ── 写真EXIF ──
   document.getElementById("photoInput").addEventListener("change", async e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -225,10 +224,12 @@
       }
       const dt = exif.DateTimeOriginal || exif.DateTime || exif.CreateDate;
       if (dt) {
-        document.getElementById("exifDate").textContent = new Date(dt).toLocaleString("ja-JP");
         const d = new Date(dt);
+        document.getElementById("exifDate").textContent = d.toLocaleString("ja-JP");
         document.getElementById("dateInput").value =
           d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+        document.getElementById("timeInput").value =
+          String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
       } else {
         document.getElementById("exifDate").textContent = "日時情報なし";
       }
@@ -256,10 +257,10 @@
     }
   });
 
-  // ── 一覧 ──
-  function formatDate(s) {
-    const [y,m,d] = s.split("-");
-    return `${y}年${parseInt(m)}月${parseInt(d)}日`;
+  function formatWhen(date, time) {
+    const [y,m,d] = date.split("-");
+    const base = `${y}年${parseInt(m)}月${parseInt(d)}日`;
+    return time ? `${base} ${time}` : base;
   }
 
   function renderItem(id, data) {
@@ -268,7 +269,7 @@
     div.innerHTML = `
       <div class="visit-main">
         <div class="visit-place">${data.place}</div>
-        <div class="visit-date">${formatDate(data.date)}</div>
+        <div class="visit-when">${formatWhen(data.date, data.time || "")}</div>
         ${data.memo ? `<div class="visit-memo">${data.memo}</div>` : ""}
         ${data.lat ? `<div class="visit-coord">📍 ${data.lat}, ${data.lng}</div>` : ""}
       </div>
@@ -299,6 +300,7 @@
   document.getElementById("btnAdd").addEventListener("click", async () => {
     const place = document.getElementById("placeInput").value.trim();
     const date  = document.getElementById("dateInput").value;
+    const time  = document.getElementById("timeInput").value;
     const memo  = document.getElementById("memoInput").value.trim();
     const lat   = document.getElementById("latInput").value;
     const lng   = document.getElementById("lngInput").value;
@@ -307,7 +309,7 @@
     document.getElementById("status").textContent = "追加中...";
     try {
       await addDoc(collection(db, COL), {
-        place, date, memo,
+        place, date, time: time || null, memo,
         lat: lat ? Number(lat) : null,
         lng: lng ? Number(lng) : null,
         createdAt: new Date().toISOString()
@@ -316,6 +318,7 @@
       document.getElementById("memoInput").value = "";
       document.getElementById("latInput").value = "";
       document.getElementById("lngInput").value = "";
+      document.getElementById("timeInput").value = "";
       document.getElementById("coordRow").style.display = "none";
       document.getElementById("exifResult").classList.remove("show");
       document.getElementById("photoInput").value = "";
