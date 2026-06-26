@@ -5,69 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ab</title>
 <style>
-  :root {
-    --bg: #f7f6f3;
-    --panel: #ffffff;
-    --border: #e2ded6;
-    --text: #2b2b2b;
-    --text-soft: #7a7568;
-    --accent: #b5651d;
-    --accent-soft: #f1e3d3;
-  }
+  :root { --bg:#f7f6f3; --panel:#ffffff; --border:#e2ded6; --text:#2b2b2b; --text-soft:#7a7568; --accent:#b5651d; --accent-soft:#f1e3d3; }
   * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    padding: 24px 16px 80px;
-  }
-  .wrap { max-width: 480px; margin: 0 auto; }
-  h1 { font-size: 1.4rem; font-weight: 600; margin: 0 0 4px; }
-  .sub { color: var(--text-soft); font-size: 0.85rem; margin: 0 0 20px; }
-
-  /* hubバナー */
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif; background:var(--bg); color:var(--text); padding:24px 16px 80px; }
+  .wrap { max-width:480px; margin:0 auto; }
+  h1 { font-size:1.4rem; font-weight:600; margin:0 0 4px; }
+  .sub { color:var(--text-soft); font-size:0.85rem; margin:0 0 20px; }
   a.hub-banner {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: var(--accent);
-    color: #fff;
-    border-radius: 12px;
-    padding: 18px 20px;
-    text-decoration: none;
-    margin-bottom: 24px;
-    transition: opacity 0.15s;
+    display:flex; align-items:center; gap:14px;
+    background:var(--accent); color:#fff; border-radius:12px;
+    padding:18px 20px; text-decoration:none; margin-bottom:24px; transition:opacity 0.15s;
   }
-  a.hub-banner:hover { opacity: 0.88; }
-  .hub-icon { font-size: 1.6rem; }
-  .hub-text-wrap {}
-  .hub-title { font-size: 1rem; font-weight: 700; }
-  .hub-desc { font-size: 0.78rem; opacity: 0.85; margin-top: 2px; }
-
-  .links { display: flex; flex-direction: column; gap: 10px; }
+  a.hub-banner:hover { opacity:0.88; }
+  .hub-icon { font-size:1.6rem; }
+  .hub-title { font-size:1rem; font-weight:700; }
+  .hub-desc { font-size:0.78rem; opacity:0.85; margin-top:2px; }
+  .links { display:flex; flex-direction:column; gap:8px; }
   a.link-card {
-    display: block;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 18px;
-    text-decoration: none;
-    color: var(--text);
-    transition: border-color 0.15s ease;
+    display:block; background:var(--panel); border:1px solid var(--border);
+    border-radius:10px; padding:14px 18px; text-decoration:none; color:var(--text); transition:border-color 0.15s;
   }
-  a.link-card:hover { border-color: var(--accent); }
-  .link-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 2px; }
-  .link-desc { font-size: 0.78rem; color: var(--text-soft); }
-  .section-label {
-    font-size: 0.68rem;
-    font-weight: 600;
-    color: var(--text-soft);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin: 18px 0 8px 2px;
-  }
-  .updated { font-size: 0.72rem; color: var(--text-soft); margin-top: 32px; text-align: right; }
+  a.link-card:hover { border-color:var(--accent); }
+  .link-title { font-size:0.95rem; font-weight:600; margin-bottom:2px; }
+  .link-desc { font-size:0.78rem; color:var(--text-soft); }
+  .section-label { font-size:0.68rem; font-weight:600; color:var(--text-soft); letter-spacing:0.08em; text-transform:uppercase; margin:18px 0 8px 2px; }
+  .updated { font-size:0.72rem; color:var(--text-soft); margin-top:32px; text-align:right; }
 </style>
 </head>
 <body>
@@ -77,56 +39,29 @@
 
   <a class="hub-banner" href="hub/">
     <span class="hub-icon">🗂</span>
-    <div class="hub-text-wrap">
-      <div class="hub-title">hub — 全部まとめて開く</div>
-      <div class="hub-desc">サイドナビ／タブで全ページをタブ切り替えなしで使える</div>
+    <div>
+      <div class="hub-title">hub — まとめて開く</div>
+      <div class="hub-desc">タブ切り替えなしで全ページ使える</div>
     </div>
   </a>
 
   <div class="links">
-    <div class="section-label">記録する</div>
-    <a class="link-card" href="m7/">
-      <div class="link-title">m7 — 今日のスコア</div>
-      <div class="link-desc">スコア（0〜100）＋今日一言。スライダー付き。</div>
-    </a>
-    <a class="link-card" href="m6/">
-      <div class="link-title">m6 — 一行日記</div>
-      <div class="link-desc">日付ごとに一言だけ残す。過去も一覧表示。</div>
-    </a>
-    <a class="link-card" href="m5/">
-      <div class="link-title">m5 — 訪問記録</div>
-      <div class="link-desc">行った場所・日付・メモを積み上げる。</div>
-    </a>
+    <div class="section-label">残す</div>
+    <a class="link-card" href="m7/"><div class="link-title">m7 — 今日の記録</div><div class="link-desc">スコア＋一言メモ。直近履歴付き。</div></a>
+    <a class="link-card" href="m5/"><div class="link-title">m5 — 訪問記録</div><div class="link-desc">行った場所・日付・メモを積み上げる。</div></a>
 
-    <div class="section-label">見る・探る</div>
-    <a class="link-card" href="m1/">
-      <div class="link-title">m1 — スコア履歴</div>
-      <div class="link-desc">バーグラフで過去のスコアを一覧表示。</div>
-    </a>
-    <a class="link-card" href="m4/">
-      <div class="link-title">m4 — 今日のトリビア</div>
-      <div class="link-desc">鉄道・地理・乗り物のちょっと面白い話。</div>
-    </a>
+    <div class="section-label">みる</div>
+    <a class="link-card" href="m1/"><div class="link-title">m1 — スコア履歴</div><div class="link-desc">バーグラフで過去のスコアを一覧。</div></a>
 
-    <div class="section-label">データ管理・実験</div>
-    <a class="link-card" href="main/">
-      <div class="link-title">main — CRUD</div>
-      <div class="link-desc">本番用（ab_items2）</div>
-    </a>
-    <a class="link-card" href="sandbox/">
-      <div class="link-title">sandbox — CRUD</div>
-      <div class="link-desc">実験用（ab_sandbox）</div>
-    </a>
-    <a class="link-card" href="mm/">
-      <div class="link-title">mm — スコア入力（旧）</div>
-      <div class="link-desc">m7に置き換え済み。データは共通。</div>
-    </a>
-    <a class="link-card" href="m3/">
-      <div class="link-title">m3 — Firestoreビューア</div>
-      <div class="link-desc">コレクション構造・データ確認用。</div>
-    </a>
+    <div class="section-label">遊ぶ</div>
+    <a class="link-card" href="m4/"><div class="link-title">m4 — トリビア</div><div class="link-desc">鉄道・地理・乗り物のちょっと面白い話。</div></a>
+
+    <div class="section-label">管理</div>
+    <a class="link-card" href="main/"><div class="link-title">main — CRUD</div><div class="link-desc">本番用（ab_items2）</div></a>
+    <a class="link-card" href="sandbox/"><div class="link-title">sandbox — CRUD</div><div class="link-desc">実験用（ab_sandbox）</div></a>
+    <a class="link-card" href="m3/"><div class="link-title">m3 — Firestoreビューア</div><div class="link-desc">コレクション構造・データ確認用。</div></a>
   </div>
-  <div class="updated">更新: 2026-06-27 01:30</div>
+  <div class="updated">更新: 2026-06-27 02:00</div>
 </div>
 </body>
 </html>
