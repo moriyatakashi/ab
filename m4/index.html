@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>m4 / 今日のトリビア</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .trivia-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 20px;
+    margin-bottom: 16px;
+    min-height: 120px;
+    position: relative;
+  }
+  .trivia-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .trivia-text {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+  .trivia-text.loading {
+    color: var(--text-soft);
+    font-size: 0.9rem;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 14px;
+  }
+  .tag {
+    font-size: 0.72rem;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-weight: 500;
+  }
+  .btn-reload {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.95rem;
+    padding: 14px;
+    border-radius: 10px;
+    margin-top: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    transition: opacity 0.15s;
+  }
+  .btn-reload:hover { opacity: 0.85; }
+  .btn-reload:disabled { opacity: 0.45; cursor: not-allowed; }
+  .meta {
+    font-size: 0.75rem;
+    color: var(--text-soft);
+    margin-top: 10px;
+    text-align: right;
+  }
+  .error-msg {
+    color: #b34444;
+    font-size: 0.85rem;
+    padding: 12px;
+    background: #fdf0f0;
+    border-radius: 8px;
+    border: 1px solid #e8c0c0;
+  }
+  .back-link {
+    display: inline-block;
+    font-size: 0.8rem;
+    color: var(--text-soft);
+    text-decoration: none;
+    margin-bottom: 20px;
+  }
+  .back-link:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="../">← ab トップ</a>
+  <h1>今日のトリビア</h1>
+  <p class="sub">鉄道・地理・乗り物のちょっと面白い話</p>
+
+  <div class="trivia-card" id="card">
+    <div class="trivia-label" id="label">読み込み中...</div>
+    <div class="trivia-text loading" id="text">生成しています...</div>
+    <div class="tag-row" id="tags"></div>
+  </div>
+
+  <div id="error-area"></div>
+  <div class="meta" id="meta"></div>
+
+  <button class="btn-reload" id="btn" onclick="loadTrivia()" disabled>
+    ↺ 別のトリビアを出す
+  </button>
+</div>
+
+<script type="module">
+  const SYSTEM_PROMPT = `あなたは鉄道・地理・乗り物に精通したトリビア専門家です。
+毎回ひとつだけ、マニアックで面白いトリビアをJSON形式で返してください。
+
+必ずこのJSON形式のみ返してください（前置き・コードブロック不要）:
+{
+  "title": "トリビアのカテゴリ・テーマ（例: 近畿の私鉄, 廃線の話, 車両の秘密）",
+  "body": "トリビア本文。2〜4文で、具体的な数字や固有名詞を入れてリアリティを出す。",
+  "tags": ["タグ1", "タグ2", "タグ3"]
+}
+
+テーマ候補（毎回ランダムに選ぶ）:
+- 近畿・大阪周辺の私鉄（近鉄・阪神・南海・京阪・阪急など）
+- JRの意外な事実
+- 廃線・廃駅の話
+- 日本最○○の路線や駅
+- 車両・技術の雑学
+- 駅名の由来・難読駅名
+- 乗り換えや路線の面白い接続
+- 世界の鉄道との比較
+
+重要: 毎回必ず異なるテーマ・内容にする。同じ話を繰り返さない。`;
+
+  async function loadTrivia() {
+    const btn = document.getElementById('btn');
+    const label = document.getElementById('label');
+    const text = document.getElementById('text');
+    const tags = document.getElementById('tags');
+    const meta = document.getElementById('meta');
+    const errorArea = document.getElementById('error-area');
+
+    btn.disabled = true;
+    text.className = 'trivia-text loading';
+    text.textContent = '生成しています...';
+    label.textContent = '読み込み中...';
+    tags.innerHTML = '';
+    errorArea.innerHTML = '';
+    meta.textContent = '';
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          system: SYSTEM_PROMPT,
+          messages: [{
+            role: 'user',
+            content: `今日の日付: ${new Date().toLocaleDateString('ja-JP')} / ランダムシード: ${Math.random().toString(36).slice(2,8)}`
+          }]
+        })
+      });
+
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      const data = await res.json();
+      const raw = data.content.find(b => b.type === 'text')?.text || '';
+
+      let parsed;
+      try {
+        const clean = raw.replace(/```json|```/g, '').trim();
+        parsed = JSON.parse(clean);
+      } catch {
+        throw new Error('JSONパース失敗: ' + raw.slice(0, 80));
+      }
+
+      label.textContent = parsed.title || 'トリビア';
+      text.className = 'trivia-text';
+      text.textContent = parsed.body || '';
+      tags.innerHTML = (parsed.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+      meta.textContent = `生成: ${new Date().toLocaleTimeString('ja-JP')}`;
+    } catch (e) {
+      text.className = 'trivia-text';
+      text.textContent = '';
+      label.textContent = 'エラー';
+      errorArea.innerHTML = `<div class="error-msg">${e.message}</div>`;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  window.loadTrivia = loadTrivia;
+  loadTrivia();
+</script>
+</body>
+</html>
