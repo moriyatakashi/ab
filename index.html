@@ -38,6 +38,15 @@
   a.link-card:hover { border-color: var(--accent); }
   .link-title { font-size: 1rem; font-weight: 600; margin-bottom: 2px; }
   .link-desc { font-size: 0.8rem; color: var(--text-soft); }
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-soft);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 20px 0 8px 2px;
+  }
+  .updated { font-size: 0.72rem; color: var(--text-soft); margin-top: 32px; text-align: right; }
 </style>
 </head>
 <body>
@@ -45,15 +54,37 @@
   <h1>ab</h1>
   <p class="sub">ページ一覧</p>
   <div class="links">
-    <a class="link-card" href="sandbox/">
-      <div class="link-title">sandbox</div>
-      <div class="link-desc">実験用（ab_items）</div>
-    </a>
+    <div class="section-label">データ管理</div>
     <a class="link-card" href="main/">
       <div class="link-title">main</div>
-      <div class="link-desc">本番用（ab_items2）</div>
+      <div class="link-desc">本番用 CRUD（ab_items2）</div>
+    </a>
+    <a class="link-card" href="sandbox/">
+      <div class="link-title">sandbox</div>
+      <div class="link-desc">実験用 CRUD（ab_sandbox）</div>
+    </a>
+
+    <div class="section-label">スコア</div>
+    <a class="link-card" href="mm/">
+      <div class="link-title">mm</div>
+      <div class="link-desc">今日のスコアを入力（0〜100）</div>
+    </a>
+    <a class="link-card" href="m1/">
+      <div class="link-title">m1</div>
+      <div class="link-desc">スコア履歴・バーグラフ</div>
+    </a>
+
+    <div class="section-label">ツール・遊び</div>
+    <a class="link-card" href="m3/">
+      <div class="link-title">m3</div>
+      <div class="link-desc">Firestoreビューア</div>
+    </a>
+    <a class="link-card" href="m4/">
+      <div class="link-title">m4</div>
+      <div class="link-desc">今日のトリビア（鉄道・地理・乗り物）</div>
     </a>
   </div>
+  <div class="updated">更新: 2026-06-27 00:00</div>
 </div>
 </body>
 </html>
