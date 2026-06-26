@@ -6,6 +6,47 @@
 <title>m5 / 訪問記録</title>
 <link rel="stylesheet" href="../style.css">
 <style>
+  .back-link { display:inline-block; font-size:0.8rem; color:var(--text-soft); text-decoration:none; margin-bottom:20px; }
+  .back-link:hover { color:var(--accent); }
+
+  /* 写真アップロードゾーン */
+  .photo-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 28px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .photo-zone:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .photo-zone.dragover { border-color: var(--accent); background: var(--accent-soft); }
+  .photo-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .photo-icon { font-size: 2rem; margin-bottom: 6px; }
+  .photo-label { font-size: 0.88rem; color: var(--text-soft); }
+  .photo-sub { font-size: 0.72rem; color: var(--text-soft); margin-top: 4px; opacity: 0.7; }
+
+  /* 抽出結果 */
+  .exif-result {
+    background: var(--accent-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.82rem;
+    color: var(--text-soft);
+    margin-bottom: 16px;
+    display: none;
+  }
+  .exif-result.show { display: block; }
+  .exif-row { display: flex; gap: 8px; margin-bottom: 4px; }
+  .exif-row:last-child { margin-bottom: 0; }
+  .exif-key { color: var(--accent); font-weight: 600; width: 56px; flex-shrink: 0; }
+  .exif-val { color: var(--text); word-break: break-all; }
+
+  /* 入力フォーム */
   .add-block {
     background: var(--panel);
     border: 1px solid var(--border);
@@ -16,6 +57,7 @@
     flex-direction: column;
     gap: 10px;
   }
+  .field-label { font-size: 0.7rem; font-weight: 600; color: var(--text-soft); margin-bottom: 2px; }
   .add-block input, .add-block textarea {
     width: 100%;
     padding: 10px 12px;
@@ -26,23 +68,24 @@
     color: var(--text);
     font-family: inherit;
   }
-  .add-block input:focus, .add-block textarea:focus {
-    outline: none;
-    border-color: var(--accent);
+  .add-block input:focus, .add-block textarea:focus { outline: none; border-color: var(--accent); }
+  .add-block textarea { resize: none; height: 60px; }
+
+  .coord-row {
+    display: flex; gap: 8px;
   }
-  .add-block textarea { resize: none; height: 64px; }
+  .coord-row input { flex: 1; font-size: 0.8rem; color: var(--text-soft); }
+
   .btn-add {
-    background: var(--accent);
-    color: #fff;
-    padding: 12px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    width: 100%;
+    background: var(--accent); color: #fff;
+    padding: 12px; font-size: 0.9rem; font-weight: 600;
+    border-radius: 8px; border: none; cursor: pointer; width: 100%;
+    transition: opacity 0.15s;
   }
   .btn-add:hover { opacity: 0.85; }
+  .btn-add:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* 一覧 */
   .visit-item {
     background: var(--panel);
     border: 1px solid var(--border);
@@ -53,54 +96,66 @@
     align-items: flex-start;
     gap: 10px;
   }
-  .visit-main { flex: 1; }
-  .visit-place {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 2px;
-  }
-  .visit-date {
-    font-size: 0.75rem;
-    color: var(--accent);
-    margin-bottom: 4px;
-  }
-  .visit-memo {
-    font-size: 0.82rem;
-    color: var(--text-soft);
-    line-height: 1.5;
-  }
+  .visit-main { flex: 1; min-width: 0; }
+  .visit-place { font-size: 1rem; font-weight: 600; margin-bottom: 2px; }
+  .visit-date { font-size: 0.75rem; color: var(--accent); margin-bottom: 4px; }
+  .visit-memo { font-size: 0.82rem; color: var(--text-soft); line-height: 1.5; }
+  .visit-coord { font-size: 0.7rem; color: var(--text-soft); margin-top: 4px; opacity: 0.6; }
   .btn-del {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-soft);
-    font-size: 0.75rem;
-    padding: 4px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    white-space: nowrap;
-    flex-shrink: 0;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-soft); font-size: 0.75rem; padding: 4px 10px;
+    border-radius: 6px; cursor: pointer; white-space: nowrap; flex-shrink: 0;
   }
   .btn-del:hover { border-color: var(--danger); color: var(--danger); }
-  .back-link { display: inline-block; font-size: 0.8rem; color: var(--text-soft); text-decoration: none; margin-bottom: 20px; }
-  .back-link:hover { color: var(--accent); }
+
+  .geocoding-status { font-size: 0.75rem; color: var(--accent); }
 </style>
 </head>
 <body>
 <div class="wrap">
   <a class="back-link" href="../">← ab トップ</a>
   <h1>訪問記録</h1>
-  <p class="sub">行った場所を残す</p>
+  <p class="sub">写真を選ぶと撮影日時・場所を自動入力</p>
 
+  <!-- 写真ドロップゾーン -->
+  <div class="photo-zone" id="photoZone">
+    <input type="file" id="photoInput" accept="image/*">
+    <div class="photo-icon">📷</div>
+    <div class="photo-label">写真を選ぶ / タップ</div>
+    <div class="photo-sub">EXIF情報だけ読みます。写真はどこにも送りません。</div>
+  </div>
+
+  <!-- 抽出結果表示 -->
+  <div class="exif-result" id="exifResult">
+    <div class="exif-row"><span class="exif-key">日時</span><span class="exif-val" id="exifDate">—</span></div>
+    <div class="exif-row"><span class="exif-key">座標</span><span class="exif-val" id="exifCoord">—</span></div>
+    <div class="exif-row"><span class="exif-key">地名</span><span class="exif-val" id="exifPlace"><span class="geocoding-status">取得中...</span></span></div>
+  </div>
+
+  <!-- 入力フォーム -->
   <div class="add-block">
-    <input type="text" id="placeInput" placeholder="場所名（例: 布施駅、道頓堀）" maxlength="60">
-    <input type="date" id="dateInput">
-    <textarea id="memoInput" placeholder="メモ（任意）"></textarea>
+    <div>
+      <div class="field-label">場所名</div>
+      <input type="text" id="placeInput" placeholder="例: 布施駅、道頓堀" maxlength="80">
+    </div>
+    <div>
+      <div class="field-label">日付</div>
+      <input type="date" id="dateInput">
+    </div>
+    <div>
+      <div class="field-label">メモ（任意）</div>
+      <textarea id="memoInput" placeholder="ひとこと"></textarea>
+    </div>
+    <div class="coord-row" id="coordRow" style="display:none;">
+      <input type="text" id="latInput" placeholder="緯度" readonly>
+      <input type="text" id="lngInput" placeholder="経度" readonly>
+    </div>
     <button class="btn-add" id="btnAdd">追加</button>
   </div>
 
   <p class="status" id="status">読み込み中...</p>
   <div class="list" id="list"></div>
-  <p class="empty" id="emptyMsg" style="display:none;">記録はまだありません</p>
+  <p class="empty" id="emptyMsg" style="display:none; text-align:center; color:var(--text-soft); font-size:0.85rem; padding:32px 0;">記録はまだありません</p>
 </div>
 
 <script type="module">
@@ -119,24 +174,198 @@
   // 今日の日付をデフォルト
   const today = new Date();
   document.getElementById("dateInput").value =
-    today.getFullYear() + "-" +
-    String(today.getMonth()+1).padStart(2,"0") + "-" +
-    String(today.getDate()).padStart(2,"0");
+    today.getFullYear() + "-" + String(today.getMonth()+1).padStart(2,"0") + "-" + String(today.getDate()).padStart(2,"0");
 
+  // ── EXIF解析 ──────────────────────────────
+  function readUint16(view, offset, le) { return view.getUint16(offset, le); }
+  function readUint32(view, offset, le) { return view.getUint32(offset, le); }
+
+  function parseExif(buffer) {
+    const view = new DataView(buffer);
+    // JPEGマーカー確認
+    if (view.getUint16(0) !== 0xFFD8) return null;
+
+    let offset = 2;
+    while (offset < view.byteLength - 2) {
+      const marker = view.getUint16(offset);
+      if (marker === 0xFFE1) { // APP1 (EXIF)
+        return parseExifData(view, offset + 4);
+      }
+      if ((marker & 0xFF00) !== 0xFF00) break;
+      offset += 2 + view.getUint16(offset + 2);
+    }
+    return null;
+  }
+
+  function parseExifData(view, start) {
+    const exifHeader = String.fromCharCode(
+      view.getUint8(start), view.getUint8(start+1),
+      view.getUint8(start+2), view.getUint8(start+3)
+    );
+    if (exifHeader !== "Exif") return null;
+
+    const tiffStart = start + 6;
+    const byteOrder = view.getUint16(tiffStart);
+    const le = byteOrder === 0x4949;
+
+    const ifdOffset = readUint32(view, tiffStart + 4, le);
+    const result = {};
+
+    // IFD0を読む
+    readIFD(view, tiffStart, tiffStart + ifdOffset, le, result);
+
+    // ExifIFDサブディレクトリ
+    if (result._exifIFD) {
+      readIFD(view, tiffStart, tiffStart + result._exifIFD, le, result);
+    }
+    // GPS IFD
+    if (result._gpsIFD) {
+      const gps = {};
+      readIFD(view, tiffStart, tiffStart + result._gpsIFD, le, gps);
+      result.gps = gps;
+    }
+
+    return result;
+  }
+
+  function readIFD(view, tiffStart, ifdOffset, le, result) {
+    const count = readUint16(view, ifdOffset, le);
+    for (let i = 0; i < count; i++) {
+      const entry = ifdOffset + 2 + i * 12;
+      const tag   = readUint16(view, entry, le);
+      const type  = readUint16(view, entry + 2, le);
+      const num   = readUint32(view, entry + 4, le);
+      const valOff = entry + 8;
+
+      if (tag === 0x8769) { result._exifIFD = readUint32(view, valOff, le); continue; }
+      if (tag === 0x8825) { result._gpsIFD  = readUint32(view, valOff, le); continue; }
+
+      // 撮影日時
+      if (tag === 0x9003 || tag === 0x0132) {
+        const off = num > 4 ? tiffStart + readUint32(view, valOff, le) : valOff;
+        let s = "";
+        for (let j = 0; j < num - 1; j++) s += String.fromCharCode(view.getUint8(off + j));
+        result.dateTime = s;
+      }
+
+      // GPS系
+      if (tag === 0x0001) result.GPSLatitudeRef  = String.fromCharCode(view.getUint8(valOff));
+      if (tag === 0x0003) result.GPSLongitudeRef = String.fromCharCode(view.getUint8(valOff));
+      if (tag === 0x0002 || tag === 0x0004) {
+        const off = tiffStart + readUint32(view, valOff, le);
+        const coords = [];
+        for (let j = 0; j < 3; j++) {
+          const n = readUint32(view, off + j*8, le);
+          const d = readUint32(view, off + j*8 + 4, le);
+          coords.push(d === 0 ? 0 : n / d);
+        }
+        if (tag === 0x0002) result.GPSLatitude  = coords;
+        else                 result.GPSLongitude = coords;
+      }
+    }
+  }
+
+  function dmsToDecimal(dms, ref) {
+    if (!dms) return null;
+    const dec = dms[0] + dms[1]/60 + dms[2]/3600;
+    return (ref === "S" || ref === "W") ? -dec : dec;
+  }
+
+  function parseExifDate(s) {
+    // "2026:06:27 07:30:00" → "2026-06-27"
+    if (!s) return null;
+    const m = s.match(/^(\d{4}):(\d{2}):(\d{2})/);
+    return m ? `${m[1]}-${m[2]}-${m[3]}` : null;
+  }
+
+  // ── Nominatim Reverse Geocoding ──
+  async function reverseGeocode(lat, lng) {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ja`;
+    const res = await fetch(url, { headers: { "User-Agent": "ab-roreki/1.0" } });
+    if (!res.ok) throw new Error("Geocoding失敗");
+    const data = await res.json();
+    // 市区町村＋町名あたりを返す
+    const a = data.address || {};
+    const place = [
+      a.city || a.town || a.village || a.county || "",
+      a.suburb || a.neighbourhood || a.quarter || ""
+    ].filter(Boolean).join(" ") || data.display_name?.split(",")[0] || "";
+    return { place, display: data.display_name };
+  }
+
+  // ── ファイル選択 ──
+  document.getElementById("photoInput").addEventListener("change", async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const exifResult = document.getElementById("exifResult");
+    exifResult.classList.add("show");
+    document.getElementById("exifDate").textContent = "解析中...";
+    document.getElementById("exifCoord").textContent = "解析中...";
+    document.getElementById("exifPlace").innerHTML = '<span class="geocoding-status">解析中...</span>';
+
+    const buffer = await file.arrayBuffer();
+    const exif = parseExif(buffer);
+
+    if (!exif) {
+      document.getElementById("exifDate").textContent = "EXIFなし";
+      document.getElementById("exifCoord").textContent = "EXIFなし";
+      document.getElementById("exifPlace").textContent = "取得不可";
+      return;
+    }
+
+    // 日時
+    const dateStr = parseExifDate(exif.dateTime);
+    if (dateStr) {
+      document.getElementById("exifDate").textContent = exif.dateTime;
+      document.getElementById("dateInput").value = dateStr;
+    } else {
+      document.getElementById("exifDate").textContent = "日時情報なし";
+    }
+
+    // GPS
+    const gps = exif.gps || exif;
+    const lat = dmsToDecimal(gps.GPSLatitude,  gps.GPSLatitudeRef);
+    const lng = dmsToDecimal(gps.GPSLongitude, gps.GPSLongitudeRef);
+
+    if (lat !== null && lng !== null) {
+      const latR = Math.round(lat * 10000) / 10000;
+      const lngR = Math.round(lng * 10000) / 10000;
+      document.getElementById("exifCoord").textContent = `${latR}, ${lngR}`;
+      document.getElementById("latInput").value = latR;
+      document.getElementById("lngInput").value = lngR;
+      document.getElementById("coordRow").style.display = "flex";
+
+      // Reverse geocoding
+      try {
+        const { place } = await reverseGeocode(lat, lng);
+        document.getElementById("exifPlace").textContent = place || "地名取得失敗";
+        if (place) document.getElementById("placeInput").value = place;
+      } catch(e) {
+        document.getElementById("exifPlace").textContent = "地名取得失敗: " + e.message;
+      }
+    } else {
+      document.getElementById("exifCoord").textContent = "GPS情報なし";
+      document.getElementById("exifPlace").textContent = "GPS情報なし";
+    }
+  });
+
+  // ── 一覧表示 ──
   function formatDate(s) {
     const [y,m,d] = s.split("-");
     return `${y}年${parseInt(m)}月${parseInt(d)}日`;
   }
 
-  function renderItem(id, place, date, memo) {
+  function renderItem(id, data) {
     const div = document.createElement("div");
     div.className = "visit-item";
-    div.dataset.id = id;
+    const hasCoord = data.lat && data.lng;
     div.innerHTML = `
       <div class="visit-main">
-        <div class="visit-place">${place}</div>
-        <div class="visit-date">${formatDate(date)}</div>
-        ${memo ? `<div class="visit-memo">${memo}</div>` : ""}
+        <div class="visit-place">${data.place}</div>
+        <div class="visit-date">${formatDate(data.date)}</div>
+        ${data.memo ? `<div class="visit-memo">${data.memo}</div>` : ""}
+        ${hasCoord ? `<div class="visit-coord">📍 ${data.lat}, ${data.lng}</div>` : ""}
       </div>
       <button class="btn-del" onclick="del('${id}', this)">削除</button>
     `;
@@ -155,10 +384,7 @@
         return;
       }
       document.getElementById("emptyMsg").style.display = "none";
-      snap.forEach(d => {
-        const { place, date, memo } = d.data();
-        list.appendChild(renderItem(d.id, place, date, memo||""));
-      });
+      snap.forEach(d => list.appendChild(renderItem(d.id, d.data())));
       document.getElementById("status").textContent = `${snap.size}件`;
     } catch(e) {
       document.getElementById("status").textContent = "エラー: " + e.message;
@@ -169,14 +395,27 @@
     const place = document.getElementById("placeInput").value.trim();
     const date  = document.getElementById("dateInput").value;
     const memo  = document.getElementById("memoInput").value.trim();
+    const lat   = document.getElementById("latInput").value;
+    const lng   = document.getElementById("lngInput").value;
     if (!place) { document.getElementById("status").textContent = "場所名を入力してください"; return; }
-    if (!date)  { document.getElementById("status").textContent = "日付を入力してください"; return; }
+    if (!date)  { document.getElementById("status").textContent = "日付を選んでください"; return; }
     document.getElementById("status").textContent = "追加中...";
     try {
-      await addDoc(collection(db, COL), { place, date, memo, createdAt: new Date().toISOString() });
+      await addDoc(collection(db, COL), {
+        place, date, memo,
+        lat: lat ? Number(lat) : null,
+        lng: lng ? Number(lng) : null,
+        createdAt: new Date().toISOString()
+      });
+      // リセット
       document.getElementById("placeInput").value = "";
       document.getElementById("memoInput").value = "";
-      document.getElementById("status").textContent = "追加しました";
+      document.getElementById("latInput").value = "";
+      document.getElementById("lngInput").value = "";
+      document.getElementById("coordRow").style.display = "none";
+      document.getElementById("exifResult").classList.remove("show");
+      document.getElementById("photoInput").value = "";
+      document.getElementById("status").textContent = "追加しました ✓";
       await load();
     } catch(e) {
       document.getElementById("status").textContent = "エラー: " + e.message;
@@ -188,12 +427,10 @@
     try {
       await deleteDoc(doc(db, COL, id));
       btn.closest(".visit-item").remove();
-      const remaining = document.getElementById("list").children.length;
-      document.getElementById("status").textContent = `${remaining}件`;
-      if (remaining === 0) document.getElementById("emptyMsg").style.display = "block";
-    } catch(e) {
-      alert("削除エラー: " + e.message);
-    }
+      const rem = document.getElementById("list").children.length;
+      document.getElementById("status").textContent = `${rem}件`;
+      if (rem === 0) document.getElementById("emptyMsg").style.display = "block";
+    } catch(e) { alert("削除エラー: " + e.message); }
   };
 
   load();
