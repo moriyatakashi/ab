@@ -12,31 +12,18 @@
     border-radius: 14px;
     padding: 24px 20px;
     margin-bottom: 16px;
-    min-height: 120px;
-    position: relative;
   }
   .trivia-label {
     font-size: 0.7rem;
     font-weight: 600;
     color: var(--accent);
     letter-spacing: 0.08em;
-    text-transform: uppercase;
     margin-bottom: 10px;
   }
   .trivia-text {
     font-size: 1rem;
-    line-height: 1.75;
+    line-height: 1.8;
     color: var(--text);
-    white-space: pre-wrap;
-  }
-  .trivia-text.loading {
-    color: var(--text-soft);
-    font-size: 0.9rem;
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
   }
   .tag-row {
     display: flex;
@@ -67,20 +54,16 @@
     transition: opacity 0.15s;
   }
   .btn-reload:hover { opacity: 0.85; }
-  .btn-reload:disabled { opacity: 0.45; cursor: not-allowed; }
   .meta {
     font-size: 0.75rem;
     color: var(--text-soft);
     margin-top: 10px;
     text-align: right;
   }
-  .error-msg {
-    color: #b34444;
-    font-size: 0.85rem;
-    padding: 12px;
-    background: #fdf0f0;
-    border-radius: 8px;
-    border: 1px solid #e8c0c0;
+  .counter {
+    font-size: 0.75rem;
+    color: var(--text-soft);
+    margin-bottom: 12px;
   }
   .back-link {
     display: inline-block;
@@ -98,103 +81,152 @@
   <h1>今日のトリビア</h1>
   <p class="sub">鉄道・地理・乗り物のちょっと面白い話</p>
 
-  <div class="trivia-card" id="card">
-    <div class="trivia-label" id="label">読み込み中...</div>
-    <div class="trivia-text loading" id="text">生成しています...</div>
+  <div class="trivia-card">
+    <div class="trivia-label" id="label"></div>
+    <div class="trivia-text" id="text"></div>
     <div class="tag-row" id="tags"></div>
   </div>
 
-  <div id="error-area"></div>
   <div class="meta" id="meta"></div>
-
-  <button class="btn-reload" id="btn" onclick="loadTrivia()" disabled>
-    ↺ 別のトリビアを出す
-  </button>
+  <button class="btn-reload" id="btn" onclick="next()">↺ 別のトリビアを出す</button>
+  <div class="counter" id="counter"></div>
 </div>
 
-<script type="module">
-  const SYSTEM_PROMPT = `あなたは鉄道・地理・乗り物に精通したトリビア専門家です。
-毎回ひとつだけ、マニアックで面白いトリビアをJSON形式で返してください。
+<script>
+const TRIVIA = [
+  {
+    "title": "近鉄の意外な記録",
+    "body": "近畿日本鉄道は路線総延長約501kmで、日本の私鉄で最長を誇る。東は名古屋、西は大阪難波・神戸三宮（阪神経由）、南は吉野、東南は賢島まで伸び、1社の路線だけで3府4県をカバーする。新幹線のない奈良県を通る唯一の鉄道でもある。",
+    "tags": [
+      "近鉄",
+      "日本最長",
+      "私鉄"
+    ]
+  },
+  {
+    "title": "難読駅名の世界",
+    "body": "JR和歌山線の「下兵庫」は「しもひょうご」ではなく「しもひょうご」……ではなく「しもひょうご」と読む。一方、近鉄吉野線の「薬水」は「くすりみず」ではなく「やくすい」。大阪市営地下鉄時代から「喜連瓜破」（きれうりわり）は初見で読める人がほぼいない難読駅名として知られる。",
+    "tags": [
+      "難読駅名",
+      "近鉄",
+      "大阪メトロ"
+    ]
+  },
+  {
+    "title": "布施駅の隠れた事実",
+    "body": "近鉄大阪線・奈良線が交差する布施駅は、1日の乗降客数が約6万人を超える近鉄の主要駅のひとつ。かつて大阪線と奈良線のホームは別改札だったが、1970年の大阪万博に合わせた整備で統合された。東大阪市の中心駅でありながら、駅名の「布施」は市名より先に存在した地名に由来する。",
+    "tags": [
+      "布施駅",
+      "近鉄",
+      "東大阪"
+    ]
+  },
+  {
+    "title": "四国の鉄道密度",
+    "body": "四国4県を走るJR四国の路線は全8線あるが、高知県内では土讃線1本が県を縦断するだけで、他県からの直通列車も含め1日の本数が一桁台の区間が複数存在する。高知～窪川間は特急「あしずり」でも2時間超かかり、距離感が本州とは別次元。四国の鉄道旅は88箇所巡礼と同じく「時間を忘れる」体験になる。",
+    "tags": [
+      "JR四国",
+      "土讃線",
+      "高知"
+    ]
+  },
+  {
+    "title": "新幹線の車内清掃7分の秘密",
+    "body": "東海道新幹線の折り返し清掃は「新幹線劇場」とも呼ばれ、わずか7分で1編成16両・1323席を清掃する。作業員は乗客が降りた瞬間に乗り込み、全座席の回転・ゴミ回収・テーブル拭きを分単位で完了させる。この仕組みはハーバードビジネススクールの事例研究にも取り上げられた。",
+    "tags": [
+      "新幹線",
+      "東海道",
+      "清掃"
+    ]
+  },
+  {
+    "title": "阪堺電車とチン電",
+    "body": "大阪唯一の路面電車・阪堺電気軌道は1911年開業で、現役の車両の中に製造から60年以上経過した「モ161形」が在籍する。かつてはチンチンと鐘を鳴らして走ったことから「チン電」と呼ばれ、沿線住民に親しまれてきた。天王寺～我孫子道間の一部区間は1kmあたりの運賃が全国でもトップクラスに安い。",
+    "tags": [
+      "阪堺電車",
+      "路面電車",
+      "大阪"
+    ]
+  },
+  {
+    "title": "廃線跡が遊歩道に",
+    "body": "大阪府内にはかつて多くの貨物専用線が走っており、現在その多くが自転車道や遊歩道に転用されている。城東貨物線の一部は「おおさか東線」として2019年に全線開業したが、廃止された片町線の旧貨物支線跡は緑道として残る。廃線跡を歩くと、カーブ半径や築堤の形状から当時の列車の動きが想像できる。",
+    "tags": [
+      "廃線",
+      "大阪",
+      "おおさか東線"
+    ]
+  },
+  {
+    "title": "日本一短い鉄道路線",
+    "body": "芝山鉄道（千葉県）の営業路線はわずか2.2kmで、駅数も2駅（東成田・芝山千代田）のみ。成田空港の騒音対策として地元への見返りに建設された経緯を持ち、1日の利用者数も非常に少ない。一方で日本一長い駅名は「南阿蘇水の生まれる里白水高原駅」（熊本）で15文字ある。",
+    "tags": [
+      "芝山鉄道",
+      "日本最短",
+      "記録"
+    ]
+  },
+  {
+    "title": "スイスの登山鉄道と近鉄の共通点",
+    "body": "スイス・ユングフラウ鉄道（1912年開業）は世界最高所の鉄道駅を持つことで有名だが、架線電圧や急勾配対応技術は日本の近鉄大阪線とは対照的なアプローチをとる。近鉄大阪線の榛原～室生口大野間には33‰（パーミル）の急勾配があり、私鉄の幹線としては国内屈指の険しさを誇る。",
+    "tags": [
+      "近鉄大阪線",
+      "急勾配",
+      "世界比較"
+    ]
+  },
+  {
+    "title": "京阪電車の2階建て車両",
+    "body": "京阪特急「プレミアムカー」に先駆け、京阪は1992年から「スーパーカー」として2階建て車両を特急に連結していた。私鉄の通勤・近距離特急に2階建て車両を本格導入したのは当時としては画期的だった。現在の8000系は2階建て車両を含む構成で、淀屋橋〜出町柳間を約1時間で結ぶ。",
+    "tags": [
+      "京阪電車",
+      "2階建て",
+      "特急"
+    ]
+  },
+  {
+    "title": "南海電鉄と四国の意外なつながり",
+    "body": "南海電鉄はかつて「南海四国ライン」として鉄道連絡船を運航し、難波から和歌山港経由で四国・徳島へのルートを担っていた。現在も南海フェリーが和歌山港〜徳島港を結ぶが、鉄道との一体運用は縮小している。お遍路の出発点・徳島と大阪を最短で結ぶルートとして、今も一定の需要がある。",
+    "tags": [
+      "南海電鉄",
+      "フェリー",
+      "四国"
+    ]
+  },
+  {
+    "title": "駅のホーム番号の謎",
+    "body": "大阪駅（JR）のホームは1〜11番線まであるが、欠番がなく連番に見えて実は「10番線」が存在しない。隣接する梅田貨物線の関係で番線割り当てに変則が生じたためだ。同様に、新幹線と在来線が同じ駅を共有する場合、在来線と新幹線で番線の数え方がリセットされる駅も多い。",
+    "tags": [
+      "大阪駅",
+      "ホーム番線",
+      "雑学"
+    ]
+  }
+];
 
-必ずこのJSON形式のみ返してください（前置き・コードブロック不要）:
-{
-  "title": "トリビアのカテゴリ・テーマ（例: 近畿の私鉄, 廃線の話, 車両の秘密）",
-  "body": "トリビア本文。2〜4文で、具体的な数字や固有名詞を入れてリアリティを出す。",
-  "tags": ["タグ1", "タグ2", "タグ3"]
+let shown = [];
+let current = -1;
+
+function pick() {
+  if (shown.length >= TRIVIA.length) shown = [];
+  let idx;
+  do { idx = Math.floor(Math.random() * TRIVIA.length); } while (shown.includes(idx));
+  shown.push(idx);
+  current = idx;
+  return TRIVIA[idx];
 }
 
-テーマ候補（毎回ランダムに選ぶ）:
-- 近畿・大阪周辺の私鉄（近鉄・阪神・南海・京阪・阪急など）
-- JRの意外な事実
-- 廃線・廃駅の話
-- 日本最○○の路線や駅
-- 車両・技術の雑学
-- 駅名の由来・難読駅名
-- 乗り換えや路線の面白い接続
-- 世界の鉄道との比較
+function render(t) {
+  document.getElementById('label').textContent = t.title;
+  document.getElementById('text').textContent = t.body;
+  document.getElementById('tags').innerHTML = (t.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('');
+  document.getElementById('meta').textContent = new Date().toLocaleTimeString('ja-JP') + ' 表示';
+  document.getElementById('counter').textContent = `${shown.length} / ${TRIVIA.length} 件目`;
+}
 
-重要: 毎回必ず異なるテーマ・内容にする。同じ話を繰り返さない。`;
+function next() { render(pick()); }
 
-  async function loadTrivia() {
-    const btn = document.getElementById('btn');
-    const label = document.getElementById('label');
-    const text = document.getElementById('text');
-    const tags = document.getElementById('tags');
-    const meta = document.getElementById('meta');
-    const errorArea = document.getElementById('error-area');
-
-    btn.disabled = true;
-    text.className = 'trivia-text loading';
-    text.textContent = '生成しています...';
-    label.textContent = '読み込み中...';
-    tags.innerHTML = '';
-    errorArea.innerHTML = '';
-    meta.textContent = '';
-
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1000,
-          system: SYSTEM_PROMPT,
-          messages: [{
-            role: 'user',
-            content: `今日の日付: ${new Date().toLocaleDateString('ja-JP')} / ランダムシード: ${Math.random().toString(36).slice(2,8)}`
-          }]
-        })
-      });
-
-      if (!res.ok) throw new Error(`API error: ${res.status}`);
-      const data = await res.json();
-      const raw = data.content.find(b => b.type === 'text')?.text || '';
-
-      let parsed;
-      try {
-        const clean = raw.replace(/```json|```/g, '').trim();
-        parsed = JSON.parse(clean);
-      } catch {
-        throw new Error('JSONパース失敗: ' + raw.slice(0, 80));
-      }
-
-      label.textContent = parsed.title || 'トリビア';
-      text.className = 'trivia-text';
-      text.textContent = parsed.body || '';
-      tags.innerHTML = (parsed.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
-      meta.textContent = `生成: ${new Date().toLocaleTimeString('ja-JP')}`;
-    } catch (e) {
-      text.className = 'trivia-text';
-      text.textContent = '';
-      label.textContent = 'エラー';
-      errorArea.innerHTML = `<div class="error-msg">${e.message}</div>`;
-    } finally {
-      btn.disabled = false;
-    }
-  }
-
-  window.loadTrivia = loadTrivia;
-  loadTrivia();
+next();
 </script>
 </body>
 </html>
