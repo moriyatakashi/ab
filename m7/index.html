@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>m7 / 今日のスコア</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 24px 16px 80px;
+  }
+  .inner { width: 100%; max-width: 340px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .back-link { align-self: flex-start; font-size: 0.8rem; color: var(--text-soft); text-decoration: none; }
+  .back-link:hover { color: var(--accent); }
+  .today-label { font-size: 1.5rem; font-weight: 700; color: var(--accent); letter-spacing: 0.03em; }
+  .current-score { font-size: 0.85rem; color: var(--text-soft); min-height: 18px; }
+
+  /* スコア入力 */
+  .score-wrap { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  input[type="number"] {
+    width: 100%;
+    font-size: 3rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 14px;
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    background: var(--panel);
+    color: var(--accent);
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  input[type="number"]:focus { outline: none; border-color: var(--accent); }
+
+  /* スライダー */
+  .slider-wrap { width: 100%; }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    height: 6px;
+  }
+  .slider-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-soft); margin-top: 2px; }
+
+  /* 一言入力 */
+  .note-wrap { width: 100%; }
+  .note-label { font-size: 0.72rem; color: var(--text-soft); margin-bottom: 6px; }
+  textarea {
+    width: 100%;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--panel);
+    color: var(--text);
+    font-family: inherit;
+    resize: none;
+    height: 70px;
+  }
+  textarea:focus { outline: none; border-color: var(--accent); }
+
+  /* ボタン */
+  .buttons { display: flex; gap: 10px; width: 100%; }
+  .btn-submit {
+    flex: 1; background: var(--accent); color: #fff;
+    font-size: 1rem; font-weight: 700; padding: 14px;
+    border-radius: 10px; border: none; cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-submit:hover { opacity: 0.85; }
+  .btn-cancel {
+    background: var(--panel); color: var(--danger);
+    border: 1px solid var(--danger);
+    font-size: 0.85rem; font-weight: 500; padding: 14px 16px;
+    border-radius: 10px; cursor: pointer; transition: opacity 0.15s;
+  }
+  .btn-cancel:hover { opacity: 0.75; }
+  .status { font-size: 0.78rem; color: var(--text-soft); min-height: 16px; }
+
+  /* 履歴プレビュー */
+  .history-wrap { width: 100%; margin-top: 8px; }
+  .history-label { font-size: 0.7rem; font-weight: 600; color: var(--text-soft); letter-spacing: 0.06em; margin-bottom: 8px; }
+  .hist-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+  }
+  .hist-item:last-child { border-bottom: none; }
+  .hist-date { font-size: 0.75rem; color: var(--text-soft); white-space: nowrap; width: 80px; flex-shrink: 0; }
+  .hist-bar-wrap { flex: 1; height: 5px; background: var(--accent-soft); border-radius: 3px; overflow: hidden; }
+  .hist-bar { height: 100%; background: var(--accent); border-radius: 3px; }
+  .hist-score { font-size: 0.85rem; font-weight: 700; color: var(--accent); width: 28px; text-align: right; flex-shrink: 0; }
+  .hist-note { font-size: 0.72rem; color: var(--text-soft); width: 100%; padding-left: 90px; padding-bottom: 4px; line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="inner">
+  <a class="back-link" href="../">← ab トップ</a>
+  <div class="today-label" id="todayLabel"></div>
+  <div class="current-score" id="currentScore"></div>
+
+  <div class="score-wrap">
+    <input type="number" id="scoreInput" min="0" max="100" placeholder="—">
+    <div class="slider-wrap">
+      <input type="range" id="scoreSlider" min="0" max="100" value="50">
+      <div class="slider-labels"><span>0</span><span>50</span><span>100</span></div>
+    </div>
+  </div>
+
+  <div class="note-wrap">
+    <div class="note-label">今日一言（任意）</div>
+    <textarea id="noteInput" placeholder="今日どんな日だった？"></textarea>
+  </div>
+
+  <div class="buttons">
+    <button class="btn-submit" id="btnSubmit">送信</button>
+    <button class="btn-cancel" id="btnCancel">取消</button>
+  </div>
+  <div class="status" id="status"></div>
+
+  <div class="history-wrap">
+    <div class="history-label">直近の記録</div>
+    <div id="histList"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, orderBy, query, limit }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
+    authDomain: "ab01-9f35a.firebaseapp.com",
+    projectId: "ab01-9f35a"
+  });
+  const db = getFirestore(app);
+
+  const now = new Date();
+  const dateStr = now.getFullYear() + "-" +
+    String(now.getMonth()+1).padStart(2,"0") + "-" +
+    String(now.getDate()).padStart(2,"0");
+
+  document.getElementById("todayLabel").textContent =
+    now.getFullYear() + "年" + (now.getMonth()+1) + "月" + now.getDate() + "日";
+
+  // スライダー⇔数値 同期
+  const numInput = document.getElementById("scoreInput");
+  const slider   = document.getElementById("scoreSlider");
+  numInput.addEventListener("input", () => { if(numInput.value !== "") slider.value = numInput.value; });
+  slider.addEventListener("input", () => { numInput.value = slider.value; });
+
+  function formatDate(s) {
+    const [y,m,d] = s.split("-");
+    return `${parseInt(m)}/${parseInt(d)}`;
+  }
+
+  async function load() {
+    try {
+      // ab_items2 から日付形式のドキュメントを取得
+      const snap = await getDocs(collection(db, "ab_items2"));
+      const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+      const items = [];
+      snap.forEach(d => {
+        const data = d.data();
+        const id = d.id;
+        if (DATE_RE.test(id) && !isNaN(Number(data.col2)) && Number(data.col2) >= 0 && Number(data.col2) <= 100) {
+          items.push({ date: id, score: Number(data.col2), note: data.col3 || "" });
+        }
+      });
+      items.sort((a,b) => b.date.localeCompare(a.date));
+
+      // 今日分をフォーム初期値に
+      const todayItem = items.find(i => i.date === dateStr);
+      if (todayItem) {
+        numInput.value = todayItem.score;
+        slider.value  = todayItem.score;
+        document.getElementById("noteInput").value = todayItem.note;
+        document.getElementById("currentScore").textContent = `記録済: ${todayItem.score}点`;
+      } else {
+        document.getElementById("currentScore").textContent = "本日の記録はまだありません";
+      }
+
+      // 直近7件（今日含む）を履歴表示
+      const hist = document.getElementById("histList");
+      hist.innerHTML = "";
+      items.slice(0, 7).forEach(({ date, score, note }) => {
+        const row = document.createElement("div");
+        const isToday = date === dateStr;
+        row.innerHTML = `
+          <div class="hist-item">
+            <span class="hist-date" style="${isToday ? 'color:var(--accent);font-weight:700;' : ''}">${formatDate(date)}</span>
+            <div class="hist-bar-wrap"><div class="hist-bar" style="width:${score}%"></div></div>
+            <span class="hist-score">${score}</span>
+          </div>
+          ${note ? `<div class="hist-note">${note}</div>` : ""}
+        `;
+        hist.appendChild(row);
+      });
+    } catch(e) {
+      document.getElementById("status").textContent = "読込エラー: " + e.message;
+    }
+  }
+
+  document.getElementById("btnSubmit").addEventListener("click", async () => {
+    const val = parseInt(numInput.value);
+    if (isNaN(val) || val < 0 || val > 100) {
+      document.getElementById("status").textContent = "0〜100の数字を入力してください";
+      return;
+    }
+    const note = document.getElementById("noteInput").value.trim();
+    document.getElementById("status").textContent = "送信中...";
+    try {
+      await setDoc(doc(db, "ab_items2", dateStr), {
+        col1: dateStr, col2: String(val), col3: note, createdAt: new Date().toISOString()
+      });
+      document.getElementById("currentScore").textContent = `記録済: ${val}点`;
+      document.getElementById("status").textContent = "送信しました ✓";
+      await load();
+    } catch(e) {
+      document.getElementById("status").textContent = "エラー: " + e.message;
+    }
+  });
+
+  document.getElementById("btnCancel").addEventListener("click", async () => {
+    if (!confirm("今日の記録を削除しますか？")) return;
+    try {
+      await deleteDoc(doc(db, "ab_items2", dateStr));
+      numInput.value = "";
+      slider.value = 50;
+      document.getElementById("noteInput").value = "";
+      document.getElementById("currentScore").textContent = "本日の記録はまだありません";
+      document.getElementById("status").textContent = "削除しました";
+      await load();
+    } catch(e) {
+      document.getElementById("status").textContent = "エラー: " + e.message;
+    }
+  });
+
+  load();
+</script>
+</body>
+</html>
