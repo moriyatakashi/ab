@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>m6 / 一行日記</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .today-block {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  .today-date {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .today-block textarea {
+    width: 100%;
+    font-size: 1rem;
+    line-height: 1.7;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    resize: none;
+    height: 80px;
+  }
+  .today-block textarea:focus { outline: none; border-color: var(--accent); }
+  .today-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .btn-save {
+    flex: 1;
+    background: var(--accent);
+    color: #fff;
+    padding: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-save:hover { opacity: 0.85; }
+  .btn-del-today {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-soft);
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .btn-del-today:hover { border-color: var(--danger); color: var(--danger); }
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-soft);
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+  .diary-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+  }
+  .diary-date {
+    font-size: 0.75rem;
+    color: var(--accent);
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+  .diary-text {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--text);
+    flex: 1;
+  }
+  .back-link { display: inline-block; font-size: 0.8rem; color: var(--text-soft); text-decoration: none; margin-bottom: 20px; }
+  .back-link:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="../">← ab トップ</a>
+  <h1>一行日記</h1>
+  <p class="sub">今日のことを一言</p>
+
+  <div class="today-block">
+    <div class="today-date" id="todayLabel"></div>
+    <textarea id="textInput" placeholder="今日のこと、一言で…"></textarea>
+    <div class="today-actions">
+      <button class="btn-save" id="btnSave">保存</button>
+      <button class="btn-del-today" id="btnDel">削除</button>
+    </div>
+  </div>
+
+  <p class="status" id="status">読み込み中...</p>
+  <div class="section-label" id="histLabel" style="display:none;">過去の記録</div>
+  <div class="list" id="list"></div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, orderBy, query }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
+    authDomain: "ab01-9f35a.firebaseapp.com",
+    projectId: "ab01-9f35a"
+  });
+  const db = getFirestore(app);
+  const COL = "ab_diary";
+
+  const now = new Date();
+  const dateStr = now.getFullYear() + "-" +
+    String(now.getMonth()+1).padStart(2,"0") + "-" +
+    String(now.getDate()).padStart(2,"0");
+
+  document.getElementById("todayLabel").textContent =
+    now.getFullYear() + "年" + (now.getMonth()+1) + "月" + now.getDate() + "日（今日）";
+
+  function formatDate(s) {
+    const [y,m,d] = s.split("-");
+    return `${y}年${parseInt(m)}月${parseInt(d)}日`;
+  }
+
+  async function load() {
+    try {
+      const q = query(collection(db, COL), orderBy("date","desc"));
+      const snap = await getDocs(q);
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+      let pastCount = 0;
+
+      snap.forEach(d => {
+        const { date, text } = d.data();
+        if (date === dateStr) {
+          document.getElementById("textInput").value = text || "";
+          return;
+        }
+        pastCount++;
+        const div = document.createElement("div");
+        div.className = "diary-item";
+        div.innerHTML = `
+          <span class="diary-date">${formatDate(date)}</span>
+          <span class="diary-text">${text}</span>
+        `;
+        list.appendChild(div);
+      });
+
+      document.getElementById("histLabel").style.display = pastCount > 0 ? "block" : "none";
+      document.getElementById("status").textContent = "";
+    } catch(e) {
+      document.getElementById("status").textContent = "エラー: " + e.message;
+    }
+  }
+
+  document.getElementById("btnSave").addEventListener("click", async () => {
+    const text = document.getElementById("textInput").value.trim();
+    if (!text) { document.getElementById("status").textContent = "何か入力してください"; return; }
+    document.getElementById("status").textContent = "保存中...";
+    try {
+      await setDoc(doc(db, COL, dateStr), { date: dateStr, text, updatedAt: new Date().toISOString() });
+      document.getElementById("status").textContent = "保存しました";
+      await load();
+    } catch(e) {
+      document.getElementById("status").textContent = "エラー: " + e.message;
+    }
+  });
+
+  document.getElementById("btnDel").addEventListener("click", async () => {
+    if (!confirm("今日の日記を削除しますか？")) return;
+    try {
+      await deleteDoc(doc(db, COL, dateStr));
+      document.getElementById("textInput").value = "";
+      document.getElementById("status").textContent = "削除しました";
+    } catch(e) {
+      document.getElementById("status").textContent = "エラー: " + e.message;
+    }
+  });
+
+  load();
+</script>
+</body>
+</html>
