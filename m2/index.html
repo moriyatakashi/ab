@@ -592,15 +592,17 @@
     const emptyMsg = document.getElementById("emptyMsg");
     listEl.innerHTML = "";
 
-    const [scoreSnap, visitSnap, checkSnap] = await Promise.all([
+    const [scoreSnap, visitSnap] = await Promise.all([
       getDocs(collection(db, SCORE_COL)),
-      getDocs(query(collection(db, VISIT_COL), orderBy("createdAt", "desc"))),
-      getDocs(collection(db, CHECK_COL))
+      getDocs(query(collection(db, VISIT_COL), orderBy("createdAt", "desc")))
     ]);
 
-    // チェックマップ
+    // チェックマップ（失敗してもスコア・訪問には影響させない）
     const checkMap = {};
-    checkSnap.forEach(d => { checkMap[d.id] = d.data(); });
+    try {
+      const checkSnap = await getDocs(collection(db, CHECK_COL));
+      checkSnap.forEach(d => { checkMap[d.id] = d.data(); });
+    } catch(e) { console.warn("checkMap load failed:", e); }
 
     // スコアマップ
     const scoreMap = {};
