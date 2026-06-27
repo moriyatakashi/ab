@@ -157,7 +157,7 @@ TRUNCATE ab_sandbox
     <button class="sql-run" id="sqlRun">▶ 実行</button>
     <div class="sql-log" id="sqlLog"></div>
   </div>
-  <p style="font-size:0.72rem;color:var(--text-soft);text-align:right;margin-top:24px;">更新: 2026-06-28 08:53</p>
+  <p style="font-size:0.72rem;color:var(--text-soft);text-align:right;margin-top:24px;">更新: 2026-06-28 08:55</p>
 </div>
 
 <script>alert("[A-0] 通常script OK");</script>
@@ -325,6 +325,7 @@ TRUNCATE ab_sandbox
         colDiv.appendChild(docList);
 
       } catch(e) {
+        alert("[CATCH] " + colName + " エラー: " + e.message + " / " + e.stack?.split("\n")[0]);
         schemaItem.innerHTML = `
           <div class="schema-header"><span class="schema-col-name">${colName}</span></div>
           <p class="schema-error">エラー: ${e.message}</p>
