@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>m2 / 今日の記録</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .back-link { display:inline-block; font-size:0.8rem; color:var(--text-soft); text-decoration:none; margin-bottom:20px; }
+  .back-link:hover { color:var(--accent); }
+
+  /* セクション */
+  .section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 16px;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    margin: 0 0 14px;
+  }
+
+  /* スコア */
+  .score-display {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .score-num {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--accent);
+    min-width: 64px;
+    text-align: center;
+    line-height: 1;
+  }
+  .score-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--accent-soft);
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  }
+  .score-date {
+    font-size: 0.78rem;
+    color: var(--text-soft);
+  }
+  .note-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: var(--bg);
+    color: var(--text);
+    margin-bottom: 12px;
+    box-sizing: border-box;
+  }
+  .note-input:focus { outline: none; border-color: var(--accent); }
+
+  .btn-save-score {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+  .score-saved {
+    font-size: 0.78rem;
+    color: var(--text-soft);
+    margin-top: 8px;
+    text-align: center;
+    min-height: 1.2em;
+  }
+
+  /* 訪問記録 */
+  .visit-form { display: flex; flex-direction: column; gap: 10px; }
+  .visit-form input {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .visit-form input:focus { outline: none; border-color: var(--accent); }
+  .visit-row-inputs { display: flex; gap: 8px; }
+  .visit-row-inputs input { flex: 1; }
+  .btn-gps {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  .btn-add-visit {
+    width: 100%;
+    padding: 12px;
+    background: var(--panel);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  /* 履歴 */
+  .history-section { margin-top: 24px; }
+  .history-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    margin-bottom: 10px;
+  }
+  .day-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .day-date { font-size: 0.9rem; font-weight: 700; }
+  .day-dow { font-size: 0.75rem; color: var(--text-soft); }
+  .score-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+  }
+  .score-label { font-size: 0.7rem; color: var(--text-soft); width: 36px; }
+  .bar-wrap { flex:1; height:5px; background:var(--accent-soft); border-radius:3px; overflow:hidden; }
+  .bar { height:100%; background:var(--accent); border-radius:3px; }
+  .score-val { font-size:1.1rem; font-weight:700; color:var(--accent); min-width:34px; text-align:right; }
+  .score-note { font-size:0.75rem; color:var(--text-soft); padding-left:46px; margin-bottom:6px; }
+  .visit-item {
+    display: flex; gap: 8px; align-items: flex-start;
+    font-size: 0.82rem; color: var(--text); padding: 4px 0;
+  }
+  .visit-item-icon { color: var(--text-soft); flex-shrink: 0; }
+  .visit-item-place { font-weight: 600; }
+  .visit-item-time { color: var(--text-soft); font-size: 0.72rem; }
+
+  .updated { font-size:0.72rem; color:var(--text-soft); margin-top:32px; text-align:right; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="../">← ab トップ</a>
+  <h1>今日の記録</h1>
+
+  <!-- スコア入力 -->
+  <div class="section">
+    <div class="section-title">スコア</div>
+    <div class="score-display">
+      <div class="score-num" id="scoreNum">70</div>
+      <div class="score-bar-wrap">
+        <input type="range" id="slider" min="0" max="100" value="70">
+        <div class="score-date" id="scoreDate"></div>
+      </div>
+    </div>
+    <input class="note-input" id="noteInput" type="text" placeholder="一言メモ（任意）">
+    <button class="btn-save-score" id="btnSaveScore">保存</button>
+    <div class="score-saved" id="scoreSaved"></div>
+  </div>
+
+  <!-- 訪問記録 -->
+  <div class="section">
+    <div class="section-title">訪問記録</div>
+    <div class="visit-form">
+      <div class="visit-row-inputs">
+        <input type="text" id="placeInput" placeholder="場所">
+        <button class="btn-gps" id="btnGps">📍 現在地</button>
+      </div>
+      <div class="visit-row-inputs">
+        <input type="date" id="dateInput">
+        <input type="time" id="timeInput">
+      </div>
+      <input type="text" id="memoInput" placeholder="メモ（任意）">
+      <button class="btn-add-visit" id="btnAddVisit">＋ 追加</button>
+    </div>
+    <div class="status" id="visitStatus"></div>
+  </div>
+
+  <!-- 履歴 -->
+  <div class="history-section">
+    <div class="history-label">直近の記録</div>
+    <div id="historyList"></div>
+    <p class="empty" id="emptyMsg" style="display:none;">記録はまだありません</p>
+  </div>
+
+  <p class="updated">更新: 2026-06-27 20:00</p>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, getDocs, doc, setDoc, addDoc, orderBy, query }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
+    authDomain: "ab01-9f35a.firebaseapp.com",
+    projectId: "ab01-9f35a"
+  });
+  const db = getFirestore(app);
+
+  const SCORE_COL = "ab_items2";
+  const VISIT_COL = "ab_visits";
+  const DATE_RE   = /^\d{4}-\d{2}-\d{2}$/;
+  const DOW       = ["日","月","火","水","木","金","土"];
+
+  // 今日の日付をセット
+  const today = new Date().toLocaleDateString("sv-SE");
+  document.getElementById("scoreDate").textContent = today;
+  document.getElementById("dateInput").value = today;
+  const now = new Date();
+  document.getElementById("timeInput").value =
+    String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
+
+  // スライダー
+  const slider   = document.getElementById("slider");
+  const scoreNum = document.getElementById("scoreNum");
+  slider.addEventListener("input", () => scoreNum.textContent = slider.value);
+
+  // スコア保存
+  document.getElementById("btnSaveScore").addEventListener("click", async () => {
+    const score = slider.value;
+    const note  = document.getElementById("noteInput").value.trim();
+    const saved = document.getElementById("scoreSaved");
+    try {
+      await setDoc(doc(db, SCORE_COL, today), {
+        col1: today, col2: score, col3: note,
+        createdAt: new Date().toISOString()
+      });
+      saved.textContent = "✓ 保存しました";
+      setTimeout(() => saved.textContent = "", 2000);
+      loadHistory();
+    } catch(e) {
+      saved.textContent = "エラー: " + e.message;
+    }
+  });
+
+  // GPS
+  document.getElementById("btnGps").addEventListener("click", () => {
+    if (!navigator.geolocation) { alert("位置情報非対応"); return; }
+    const btn = document.getElementById("btnGps");
+    btn.textContent = "取得中...";
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ja`
+        );
+        const data = await res.json();
+        const addr = data.address;
+        const place = [addr.city||addr.town||addr.village, addr.suburb||addr.neighbourhood||addr.quarter]
+          .filter(Boolean).join(" ");
+        document.getElementById("placeInput").value = place || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      } catch {
+        document.getElementById("placeInput").value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      }
+      btn.textContent = "📍 現在地";
+    }, () => {
+      alert("位置情報を取得できませんでした");
+      btn.textContent = "📍 現在地";
+    });
+  });
+
+  // 訪問記録追加
+  document.getElementById("btnAddVisit").addEventListener("click", async () => {
+    const place  = document.getElementById("placeInput").value.trim();
+    const date   = document.getElementById("dateInput").value;
+    const time   = document.getElementById("timeInput").value;
+    const memo   = document.getElementById("memoInput").value.trim();
+    const status = document.getElementById("visitStatus");
+    if (!place) { document.getElementById("placeInput").focus(); return; }
+    try {
+      await addDoc(collection(db, VISIT_COL), {
+        place, date, time, memo, lat: null, lng: null,
+        createdAt: new Date().toISOString()
+      });
+      document.getElementById("placeInput").value = "";
+      document.getElementById("memoInput").value  = "";
+      status.textContent = "✓ 追加しました";
+      setTimeout(() => status.textContent = "", 2000);
+      loadHistory();
+    } catch(e) {
+      status.textContent = "エラー: " + e.message;
+    }
+  });
+
+  // 履歴表示
+  async function loadHistory() {
+    const listEl = document.getElementById("historyList");
+    const emptyMsg = document.getElementById("emptyMsg");
+    listEl.innerHTML = "";
+
+    const [scoreSnap, visitSnap] = await Promise.all([
+      getDocs(collection(db, SCORE_COL)),
+      getDocs(query(collection(db, VISIT_COL), orderBy("createdAt", "desc")))
+    ]);
+
+    // スコアマップ
+    const scoreMap = {};
+    scoreSnap.forEach(d => {
+      const id = d.id;
+      const data = d.data();
+      if (DATE_RE.test(id) && !isNaN(Number(data.col2))) {
+        scoreMap[id] = { score: Number(data.col2), note: data.col3 || "" };
+      }
+    });
+
+    // 訪問マップ
+    const visitMap = {};
+    visitSnap.forEach(d => {
+      const data = d.data();
+      if (!data.date) return;
+      if (!visitMap[data.date]) visitMap[data.date] = [];
+      visitMap[data.date].push({ place: data.place||"—", time: data.time||"", memo: data.memo||"" });
+    });
+
+    // 日付マージ・新しい順・3件
+    const allDates = [...new Set([...Object.keys(scoreMap), ...Object.keys(visitMap)])]
+      .sort((a, b) => b.localeCompare(a))
+      .slice(0, 3);
+
+    if (allDates.length === 0) { emptyMsg.style.display = "block"; return; }
+    emptyMsg.style.display = "none";
+
+    allDates.forEach(date => {
+      const [y, m, d2] = date.split("-");
+      const dow  = DOW[new Date(date).getDay()];
+      const label = `${y}年${parseInt(m)}月${parseInt(d2)}日`;
+      const score  = scoreMap[date];
+      const visits = visitMap[date] || [];
+
+      const card = document.createElement("div");
+      card.className = "day-card";
+      card.innerHTML = `<div class="day-header"><span class="day-date">${label}</span><span class="day-dow">${dow}曜</span></div>`;
+
+      if (score) {
+        const s = document.createElement("div");
+        s.innerHTML = `
+          <div class="score-row">
+            <span class="score-label">スコア</span>
+            <div class="bar-wrap"><div class="bar" style="width:${score.score}%"></div></div>
+            <span class="score-val">${score.score}</span>
+          </div>
+          ${score.note ? `<div class="score-note">${score.note}</div>` : ""}
+        `;
+        card.appendChild(s);
+      }
+
+      visits.sort((a, b) => a.time.localeCompare(b.time));
+      visits.forEach(v => {
+        const vDiv = document.createElement("div");
+        vDiv.className = "visit-item";
+        vDiv.innerHTML = `
+          <span class="visit-item-icon">📍</span>
+          <div>
+            <div class="visit-item-place">${v.place}</div>
+            ${v.time ? `<div class="visit-item-time">${v.time}</div>` : ""}
+            ${v.memo ? `<div class="visit-item-time">${v.memo}</div>` : ""}
+          </div>
+        `;
+        card.appendChild(vDiv);
+      });
+
+      listEl.appendChild(card);
+    });
+  }
+
+  loadHistory();
+</script>
+</body>
+</html>
