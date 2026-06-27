@@ -203,8 +203,15 @@
         return;
       }
       document.getElementById("emptyMsg").style.display = "none";
-      snap.forEach(d => list.appendChild(renderItem(d.id, d.data())));
-      document.getElementById("status").textContent = `${snap.size}件`;
+      const items = [];
+      snap.forEach(d => items.push({ id: d.id, data: d.data() }));
+      items.sort((a, b) => {
+        const da = (a.data.date || "") + (a.data.time || "");
+        const db_ = (b.data.date || "") + (b.data.time || "");
+        return db_.localeCompare(da);
+      });
+      items.slice(0, 3).forEach(({ id, data }) => list.appendChild(renderItem(id, data)));
+      document.getElementById("status").textContent = `直近3件 / 全${items.length}件`;
     } catch(e) {
       document.getElementById("status").textContent = "エラー: " + e.message;
     }
