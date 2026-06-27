@@ -131,8 +131,7 @@
   import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  import { getAuth, GoogleAuthProvider, signInWithRedirect,
-           getRedirectResult, signOut, onAuthStateChanged }
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
   const _app = getApps().length ? getApps()[0] : initializeApp({
@@ -165,7 +164,7 @@
       <button id="btnLogin" style="background:#fff;border:1px solid #e2ded6;border-radius:10px;padding:13px 22px;font-size:0.92rem;font-weight:600;color:#2b2b2b;cursor:pointer;">Googleでログイン</button>
     </div>`;
     document.getElementById("btnLogin").onclick = () => {
-      signInWithRedirect(auth, new GoogleAuthProvider());
+      try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch(e) { alert(e.message); }
     };
   }
 
@@ -261,21 +260,10 @@
     }
   });
 
-  onAuthStateChanged(auth, async user => {
-    // リダイレクト結果を先に処理
-    try {
-      const result = await getRedirectResult(auth);
-      if (result?.user) { user = result.user; }
-    } catch(e) {}
-
+  onAuthStateChanged(auth, user => {
     const badge = document.getElementById("auth-badge");
     if (badge) badge.remove();
-    if (!user) {
-      showLogin();
-    } else {
-      showBadge(user);
-      load();
-    }
+    if (!user) { showLogin(); } else { showBadge(user); load(); }
   });
 </script>
 </body>
