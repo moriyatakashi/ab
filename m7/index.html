@@ -178,7 +178,7 @@
 
       const hist = document.getElementById("histList");
       hist.innerHTML = "";
-      items.slice(0, 7).forEach(({ date, score, note }) => {
+      items.slice(0, 3).forEach(({ date, score, note }) => {
         const isToday = date === dateStr;
         const wrap = document.createElement("div");
         wrap.innerHTML = `
