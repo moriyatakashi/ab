@@ -3,13 +3,79 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ab</title>
+<title>main / CRUD</title>
 <link rel="stylesheet" href="../style.css">
+<style>
+  .mode-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .mode-tab {
+    flex: 1;
+    padding: 10px 0;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: var(--panel);
+    color: var(--text-soft);
+    border: none;
+    transition: background 0.15s, color 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .mode-tab.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .mode-badge {
+    display: inline-block;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-left: 5px;
+    vertical-align: middle;
+    letter-spacing: 0.05em;
+  }
+  .mode-tab.active .mode-badge { background: rgba(255,255,255,0.25); color: #fff; }
+  .mode-tab:not(.active) .mode-badge { background: var(--accent-soft); color: var(--accent); }
+  .sandbox-notice {
+    font-size: 0.75rem;
+    color: var(--text-soft);
+    background: var(--accent-soft);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .sandbox-notice.show { display: block; }
+  .back-link { display:inline-block; font-size:0.8rem; color:var(--text-soft); text-decoration:none; margin-bottom:20px; }
+  .back-link:hover { color:var(--accent); }
+</style>
 </head>
 <body>
 <div class="wrap">
-  <h1>ab</h1>
-  <p class="sub">3カラム管理ツール</p>
+  <a class="back-link" href="../">← ab トップ</a>
+  <h1>CRUD</h1>
+  <p class="sub" id="subText">本番データ（ab_items2）</p>
+
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tabProd" onclick="switchMode('prod')">
+      本番 <span class="mode-badge">ab_items2</span>
+    </button>
+    <button class="mode-tab" id="tabSandbox" onclick="switchMode('sandbox')">
+      実験 <span class="mode-badge">ab_sandbox</span>
+    </button>
+  </div>
+
+  <div class="sandbox-notice" id="sandboxNotice">
+    🧪 実験モード — このデータは本番に影響しません
+  </div>
+
   <p class="status" id="status">読み込み中...</p>
 
   <div class="add-row">
@@ -21,6 +87,7 @@
 
   <div class="list" id="list"></div>
   <p class="empty" id="emptyMsg" style="display:none;">データがありません</p>
+  <p class="updated">更新: 2026-06-27 15:30</p>
 </div>
 
 <script type="module" src="app.js"></script>
