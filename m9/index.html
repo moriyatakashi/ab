@@ -49,6 +49,33 @@
   .visit-place { font-weight:600; }
   .visit-time { color:var(--text-soft); font-size:0.72rem; }
 
+  /* 振り返り記録 */
+  .review-form {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px; margin-bottom: 16px;
+  }
+  .prev-review {
+    font-size: 0.78rem; color: var(--text-soft); margin-bottom: 14px;
+    padding: 8px 12px; background: var(--accent-soft);
+    border-radius: 8px;
+  }
+  .score-row-input { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .score-big { font-size:2.5rem; font-weight:800; color:var(--accent); min-width:52px; text-align:center; line-height:1; }
+  .range-wrap { flex:1; }
+  input[type="range"] {
+    -webkit-appearance:none; width:100%; height:6px;
+    border-radius:3px; background:var(--accent-soft); outline:none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:22px; height:22px;
+    border-radius:50%; background:var(--accent); cursor:pointer;
+    box-shadow:0 1px 4px rgba(0,0,0,0.15);
+  }
+  .btn-record {
+    width:100%; padding:12px; background:var(--accent); color:#fff;
+    border:none; border-radius:10px; font-size:0.95rem; font-weight:600; cursor:pointer;
+  }
+  .record-saved { font-size:0.78rem; color:var(--accent); text-align:center; margin-top:8px; min-height:1.2em; }
   .empty { text-align:center; color:var(--text-soft); font-size:0.85rem; padding:20px 0; }
   .updated { font-size:0.72rem; color:var(--text-soft); margin-top:32px; text-align:right; }
 </style>
@@ -61,6 +88,19 @@
     <div class="hero-icon">🔁</div>
     <div class="hero-title">振り返りの日</div>
     <div class="hero-sub" id="heroDate"></div>
+  </div>
+
+  <!-- 振り返り記録 -->
+  <div class="review-form">
+    <div class="prev-review" id="prevReview">前回の振り返り日を確認中...</div>
+    <div class="score-row-input">
+      <div class="score-big" id="reviewScoreNum">50</div>
+      <div class="range-wrap">
+        <input type="range" id="reviewSlider" min="0" max="100" value="50">
+      </div>
+    </div>
+    <button class="btn-record" id="btnRecord">📝 振り返りを記録する</button>
+    <div class="record-saved" id="recordSaved"></div>
   </div>
 
   <div class="section-label">ここから始める</div>
@@ -79,12 +119,12 @@
   <div id="historyList"></div>
   <p class="empty" id="emptyMsg" style="display:none;">記録がまだありません</p>
 
-  <p class="updated">更新: 2026-06-28 13:00</p>
+  <p class="updated">更新: 2026-06-28 08:41</p>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, orderBy, query }
+import { getFirestore, collection, getDocs, doc, setDoc, orderBy, query, limit }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app = initializeApp({
@@ -95,6 +135,56 @@ const app = initializeApp({
 const db = getFirestore(app);
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+  const REVIEW_COL = "ab_reviews";
+
+  // スライダー連動
+  const reviewSlider = document.getElementById("reviewSlider");
+  const reviewScoreNum = document.getElementById("reviewScoreNum");
+  reviewSlider.addEventListener("input", () => {
+    reviewScoreNum.textContent = reviewSlider.value;
+  });
+
+  // 前回の振り返り日を取得して表示
+  async function loadPrevReview() {
+    const prevEl = document.getElementById("prevReview");
+    try {
+      const snap = await getDocs(collection(db, REVIEW_COL));
+      const rows = [];
+      snap.forEach(d => rows.push(d.data()));
+      const past = rows
+        .filter(r => r.date && r.date < today)
+        .sort((a, b) => b.date.localeCompare(a.date));
+      if (past.length > 0) {
+        const prev = past[0];
+        const [y, m, d2] = prev.date.split("-");
+        prevEl.textContent = `前回の振り返り: ${parseInt(m)}/${parseInt(d2)}（スコア ${prev.score ?? "—"}）`;
+      } else {
+        prevEl.textContent = "前回の振り返り記録はありません";
+      }
+    } catch(e) {
+      prevEl.textContent = "前回の振り返り記録を取得できませんでした";
+    }
+  }
+
+  // 振り返りを記録
+  document.getElementById("btnRecord").addEventListener("click", async () => {
+    const score = Number(reviewSlider.value);
+    const savedEl = document.getElementById("recordSaved");
+    const btn = document.getElementById("btnRecord");
+    btn.disabled = true;
+    try {
+      await setDoc(doc(db, REVIEW_COL, today), {
+        date: today,
+        score,
+        createdAt: new Date().toISOString()
+      });
+      savedEl.textContent = "✓ 記録しました（スコア " + score + "）";
+      loadPrevReview();
+    } catch(e) {
+      savedEl.textContent = "エラー: " + e.message;
+    }
+    btn.disabled = false;
+  });
 const DOW = ["日","月","火","水","木","金","土"];
 
 // 今日の日付表示
@@ -193,6 +283,7 @@ async function load() {
   });
 }
 
+loadPrevReview();
 load();
 </script>
 </body>
