@@ -37,6 +37,29 @@
 
   /* gameloop テスト */
   #loopCanvas { display: block; width: 100%; height: 60px; background: #1a1a22; border-radius: 8px; margin-top: 8px; }
+
+  /* 異常系テスト */
+  .neg-section { margin-top: 32px; border-top: 1px solid #1a1a22; padding-top: 20px; }
+  .neg-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #f08060; margin-bottom: 12px; }
+  .neg-log { font-family: monospace; font-size: 0.75rem; background: #0d0d12; border-radius: 8px; padding: 10px 12px; max-height: 220px; overflow-y: auto; margin-top: 8px; }
+  .neg-row { padding: 3px 0; border-bottom: 1px solid #111; display: flex; gap: 8px; align-items: flex-start; }
+  .neg-badge { font-size: 0.65rem; font-weight: 700; padding: 1px 6px; border-radius: 3px; flex-shrink: 0; margin-top: 1px; }
+  .neg-badge.caught  { background: #1a3a1a; color: #4ec94e; }
+  .neg-badge.leaked  { background: #3a1a1a; color: #f08060; }
+  .neg-badge.info    { background: #1a2a3a; color: #6ab0f0; }
+  .neg-text { flex: 1; color: #aaa; }
+  .neg-text .what  { color: #888; font-size: 0.7rem; }
+  .neg-text .err   { color: #f08060; font-size: 0.7rem; margin-top: 2px; }
+  .neg-text .ok    { color: #4ec94e; font-size: 0.7rem; margin-top: 2px; }
+  .neg-btn { background: #1a1a22; border: 1px solid #f08060; color: #f08060; border-radius: 8px; padding: 9px 18px; font-size: 0.8rem; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
+  .neg-btn:hover { background: #2a1a1a; }
+  .neg-manual { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+  .neg-manual label { font-size: 0.68rem; color: #666; letter-spacing: 0.06em; text-transform: uppercase; }
+  .neg-select { background: #1a1a22; border: 1px solid #2a2a4a; color: #ccc; border-radius: 6px; padding: 7px 10px; font-size: 0.8rem; }
+  .neg-input  { background: #1a1a22; border: 1px solid #2a2a4a; color: #ccc; border-radius: 6px; padding: 7px 10px; font-size: 0.8rem; font-family: monospace; }
+  .neg-run { background: #2a1a1a; border: 1px solid #f08060; color: #f08060; border-radius: 6px; padding: 8px 16px; font-size: 0.8rem; cursor: pointer; }
+  .neg-run:hover { background: #3a2020; }
+  .neg-summary { font-size: 0.75rem; margin-top: 6px; color: #888; }
 </style>
 </head>
 <body>
@@ -46,6 +69,41 @@
 
 <div id="results"></div>
 <div class="summary" id="summary">実行中...</div>
+
+  <div class="neg-section">
+    <div class="neg-title">⚠ 異常系テスト（ネガティブテスト）</div>
+
+    <div style="font-size:0.72rem; color:#555; margin-bottom:12px; line-height:1.6;">
+      バリデーションが正しく機能するか確認。<br>
+      🟢 CAUGHT = 想定通りエラーを捕捉<br>
+      🔴 LEAKED = エラーが出るべきなのに出なかった（バグ）
+    </div>
+
+    <!-- ① 自動ランダム投入 -->
+    <button class="neg-btn" id="btnRandom">🎲 ランダムな異常値を自動投入</button>
+    <div class="neg-summary" id="negSummary"></div>
+    <div class="neg-log" id="negLog"></div>
+
+    <!-- ② 手動入力 -->
+    <div class="neg-manual">
+      <div style="font-size:0.68rem; color:#f08060; letter-spacing:0.06em; text-transform:uppercase; margin-top:16px;">手動テスト</div>
+      <label>テスト対象</label>
+      <select class="neg-select" id="manualTarget">
+        <option value="score_score">ScoreManager.saveResult — score引数</option>
+        <option value="score_histCol">ScoreManager — histCol引数</option>
+        <option value="score_n">ScoreManager.loadHistory — n引数</option>
+        <option value="input_elementId">Input.bind — elementId引数</option>
+        <option value="input_keyName">Input.bind — keyName引数</option>
+        <option value="gameloop_update">GameLoop — update引数</option>
+        <option value="gameloop_maxDt">GameLoop — maxDt引数</option>
+      </select>
+      <label>入力値（JS式として評価されます）</label>
+      <input class="neg-input" id="manualValue" type="text" placeholder='例: null, "", -1, "abc", [], NaN'>
+      <button class="neg-run" id="btnManual">▶ 実行</button>
+      <div class="neg-log" id="manualLog" style="margin-top:4px;"></div>
+    </div>
+  </div>
+
 
 <script type="module">
 import { db }          from "./firebase.js";
@@ -273,6 +331,155 @@ await runTest(s4, "dt（経過時間）が妥当な範囲に収まる", async ()
   });
   visLoop.start();
 }
+
+
+// ── 異常系テスト ──────────────────────────────────────
+const RANDOM_BADS = [
+  null, undefined, "", "  ", 0, -1, -999, NaN, Infinity, -Infinity,
+  "abc", "123abc", [], {}, true, false, () => {}, Symbol("x"),
+  new Date(), 9999999
+];
+
+function badLabel(v) {
+  if (v === null)      return "null";
+  if (v === undefined) return "undefined";
+  if (typeof v === "function") return "function(){}";
+  if (typeof v === "symbol")   return "Symbol";
+  if (v instanceof Date)       return "Date";
+  if (Array.isArray(v))        return "[]（配列）";
+  if (typeof v === "object")   return "{}（オブジェクト）";
+  return JSON.stringify(v);
+}
+
+function negLog(containerId, caught, what, message) {
+  const log = document.getElementById(containerId);
+  const row = document.createElement("div");
+  row.className = "neg-row";
+  const badge = caught ? "caught" : "leaked";
+  const label = caught ? "CAUGHT" : "LEAKED";
+  const cls   = caught ? "ok" : "err";
+  row.innerHTML = '<span class="neg-badge ' + badge + '">' + label + '</span>'
+    + '<div class="neg-text"><div class="what">' + what + '</div>'
+    + '<div class="' + cls + '">' + message + '</div></div>';
+  log.appendChild(row);
+  log.scrollTop = log.scrollHeight;
+}
+
+const NEG_CASES = [
+  {
+    label: "ScoreManager(db, {空文字系}, 'x')",
+    fn: async (val) => { new ScoreManager(db, val, "x"); },
+    arg: () => [null, undefined, "", "  ", 0, 123][Math.floor(Math.random() * 6)],
+    shouldThrow: true
+  },
+  {
+    label: "ScoreManager(db, 'x', {空文字系})",
+    fn: async (val) => { new ScoreManager(db, "x", val); },
+    arg: () => [null, undefined, "", "  ", 0, 123][Math.floor(Math.random() * 6)],
+    shouldThrow: true
+  },
+  {
+    label: "saveResult(score={変な値})",
+    fn: async (val) => {
+      const sm2 = new ScoreManager(db, "ab_lib_test_hist", "ab_lib_test_hi");
+      await sm2.saveResult(val);
+    },
+    arg: () => [null, undefined, "", "abc", NaN, Infinity, -1, -999, [], {}][Math.floor(Math.random() * 10)],
+    shouldThrow: true
+  },
+  {
+    label: "loadHistory(n={変な値})",
+    fn: async (val) => {
+      const sm2 = new ScoreManager(db, "ab_lib_test_hist", "ab_lib_test_hi");
+      await sm2.loadHistory(val);
+    },
+    arg: () => [0, -1, null, "10", 1.5, NaN, Infinity][Math.floor(Math.random() * 7)],
+    shouldThrow: true
+  },
+  {
+    label: "Input.bind(elementId={変な値}, 'left')",
+    fn: async (val) => { const inp = new Input(); inp.bind(val, "left"); },
+    arg: () => [null, undefined, "", 123, [], {}][Math.floor(Math.random() * 6)],
+    shouldThrow: true
+  },
+  {
+    label: "GameLoop(update={関数以外})",
+    fn: async (val) => { new GameLoop({ update: val, draw: () => {} }); },
+    arg: () => [null, undefined, "fn", 0, [], {}][Math.floor(Math.random() * 6)],
+    shouldThrow: true
+  },
+  {
+    label: "GameLoop(maxDt={変な値})",
+    fn: async (val) => { new GameLoop({ update: () => {}, draw: () => {}, maxDt: val }); },
+    arg: () => [0, -1, null, "100", NaN, Infinity, -Infinity][Math.floor(Math.random() * 7)],
+    shouldThrow: true
+  },
+];
+
+let negPassed = 0, negFailed = 0;
+
+async function runNegCase(tc, containerId) {
+  const val = tc.arg();
+  const label = tc.label + " ← " + badLabel(val);
+  try {
+    await tc.fn(val);
+    if (tc.shouldThrow) {
+      negLog(containerId, false, label, "エラーが出るべきなのに出なかった（バリデーション漏れ）");
+      negFailed++;
+    } else {
+      negLog(containerId, true, label, "正常終了（想定通り）");
+      negPassed++;
+    }
+  } catch(e) {
+    if (tc.shouldThrow) {
+      negLog(containerId, true, label, e.message);
+      negPassed++;
+    } else {
+      negLog(containerId, false, label, "エラーが出るべきでないのに出た: " + e.message);
+      negFailed++;
+    }
+  }
+}
+
+document.getElementById("btnRandom").addEventListener("click", async () => {
+  document.getElementById("negLog").innerHTML = "";
+  negPassed = 0; negFailed = 0;
+  const shuffled = [...NEG_CASES].sort(() => Math.random() - 0.5);
+  for (const tc of shuffled) await runNegCase(tc, "negLog");
+  const sumEl2 = document.getElementById("negSummary");
+  sumEl2.textContent = negPassed + " CAUGHT / " + negFailed + " LEAKED";
+  sumEl2.style.color = negFailed === 0 ? "#4ec94e" : "#f08060";
+});
+
+document.getElementById("btnManual").addEventListener("click", async () => {
+  const target = document.getElementById("manualTarget").value;
+  const rawVal = document.getElementById("manualValue").value.trim();
+  document.getElementById("manualLog").innerHTML = "";
+  let val;
+  try {
+    val = Function('"use strict"; return (' + rawVal + ')')();
+  } catch(e) {
+    negLog("manualLog", false, "入力値のパース失敗", "JS式として評価できません: " + e.message);
+    return;
+  }
+  const MANUAL_FNS = {
+    score_score:     async (v) => { const s = new ScoreManager(db, "ab_lib_test_hist", "ab_lib_test_hi"); await s.saveResult(v); },
+    score_histCol:   async (v) => { new ScoreManager(db, v, "ab_lib_test_hi"); },
+    score_n:         async (v) => { const s = new ScoreManager(db, "ab_lib_test_hist", "ab_lib_test_hi"); await s.loadHistory(v); },
+    input_elementId: async (v) => { const inp = new Input(); inp.bind(v, "left"); },
+    input_keyName:   async (v) => { const inp = new Input(); inp.bind("btnLeft", v); },
+    gameloop_update: async (v) => { new GameLoop({ update: v, draw: () => {} }); },
+    gameloop_maxDt:  async (v) => { new GameLoop({ update: () => {}, draw: () => {}, maxDt: v }); },
+  };
+  const label = target + " ← " + badLabel(val);
+  try {
+    await MANUAL_FNS[target](val);
+    negLog("manualLog", false, label, "エラーなし（エラーが出るべきなら LEAKED）");
+  } catch(e) {
+    negLog("manualLog", true, label, e.message);
+  }
+});
+// ────────────────────────────────────────────────
 
 // ── サマリー ──────────────────────────────────────
 const sumEl = document.getElementById("summary");
