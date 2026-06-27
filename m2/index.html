@@ -330,24 +330,19 @@
     <a href="../m1/" style="display:block; text-align:center; font-size:0.8rem; color:var(--accent); padding:12px 0; text-decoration:none;">もっと見る →</a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 08:21</p>
+  <p class="updated">更新: 2026-06-28 08:23</p>
 </div>
 
-<script>alert("[C-0] 通常スクリプトOK");</script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, collection, getDocs, doc, setDoc, getDoc, addDoc, orderBy, query }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-alert("[F-1] import完了");
-alert("[F-2] initializeApp前");
   const app = initializeApp({
     apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
     authDomain: "ab01-9f35a.firebaseapp.com",
     projectId: "ab01-9f35a"
   });
-  alert("[F-3] initializeApp完了");
   const db = getFirestore(app);
-  alert("[F-4] getFirestore完了");
   const SCORE_COL = "ab_items2";
   const VISIT_COL = "ab_visits";
   const DATE_RE   = /^\d{4}-\d{2}-\d{2}$/;
@@ -355,7 +350,6 @@ alert("[F-2] initializeApp前");
 
   // 今日の日付をセット
   const today = new Date().toLocaleDateString("sv-SE");
-  alert("[G-1] today=" + today);
   document.getElementById("scoreDate").textContent = today;
   document.getElementById("dateInput").value = today;
   const now = new Date();
@@ -365,10 +359,8 @@ alert("[F-2] initializeApp前");
 
   // ── チェック項目 ──────────────────────────────────────
   const CHECK_COL = "ab_checks";
-  alert("[G-2] 定数定義完了");
   let checkData = { crossed_midnight: false, ate_meal: false };
 
-  alert("[H-1 loadChecks定義後]");
   async function loadChecks(date) {
     try {
       const d = await getDoc(doc(db, CHECK_COL, date));
@@ -394,7 +386,6 @@ alert("[F-2] initializeApp前");
     renderChecks();
   }
 
-  alert("[H-2 saveCheck定義後]");
   async function saveCheck(key, value) {
     checkData[key] = value;
     try {
@@ -409,7 +400,6 @@ alert("[F-2] initializeApp前");
     renderChecks();
   }
 
-  alert("[H-3 renderChecks定義後]");
   function renderChecks() {
     [
       { key: "crossed_midnight", boxId: "boxMidnight", itemId: "checkMidnight", doneId: "doneMidnight" },
@@ -427,7 +417,6 @@ alert("[F-2] initializeApp前");
   }
 
   // 振り返り日を変更したら即保存
-  alert("[H-4 reviewDate listener後]");
   document.getElementById("reviewDate").addEventListener("change", async () => {
     const date = document.getElementById("dateInput").value;
     const reviewDate = document.getElementById("reviewDate").value;
@@ -448,7 +437,6 @@ alert("[F-2] initializeApp前");
     } catch(e) { console.warn("review save failed:", e); }
   });
 
-  alert("[H-5 checkMidnight listener後]");
   document.getElementById("checkMidnight").addEventListener("click", () => {
     saveCheck("crossed_midnight", !checkData.crossed_midnight);
   });
@@ -457,7 +445,6 @@ alert("[F-2] initializeApp前");
   });
 
   // ── 日付確認バナー ────────────────────────────────────
-  alert("[H-6 showDateConfirm定義後]");
   function showDateConfirm() {
     const now  = new Date();
     const h    = now.getHours();
@@ -519,7 +506,6 @@ alert("[F-2] initializeApp前");
   });
 
   // 今日のスコアをFirestoreから読み込む
-  alert("[H-7 loadTodayScore定義後]");
   async function loadTodayScore(date) {
     const saveBtn = document.getElementById("btnSaveScore");
     try {
@@ -545,7 +531,6 @@ alert("[F-2] initializeApp前");
   }
 
   // スコア保存
-  alert("[H-8 btnSaveScore listener後]");
   document.getElementById("btnSaveScore").addEventListener("click", async () => {
     const score = slider.value;
     const note  = document.getElementById("noteInput").value.trim();
@@ -616,7 +601,7 @@ alert("[F-2] initializeApp前");
 
   // 履歴表示
   async function loadHistory() {
-    alert("[C-4] loadHistory開始");
+    
     const listEl = document.getElementById("historyList");
     const emptyMsg = document.getElementById("emptyMsg");
     listEl.innerHTML = "";
@@ -628,10 +613,10 @@ alert("[F-2] initializeApp前");
         getDocs(query(collection(db, VISIT_COL), orderBy("createdAt", "desc")))
       ]);
     } catch(e) {
-      alert("[C-5-ERR] 履歴読み込みエラー: " + e.message);
+      
       return;
     }
-    alert("[C-5] scoreSnap: " + scoreSnap.size + "件 / visitSnap: " + visitSnap.size + "件");
+    
 
     // チェックマップ（失敗してもスコア・訪問には影響させない）
     const checkMap = {};
@@ -724,7 +709,6 @@ alert("[F-2] initializeApp前");
     });
   }
 
-  alert("[G-3] 関数定義完了・初期化開始 today=" + today);
   loadChecks(today);
   loadTodayScore(today);
 
@@ -736,7 +720,6 @@ alert("[F-2] initializeApp前");
     loadTodayScore(d);
   });
   showDateConfirm();
-  alert("[C-3] loadHistory呼び出し直前");
   loadHistory();
 </script>
 </body>
