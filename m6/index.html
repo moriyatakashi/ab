@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>m6 / INVADER</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  body { padding: 0; background: #0a0a0f; color: #e8e8e8; overflow: hidden; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 0; }
+
+  /* ヘッダー */
+  #header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px 6px;
+    background: #0a0a0f;
+  }
+  #header a { font-size: 0.72rem; color: #555; text-decoration: none; }
+  #header a:hover { color: #888; }
+  .score-bar { display: flex; gap: 20px; align-items: baseline; }
+  .score-label { font-size: 0.6rem; color: #555; letter-spacing: 0.1em; text-transform: uppercase; }
+  .score-val { font-size: 1rem; font-weight: 700; color: #e8e8e8; font-variant-numeric: tabular-nums; }
+  .hi-val { color: #f0c040; }
+
+  /* キャンバス */
+  #gameCanvas {
+    display: block;
+    width: 100%;
+    background: #0a0a0f;
+    touch-action: none;
+  }
+
+  /* オーバーレイ */
+  #overlay {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: rgba(10,10,15,0.92);
+    z-index: 10;
+  }
+  #overlay.hidden { display: none; }
+  .overlay-title {
+    font-size: 2rem; font-weight: 800; letter-spacing: 0.12em;
+    color: #f0c040; margin-bottom: 6px;
+    text-shadow: 0 0 20px rgba(240,192,64,0.4);
+  }
+  .overlay-sub { font-size: 0.8rem; color: #888; margin-bottom: 28px; letter-spacing: 0.06em; }
+  .overlay-score { font-size: 1.1rem; color: #e8e8e8; margin-bottom: 6px; }
+  .overlay-hi { font-size: 0.85rem; color: #f0c040; margin-bottom: 32px; }
+  #btnStart {
+    background: #f0c040; color: #0a0a0f;
+    border: none; border-radius: 10px;
+    padding: 14px 40px; font-size: 1rem; font-weight: 700;
+    letter-spacing: 0.08em; cursor: pointer;
+  }
+  #btnStart:hover { opacity: 0.88; }
+
+  /* コントロール */
+  #controls {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px 16px;
+    background: #0a0a0f;
+    gap: 12px;
+  }
+  .ctrl-btn {
+    flex: 1; height: 56px;
+    background: #1a1a22; border: 1px solid #333;
+    border-radius: 12px; color: #aaa;
+    font-size: 1.4rem; font-weight: 700;
+    cursor: pointer; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s;
+  }
+  .ctrl-btn:active, .ctrl-btn.pressed { background: #2a2a38; color: #fff; }
+  #btnFire {
+    flex: 1.2; background: #1e1a10; border-color: #f0c040;
+    color: #f0c040; font-size: 1rem; letter-spacing: 0.06em;
+  }
+  #btnFire:active, #btnFire.pressed { background: #2e2810; }
+
+  /* 履歴 */
+  #historySection {
+    background: #0a0a0f; padding: 0 16px 24px;
+    max-height: 180px; overflow-y: auto;
+  }
+  .hist-label { font-size: 0.6rem; color: #444; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 0 6px; }
+  .hist-row {
+    display: flex; justify-content: space-between;
+    font-size: 0.78rem; color: #666; padding: 3px 0;
+    border-bottom: 1px solid #141418;
+  }
+  .hist-row.best { color: #f0c040; }
+  .hist-date { color: #444; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="header">
+    <a href="../">← ab</a>
+    <div class="score-bar">
+      <div><div class="score-label">SCORE</div><div class="score-val" id="dispScore">0</div></div>
+      <div><div class="score-label">BEST</div><div class="score-val hi-val" id="dispHi">---</div></div>
+      <div><div class="score-label">LIVES</div><div class="score-val" id="dispLives">♥♥♥</div></div>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="controls">
+    <button class="ctrl-btn" id="btnLeft">◀</button>
+    <button class="ctrl-btn" id="btnFire">FIRE</button>
+    <button class="ctrl-btn" id="btnRight">▶</button>
+  </div>
+
+  <div id="historySection">
+    <div class="hist-label">PLAY HISTORY</div>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<div id="overlay">
+  <div class="overlay-title">INVADER</div>
+  <div class="overlay-sub">m6 · space shooter</div>
+  <div class="overlay-score" id="overlayScore"></div>
+  <div class="overlay-hi" id="overlayHi"></div>
+  <button id="btnStart">START</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc, orderBy, query, limit }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
+  authDomain: "ab01-9f35a.firebaseapp.com",
+  projectId: "ab01-9f35a"
+});
+const db = getFirestore(app);
+const COL_HIST = "ab_invader_history";
+const DOC_HI   = "ab_invader_hi";
+
+// ── Canvas setup ──────────────────────────────────────
+const canvas = document.getElementById("gameCanvas");
+const ctx    = canvas.getContext("2d");
+const W = 360, H = 480;
+canvas.width  = W;
+canvas.height = H;
+
+// ── Game state ────────────────────────────────────────
+let state = "idle"; // idle | playing | dead | over
+let score = 0, lives = 3, hiScore = 0;
+let player, bullets, invaders, invBullets;
+let invDir = 1, invSpeed = 0.4, invDropped = false;
+let frameId, lastTime = 0;
+let keys = { left: false, right: false, fire: false };
+let fireCD = 0, invFireCD = 0;
+let invMoveTimer = 0, invMoveInterval = 800;
+let wave = 1;
+
+// ── Firestore ─────────────────────────────────────────
+async function loadHi() {
+  try {
+    const d = await getDoc(doc(db, DOC_HI, "record"));
+    if (d.exists()) hiScore = d.data().score || 0;
+  } catch(e) {}
+  updateHUD();
+  loadHistory();
+}
+
+async function saveResult(s) {
+  const date = new Date().toLocaleDateString("sv-SE");
+  try {
+    await addDoc(collection(db, COL_HIST), {
+      score: s, date, wave,
+      createdAt: new Date().toISOString()
+    });
+    if (s > hiScore) {
+      hiScore = s;
+      await setDoc(doc(db, DOC_HI, "record"), { score: s, date });
+    }
+  } catch(e) {}
+  updateHUD();
+  loadHistory();
+}
+
+async function loadHistory() {
+  try {
+    const q = query(collection(db, COL_HIST), orderBy("createdAt","desc"), limit(10));
+    const snap = await getDocs(q);
+    const list = document.getElementById("historyList");
+    list.innerHTML = "";
+    let maxScore = 0;
+    snap.forEach(d => { if (d.data().score > maxScore) maxScore = d.data().score; });
+    snap.forEach(d => {
+      const data = d.data();
+      const row = document.createElement("div");
+      row.className = "hist-row" + (data.score === maxScore ? " best" : "");
+      row.innerHTML = `<span>${data.score.toLocaleString()} pt</span><span>W${data.wave||1}</span><span class="hist-date">${data.date}</span>`;
+      list.appendChild(row);
+    });
+  } catch(e) {}
+}
+
+// ── HUD ───────────────────────────────────────────────
+function updateHUD() {
+  document.getElementById("dispScore").textContent = score.toLocaleString();
+  document.getElementById("dispHi").textContent    = hiScore > 0 ? hiScore.toLocaleString() : "---";
+  document.getElementById("dispLives").textContent = "♥".repeat(Math.max(0, lives));
+}
+
+// ── Game init ─────────────────────────────────────────
+function initGame() {
+  score = 0; lives = 3; wave = 1;
+  invDir = 1; invSpeed = 0.4; invMoveInterval = 800;
+  spawnPlayer();
+  spawnInvaders();
+  bullets = []; invBullets = [];
+  fireCD = 0; invFireCD = 0; invMoveTimer = 0;
+  updateHUD();
+}
+
+function spawnPlayer() {
+  player = { x: W/2, y: H - 40, w: 28, h: 16, vx: 0, speed: 3 };
+}
+
+function spawnInvaders() {
+  invaders = [];
+  const rows = 4, cols = 8;
+  const sx = 28, sy = 50, gx = 36, gy = 30;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      invaders.push({
+        x: sx + c * gx,
+        y: sy + r * gy,
+        w: 24, h: 14,
+        row: r, alive: true,
+        pts: (rows - r) * 10
+      });
+    }
+  }
+}
+
+// ── Draw ──────────────────────────────────────────────
+function drawPlayer() {
+  const { x, y, w, h } = player;
+  ctx.fillStyle = "#7ec8e3";
+  // 胴体
+  ctx.fillRect(x - w/2, y, w, h * 0.6);
+  // 砲塔
+  ctx.fillRect(x - 4, y - h * 0.5, 8, h * 0.5);
+  // 脚
+  ctx.fillRect(x - w/2, y + h * 0.5, 8, h * 0.5);
+  ctx.fillRect(x + w/2 - 8, y + h * 0.5, 8, h * 0.5);
+}
+
+function drawInvader(inv) {
+  const { x, y, w, h, row } = inv;
+  ctx.fillStyle = row < 1 ? "#f08060" : row < 3 ? "#80d080" : "#c0a0e0";
+  // 本体
+  ctx.fillRect(x - w/2 + 3, y, w - 6, h);
+  // 目
+  ctx.fillStyle = "#0a0a0f";
+  ctx.fillRect(x - w/2 + 5, y + 3, 4, 4);
+  ctx.fillRect(x + w/2 - 9, y + 3, 4, 4);
+  // 触角
+  ctx.fillStyle = row < 1 ? "#f08060" : row < 3 ? "#80d080" : "#c0a0e0";
+  ctx.fillRect(x - w/2, y - 4, 4, 4);
+  ctx.fillRect(x + w/2 - 4, y - 4, 4, 4);
+  // 足
+  ctx.fillRect(x - w/2 + 2, y + h, 5, 4);
+  ctx.fillRect(x - w/2 + 9, y + h, 5, 4);
+  ctx.fillRect(x + w/2 - 14, y + h, 5, 4);
+  ctx.fillRect(x + w/2 - 7, y + h, 5, 4);
+}
+
+function draw() {
+  ctx.fillStyle = "#0a0a0f";
+  ctx.fillRect(0, 0, W, H);
+
+  // 地面
+  ctx.fillStyle = "#222";
+  ctx.fillRect(0, H - 8, W, 8);
+
+  if (state === "playing" || state === "dead") {
+    drawPlayer();
+    invaders.filter(i => i.alive).forEach(drawInvader);
+
+    // 弾（自機）
+    ctx.fillStyle = "#f0c040";
+    bullets.forEach(b => ctx.fillRect(b.x - 2, b.y, 4, 10));
+
+    // 弾（敵）
+    ctx.fillStyle = "#f08060";
+    invBullets.forEach(b => ctx.fillRect(b.x - 2, b.y, 4, 8));
+  }
+}
+
+// ── Update ────────────────────────────────────────────
+function update(dt) {
+  if (state !== "playing") return;
+
+  // 自機移動
+  if (keys.left  && player.x - player.w/2 > 0)  player.x -= player.speed;
+  if (keys.right && player.x + player.w/2 < W)   player.x += player.speed;
+
+  // 射撃
+  fireCD -= dt;
+  if (keys.fire && fireCD <= 0) {
+    bullets.push({ x: player.x, y: player.y - 10 });
+    fireCD = 320;
+  }
+
+  // 自機弾移動
+  bullets.forEach(b => b.y -= 6);
+  bullets = bullets.filter(b => b.y > 0);
+
+  // 敵移動
+  invMoveTimer -= dt;
+  if (invMoveTimer <= 0) {
+    invMoveTimer = invMoveInterval;
+    const alive = invaders.filter(i => i.alive);
+    if (!alive.length) return;
+
+    const leftmost  = Math.min(...alive.map(i => i.x - i.w/2));
+    const rightmost = Math.max(...alive.map(i => i.x + i.w/2));
+
+    if ((invDir > 0 && rightmost >= W - 4) || (invDir < 0 && leftmost <= 4)) {
+      invaders.forEach(i => i.y += 16);
+      invDir *= -1;
+      invMoveInterval = Math.max(150, invMoveInterval - 40);
+    } else {
+      invaders.forEach(i => i.x += invDir * 14);
+    }
+  }
+
+  // 敵射撃
+  invFireCD -= dt;
+  if (invFireCD <= 0) {
+    invFireCD = 900 + Math.random() * 600;
+    const alive = invaders.filter(i => i.alive);
+    if (alive.length) {
+      const shooter = alive[Math.floor(Math.random() * alive.length)];
+      invBullets.push({ x: shooter.x, y: shooter.y + shooter.h });
+    }
+  }
+
+  // 敵弾移動
+  invBullets.forEach(b => b.y += 4);
+  invBullets = invBullets.filter(b => b.y < H);
+
+  // 当たり判定：自機弾 vs 敵
+  bullets = bullets.filter(b => {
+    let hit = false;
+    invaders.forEach(inv => {
+      if (!inv.alive) return;
+      if (b.x > inv.x - inv.w/2 && b.x < inv.x + inv.w/2 &&
+          b.y > inv.y && b.y < inv.y + inv.h + 4) {
+        inv.alive = false; hit = true;
+        score += inv.pts;
+        updateHUD();
+      }
+    });
+    return !hit;
+  });
+
+  // 敵弾 vs 自機
+  invBullets = invBullets.filter(b => {
+    const hit = b.x > player.x - player.w/2 && b.x < player.x + player.w/2 &&
+                b.y > player.y && b.y < player.y + player.h;
+    if (hit) {
+      lives--;
+      updateHUD();
+      if (lives <= 0) { gameOver(); } else { state = "dead"; setTimeout(() => { spawnPlayer(); state = "playing"; }, 1200); }
+    }
+    return !hit;
+  });
+
+  // 敵が自機ラインに到達
+  if (invaders.filter(i => i.alive).some(i => i.y + i.h >= player.y)) {
+    lives = 0; updateHUD(); gameOver(); return;
+  }
+
+  // 全滅 → 次の波
+  if (!invaders.some(i => i.alive)) {
+    wave++;
+    invSpeed  += 0.1;
+    invMoveInterval = Math.max(150, 800 - wave * 60);
+    spawnInvaders();
+    bullets = []; invBullets = [];
+  }
+}
+
+function gameOver() {
+  state = "over";
+  cancelAnimationFrame(frameId);
+  saveResult(score);
+  showOverlay(true);
+}
+
+// ── Overlay ───────────────────────────────────────────
+function showOverlay(isGameOver) {
+  const ol = document.getElementById("overlay");
+  ol.classList.remove("hidden");
+  document.querySelector(".overlay-title").textContent = isGameOver ? "GAME OVER" : "INVADER";
+  document.querySelector(".overlay-sub").textContent   = isGameOver ? `WAVE ${wave}` : "m6 · space shooter";
+  document.getElementById("overlayScore").textContent  = isGameOver ? `SCORE  ${score.toLocaleString()}` : "";
+  document.getElementById("overlayHi").textContent     = hiScore > 0 ? `BEST  ${hiScore.toLocaleString()}` : "";
+  document.getElementById("btnStart").textContent      = isGameOver ? "RETRY" : "START";
+}
+
+// ── Loop ──────────────────────────────────────────────
+function loop(ts) {
+  const dt = ts - lastTime; lastTime = ts;
+  update(dt);
+  draw();
+  frameId = requestAnimationFrame(loop);
+}
+
+function startGame() {
+  document.getElementById("overlay").classList.add("hidden");
+  initGame();
+  state = "playing";
+  lastTime = performance.now();
+  cancelAnimationFrame(frameId);
+  frameId = requestAnimationFrame(loop);
+}
+
+document.getElementById("btnStart").addEventListener("click", startGame);
+
+// ── Touch controls ────────────────────────────────────
+function bindBtn(id, key) {
+  const btn = document.getElementById(id);
+  btn.addEventListener("touchstart", e => { e.preventDefault(); keys[key] = true;  btn.classList.add("pressed"); },    { passive: false });
+  btn.addEventListener("touchend",   e => { e.preventDefault(); keys[key] = false; btn.classList.remove("pressed"); }, { passive: false });
+  btn.addEventListener("mousedown",  () => { keys[key] = true;  btn.classList.add("pressed"); });
+  btn.addEventListener("mouseup",    () => { keys[key] = false; btn.classList.remove("pressed"); });
+}
+bindBtn("btnLeft",  "left");
+bindBtn("btnRight", "right");
+bindBtn("btnFire",  "fire");
+
+// キーボード
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowLeft")  keys.left  = true;
+  if (e.key === "ArrowRight") keys.right = true;
+  if (e.key === " " || e.key === "z") keys.fire = true;
+});
+document.addEventListener("keyup", e => {
+  if (e.key === "ArrowLeft")  keys.left  = false;
+  if (e.key === "ArrowRight") keys.right = false;
+  if (e.key === " " || e.key === "z") keys.fire = false;
+});
+
+// ── Init ──────────────────────────────────────────────
+loadHi();
+draw();
+</script>
+</body>
+</html>
