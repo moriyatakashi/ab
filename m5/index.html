@@ -5,33 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>m5 / 訪問記録</title>
 <link rel="stylesheet" href="../style.css">
-<script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
 <style>
   .back-link { display:inline-block; font-size:0.8rem; color:var(--text-soft); text-decoration:none; margin-bottom:20px; }
   .back-link:hover { color:var(--accent); }
 
-  .photo-zone {
-    border: 2px dashed var(--border); border-radius: 12px; padding: 22px 16px;
-    text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s;
-    margin-bottom: 12px; position: relative;
-  }
-  .photo-zone:hover { border-color: var(--accent); background: var(--accent-soft); }
-  .photo-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
-  .photo-icon { font-size: 1.6rem; margin-bottom: 4px; }
-  .photo-label { font-size: 0.85rem; color: var(--text-soft); }
-  .photo-sub { font-size: 0.7rem; color: var(--text-soft); margin-top: 3px; opacity: 0.7; }
-
-  .exif-result {
-    background: var(--accent-soft); border: 1px solid var(--border);
-    border-radius: 10px; padding: 10px 14px; font-size: 0.8rem;
-    margin-bottom: 12px; display: none;
-  }
-  .exif-result.show { display: block; }
-  .exif-row { display: flex; gap: 8px; margin-bottom: 3px; }
-  .exif-row:last-child { margin-bottom: 0; }
-  .exif-key { color: var(--accent); font-weight: 600; width: 56px; flex-shrink: 0; }
-  .exif-val { color: var(--text); word-break: break-all; }
-  .geocoding-status { color: var(--accent); }
 
   .add-block {
     background: var(--panel); border: 1px solid var(--border);
@@ -93,20 +70,7 @@
 <div class="wrap">
   <a class="back-link" href="../">← ab トップ</a>
   <h1>訪問記録</h1>
-  <p class="sub">写真のEXIF、または現在地から記録</p>
-
-  <div class="photo-zone">
-    <input type="file" id="photoInput" accept="image/*">
-    <div class="photo-icon">📷</div>
-    <div class="photo-label">写真を選ぶ（EXIF読み取り）</div>
-    <div class="photo-sub">写真はどこにも送りません</div>
-  </div>
-
-  <div class="exif-result" id="exifResult">
-    <div class="exif-row"><span class="exif-key">日時</span><span class="exif-val" id="exifDate">—</span></div>
-    <div class="exif-row"><span class="exif-key">座標</span><span class="exif-val" id="exifCoord">—</span></div>
-    <div class="exif-row"><span class="exif-key">地名</span><span class="exif-val" id="exifPlace">—</span></div>
-  </div>
+  <p class="sub">場所・日付・メモを記録する</p>
 
   <div class="add-block">
     <div>
@@ -206,57 +170,6 @@
     }, { enableHighAccuracy: true, timeout: 10000 });
   };
 
-  document.getElementById("photoInput").addEventListener("change", async e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const result = document.getElementById("exifResult");
-    result.classList.add("show");
-    document.getElementById("exifDate").textContent = "解析中...";
-    document.getElementById("exifCoord").textContent = "解析中...";
-    document.getElementById("exifPlace").innerHTML = '<span class="geocoding-status">解析中...</span>';
-    try {
-      const exif = await exifr.parse(file, true);
-      if (!exif) {
-        document.getElementById("exifDate").textContent = "EXIFなし";
-        document.getElementById("exifCoord").textContent = "EXIFなし";
-        document.getElementById("exifPlace").textContent = "取得不可";
-        return;
-      }
-      const dt = exif.DateTimeOriginal || exif.DateTime || exif.CreateDate;
-      if (dt) {
-        const d = new Date(dt);
-        document.getElementById("exifDate").textContent = d.toLocaleString("ja-JP");
-        document.getElementById("dateInput").value =
-          d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
-        document.getElementById("timeInput").value =
-          String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0");
-      } else {
-        document.getElementById("exifDate").textContent = "日時情報なし";
-      }
-      const lat = exif.latitude ?? exif.GPSLatitude;
-      const lng = exif.longitude ?? exif.GPSLongitude;
-      if (lat != null && lng != null) {
-        const { latR, lngR } = setCoord(lat, lng);
-        document.getElementById("exifCoord").textContent = `${latR}, ${lngR}`;
-        document.getElementById("exifPlace").innerHTML = '<span class="geocoding-status">地名取得中...</span>';
-        try {
-          const place = await reverseGeocode(lat, lng);
-          document.getElementById("exifPlace").textContent = place || "地名取得失敗";
-          if (place) document.getElementById("placeInput").value = place;
-        } catch(err) {
-          document.getElementById("exifPlace").textContent = "地名取得失敗";
-        }
-      } else {
-        document.getElementById("exifCoord").textContent = "GPS情報なし";
-        document.getElementById("exifPlace").textContent = "GPS情報なし（現在地ボタンを使用）";
-      }
-    } catch(err) {
-      document.getElementById("exifDate").textContent = "解析エラー";
-      document.getElementById("exifCoord").textContent = "—";
-      document.getElementById("exifPlace").textContent = "—";
-    }
-  });
-
   function formatWhen(date, time) {
     const [y,m,d] = date.split("-");
     const base = `${y}年${parseInt(m)}月${parseInt(d)}日`;
@@ -320,8 +233,6 @@
       document.getElementById("lngInput").value = "";
       document.getElementById("timeInput").value = "";
       document.getElementById("coordRow").style.display = "none";
-      document.getElementById("exifResult").classList.remove("show");
-      document.getElementById("photoInput").value = "";
       document.getElementById("status").textContent = "追加しました ✓";
       await load();
     } catch(e) {
