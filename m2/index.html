@@ -172,6 +172,18 @@
   .visit-item-place { font-weight: 600; }
   .visit-item-time { color: var(--text-soft); font-size: 0.72rem; }
   .check-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+  .review-section {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .review-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-soft); flex-shrink: 0; }
+  .review-input {
+    flex: 1; padding: 8px 10px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 0.88rem; background: var(--bg); color: var(--text);
+  }
+  .review-input:focus { outline: none; border-color: var(--accent); }
+  .review-saved { font-size: 0.72rem; color: var(--accent); flex-shrink: 0; min-width: 2em; }
   .check-tag {
     font-size: 0.68rem; color: var(--accent);
     background: var(--accent-soft); border-radius: 10px;
@@ -252,6 +264,13 @@
     </div>
   </div>
 
+  <!-- 次回振り返り日 -->
+  <div class="review-section">
+    <div class="review-label">次回振り返り</div>
+    <input class="review-input" type="date" id="reviewDate">
+    <div class="review-saved" id="reviewSaved"></div>
+  </div>
+
   <!-- スコア入力 -->
   <div class="section">
     <div class="section-title">スコア</div>
@@ -293,7 +312,7 @@
     <a href="../m1/" style="display:block; text-align:center; font-size:0.8rem; color:var(--accent); padding:12px 0; text-decoration:none;">もっと見る →</a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 11:00</p>
+  <p class="updated">更新: 2026-06-28 12:00</p>
 </div>
 
 <script type="module">
@@ -329,7 +348,14 @@
   async function loadChecks(date) {
     try {
       const d = await getDoc(doc(db, CHECK_COL, date));
-      if (d.exists()) checkData = { ...checkData, ...d.data() };
+      if (d.exists()) {
+        const data = d.data();
+        checkData = { ...checkData, ...data };
+        // 振り返り日を復元
+        if (data.reviewDate) {
+          document.getElementById("reviewDate").value = data.reviewDate;
+        }
+      }
     } catch(e) {}
     renderChecks();
   }
@@ -337,9 +363,11 @@
   async function saveCheck(key, value) {
     checkData[key] = value;
     try {
+      const reviewDate = document.getElementById("reviewDate").value;
       await setDoc(doc(db, CHECK_COL, document.getElementById("dateInput").value), {
         ...checkData,
         date: document.getElementById("dateInput").value,
+        reviewDate: reviewDate || null,
         updatedAt: new Date().toISOString()
       });
     } catch(e) { console.warn("check save failed:", e); }
@@ -361,6 +389,23 @@
       done.textContent = checked ? "済" : "";
     });
   }
+
+  // 振り返り日を変更したら即保存
+  document.getElementById("reviewDate").addEventListener("change", async () => {
+    const date = document.getElementById("dateInput").value;
+    const reviewDate = document.getElementById("reviewDate").value;
+    const saved = document.getElementById("reviewSaved");
+    try {
+      await setDoc(doc(db, CHECK_COL, date), {
+        ...checkData,
+        date,
+        reviewDate: reviewDate || null,
+        updatedAt: new Date().toISOString()
+      });
+      saved.textContent = "✓";
+      setTimeout(() => saved.textContent = "", 2000);
+    } catch(e) { console.warn("review save failed:", e); }
+  });
 
   document.getElementById("checkMidnight").addEventListener("click", () => {
     saveCheck("crossed_midnight", !checkData.crossed_midnight);
