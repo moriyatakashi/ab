@@ -315,11 +315,12 @@
     <a href="../m1/" style="display:block; text-align:center; font-size:0.8rem; color:var(--accent); padding:12px 0; text-decoration:none;">もっと見る →</a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 08:11</p>
+  <p class="updated">更新: 2026-06-28 08:13</p>
 </div>
 
+<script>alert("[C-0] 通常スクリプトOK");</script>
 <script type="module">
-alert("[B-1] m2スクリプト開始");
+alert("[C-1] moduleスクリプト開始");
   try { from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, collection, getDocs, doc, setDoc, getDoc, addDoc, orderBy, query }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -330,7 +331,7 @@ alert("[B-1] m2スクリプト開始");
     projectId: "ab01-9f35a"
   });
   const db = getFirestore(app);
-  alert("[B-1.5] Firebase初期化OK");
+  alert("[C-1.5] Firebase初期化OK");
 
   const SCORE_COL = "ab_items2";
   const VISIT_COL = "ab_visits";
@@ -590,7 +591,7 @@ alert("[B-1] m2スクリプト開始");
 
   // 履歴表示
   async function loadHistory() {
-    alert("[B-4] loadHistory開始");
+    alert("[C-4] loadHistory開始");
     const listEl = document.getElementById("historyList");
     const emptyMsg = document.getElementById("emptyMsg");
     listEl.innerHTML = "";
@@ -602,10 +603,10 @@ alert("[B-1] m2スクリプト開始");
         getDocs(query(collection(db, VISIT_COL), orderBy("createdAt", "desc")))
       ]);
     } catch(e) {
-      alert("[B-5-ERR] 履歴読み込みエラー: " + e.message);
+      alert("[C-5-ERR] 履歴読み込みエラー: " + e.message);
       return;
     }
-    alert("[B-5] scoreSnap: " + scoreSnap.size + "件 / visitSnap: " + visitSnap.size + "件");
+    alert("[C-5] scoreSnap: " + scoreSnap.size + "件 / visitSnap: " + visitSnap.size + "件");
 
     // チェックマップ（失敗してもスコア・訪問には影響させない）
     const checkMap = {};
@@ -698,7 +699,7 @@ alert("[B-1] m2スクリプト開始");
     });
   }
 
-  alert("[B-2] 初期化開始 today=" + today);
+  alert("[C-2] 初期化開始 today=" + today);
   loadChecks(today);
   loadTodayScore(today);
 
@@ -710,7 +711,7 @@ alert("[B-1] m2スクリプト開始");
     loadTodayScore(d);
   });
   showDateConfirm();
-  alert("[B-3] loadHistory呼び出し直前");
+  alert("[C-3] loadHistory呼び出し直前");
   loadHistory();
 </script>
 </body>
