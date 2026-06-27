@@ -254,7 +254,7 @@
     <span class="review-banner-icon">🔁</span>
     <div>
       <div class="review-banner-title">今日は振り返りの日です</div>
-      <div class="review-banner-sub">m9 振り返りページへ →</div>
+      <div class="review-banner-sub" id="reviewBannerSub">m9 振り返りページへ →</div>
     </div>
   </a>
 
@@ -330,7 +330,7 @@
     <a href="../m1/" style="display:block; text-align:center; font-size:0.8rem; color:var(--accent); padding:12px 0; text-decoration:none;">もっと見る →</a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 08:23</p>
+  <p class="updated">更新: 2026-06-28 08:41</p>
 </div>
 
 <script type="module">
@@ -370,7 +370,6 @@
         // 振り返り日を復元
         if (data.reviewDate) {
           document.getElementById("reviewDate").value = data.reviewDate;
-          // 今日が振り返り日かチェック
           const reviewDateVal = data.reviewDate;
           const todayVal = new Date().toLocaleDateString("sv-SE");
           if (reviewDateVal === todayVal) {
@@ -381,6 +380,18 @@
         } else {
           document.getElementById("reviewBanner").style.display = "none";
         }
+        // 前回の振り返り日を取得してバナーに表示
+        try {
+          const revSnap = await getDocs(collection(db, "ab_reviews"));
+          const past = [];
+          revSnap.forEach(d => { if (d.id < new Date().toLocaleDateString("sv-SE")) past.push(d.data()); });
+          past.sort((a, b) => b.date.localeCompare(a.date));
+          if (past.length > 0) {
+            const [y, m, d2] = past[0].date.split("-");
+            document.getElementById("reviewBannerSub").textContent =
+              `前回: ${parseInt(m)}/${parseInt(d2)} → m9 振り返りページへ →`;
+          }
+        } catch(e) {}
       }
     } catch(e) {}
     renderChecks();
