@@ -1,21 +1,8 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { requireAuth, db } from "../auth.js";
 import {
-  getFirestore, collection, onSnapshot, addDoc,
+  collection, onSnapshot, addDoc,
   updateDoc, deleteDoc, doc, serverTimestamp, orderBy, query
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
-  authDomain: "ab01-9f35a.firebaseapp.com",
-  projectId: "ab01-9f35a",
-  storageBucket: "ab01-9f35a.firebasestorage.app",
-  messagingSenderId: "502154862201",
-  appId: "1:502154862201:web:4ca0c72225af6bd0147ea8",
-  measurementId: "G-4L8FF69B1B"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 const COLLECTIONS = {
   prod: "ab_items2",
@@ -150,4 +137,4 @@ addBtn.addEventListener("click", async () => {
 });
 
 // 初期起動
-startListen();
+requireAuth(() => startListen());
