@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>m9 / 振り返り</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .back-link { display:inline-block; font-size:0.8rem; color:var(--text-soft); text-decoration:none; margin-bottom:20px; }
+  .back-link:hover { color:var(--accent); }
+
+  .hero {
+    background: var(--accent); color: #fff;
+    border-radius: 14px; padding: 20px 18px; margin-bottom: 20px;
+    text-align: center;
+  }
+  .hero-icon { font-size: 2rem; margin-bottom: 6px; }
+  .hero-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+  .hero-sub { font-size: 0.78rem; opacity: 0.85; }
+
+  .nav-cards { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+  a.nav-card {
+    display: block; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 18px; text-decoration: none; color: var(--text);
+    transition: border-color 0.15s;
+  }
+  a.nav-card:hover { border-color: var(--accent); }
+  .nav-card-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 2px; }
+  .nav-card-desc { font-size: 0.78rem; color: var(--text-soft); }
+
+  .section-label { font-size: 0.68rem; font-weight: 600; color: var(--text-soft);
+    letter-spacing: 0.08em; text-transform: uppercase; margin: 18px 0 8px 2px; }
+
+  /* 直近記録 */
+  .day-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
+  .day-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; }
+  .day-date { font-size:0.9rem; font-weight:700; }
+  .day-dow { font-size:0.75rem; color:var(--text-soft); }
+  .score-row { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .score-label { font-size:0.7rem; color:var(--text-soft); width:36px; }
+  .bar-wrap { flex:1; height:5px; background:var(--accent-soft); border-radius:3px; overflow:hidden; }
+  .bar { height:100%; background:var(--accent); border-radius:3px; }
+  .score-val { font-size:1.1rem; font-weight:700; color:var(--accent); min-width:34px; text-align:right; }
+  .score-note { font-size:0.75rem; color:var(--text-soft); padding-left:46px; margin-bottom:6px; }
+  .check-tags { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+  .check-tag { font-size:0.68rem; color:var(--accent); background:var(--accent-soft); border-radius:10px; padding:2px 8px; }
+  .visit-item { display:flex; gap:8px; align-items:flex-start; font-size:0.82rem; padding:4px 0; }
+  .visit-icon { color:var(--text-soft); flex-shrink:0; }
+  .visit-place { font-weight:600; }
+  .visit-time { color:var(--text-soft); font-size:0.72rem; }
+
+  .empty { text-align:center; color:var(--text-soft); font-size:0.85rem; padding:20px 0; }
+  .updated { font-size:0.72rem; color:var(--text-soft); margin-top:32px; text-align:right; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="../">← ab トップ</a>
+
+  <div class="hero">
+    <div class="hero-icon">🔁</div>
+    <div class="hero-title">振り返りの日</div>
+    <div class="hero-sub" id="heroDate"></div>
+  </div>
+
+  <div class="section-label">ここから始める</div>
+  <div class="nav-cards">
+    <a class="nav-card" href="../m2/">
+      <div class="nav-card-title">m2 — 今日の記録</div>
+      <div class="nav-card-desc">スコアを入れて、次回振り返り日を設定する</div>
+    </a>
+    <a class="nav-card" href="../m1/">
+      <div class="nav-card-title">m1 — 記録一覧</div>
+      <div class="nav-card-desc">過去の記録を振り返る</div>
+    </a>
+  </div>
+
+  <div class="section-label">直近の記録</div>
+  <div id="historyList"></div>
+  <p class="empty" id="emptyMsg" style="display:none;">記録がまだありません</p>
+
+  <p class="updated">更新: 2026-06-28 13:00</p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, orderBy, query }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
+  authDomain: "ab01-9f35a.firebaseapp.com",
+  projectId: "ab01-9f35a"
+});
+const db = getFirestore(app);
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const DOW = ["日","月","火","水","木","金","土"];
+
+// 今日の日付表示
+const today = new Date().toLocaleDateString("sv-SE");
+const todayDisp = new Date().toLocaleDateString("ja-JP", { month:"long", day:"numeric", weekday:"short" });
+document.getElementById("heroDate").textContent = todayDisp;
+
+async function load() {
+  const [scoreSnap, visitSnap, checkSnap] = await Promise.all([
+    getDocs(collection(db, "ab_items2")),
+    getDocs(query(collection(db, "ab_visits"), orderBy("createdAt", "desc"))),
+    getDocs(collection(db, "ab_checks"))
+  ]);
+
+  const scoreMap = {};
+  scoreSnap.forEach(d => {
+    const id = d.id; const data = d.data();
+    if (DATE_RE.test(id) && !isNaN(Number(data.col2))) {
+      scoreMap[id] = { score: Number(data.col2), note: data.col3 || "" };
+    }
+  });
+
+  const visitMap = {};
+  visitSnap.forEach(d => {
+    const data = d.data();
+    if (!data.date) return;
+    if (!visitMap[data.date]) visitMap[data.date] = [];
+    visitMap[data.date].push({ place: data.place||"—", time: data.time||"", memo: data.memo||"" });
+  });
+
+  const checkMap = {};
+  checkSnap.forEach(d => { checkMap[d.id] = d.data(); });
+
+  const allDates = [...new Set([...Object.keys(scoreMap), ...Object.keys(visitMap)])]
+    .sort((a, b) => b.localeCompare(a))
+    .slice(0, 5);
+
+  const listEl = document.getElementById("historyList");
+  if (allDates.length === 0) {
+    document.getElementById("emptyMsg").style.display = "block";
+    return;
+  }
+
+  allDates.forEach(date => {
+    const [y, m, d] = date.split("-");
+    const dow = DOW[new Date(date).getDay()];
+    const label = `${y}年${parseInt(m)}月${parseInt(d)}日`;
+    const score  = scoreMap[date];
+    const visits = visitMap[date] || [];
+    const chk    = checkMap[date];
+
+    const card = document.createElement("div");
+    card.className = "day-card";
+    card.innerHTML = `<div class="day-header"><span class="day-date">${label}</span><span class="day-dow">${dow}曜</span></div>`;
+
+    if (score) {
+      const s = document.createElement("div");
+      s.innerHTML = `
+        <div class="score-row">
+          <span class="score-label">スコア</span>
+          <div class="bar-wrap"><div class="bar" style="width:${score.score}%"></div></div>
+          <span class="score-val">${score.score}</span>
+        </div>
+        ${score.note ? `<div class="score-note">${score.note}</div>` : ""}
+      `;
+      card.appendChild(s);
+    }
+
+    if (chk) {
+      const tags = [];
+      if (chk.crossed_midnight) tags.push("日を跨いだ");
+      if (chk.ate_meal)         tags.push("ご飯食べた");
+      if (tags.length) {
+        const tagDiv = document.createElement("div");
+        tagDiv.className = "check-tags";
+        tagDiv.innerHTML = tags.map(t => `<span class="check-tag">✓ ${t}</span>`).join("");
+        card.appendChild(tagDiv);
+      }
+    }
+
+    visits.sort((a, b) => a.time.localeCompare(b.time));
+    visits.forEach(v => {
+      const vDiv = document.createElement("div");
+      vDiv.className = "visit-item";
+      vDiv.innerHTML = `
+        <span class="visit-icon">📍</span>
+        <div>
+          <div class="visit-place">${v.place}</div>
+          ${v.time ? `<div class="visit-time">${v.time}</div>` : ""}
+        </div>
+      `;
+      card.appendChild(vDiv);
+    });
+
+    listEl.appendChild(card);
+  });
+}
+
+load();
+</script>
+</body>
+</html>
