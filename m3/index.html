@@ -150,8 +150,8 @@
     <h2>🛠 SQL コンソール</h2>
     <textarea class="sql-input" id="sqlInput" placeholder="INSERT ab_items2 col1=&quot;値&quot; col2=&quot;値&quot; col3=&quot;値&quot;
 UPDATE ab_items2 id=&quot;docId&quot; col1=&quot;新しい値&quot;
-DELETE ab_items id=&quot;docId&quot;
-TRUNCATE ab_items
+DELETE ab_items2 id=&quot;docId&quot;
+TRUNCATE ab_sandbox
 -- 複数行まとめて実行可"></textarea>
     <button class="sql-run" id="sqlRun">▶ 実行</button>
     <div class="sql-log" id="sqlLog"></div>
@@ -174,7 +174,7 @@ TRUNCATE ab_items
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  const COLLECTIONS = ["ab_items", "ab_items2", "mm_scores"];
+  const COLLECTIONS = ["ab_items2", "ab_sandbox"];
   const SKIP_FIELDS = ["createdAt", "updatedAt"];
   const FIELD_ORDER = ["col1", "col2", "col3"];
 
