@@ -157,12 +157,10 @@ TRUNCATE ab_sandbox
     <button class="sql-run" id="sqlRun">▶ 実行</button>
     <div class="sql-log" id="sqlLog"></div>
   </div>
-  <p style="font-size:0.72rem;color:var(--text-soft);text-align:right;margin-top:24px;">更新: 2026-06-28 08:56</p>
+  <p style="font-size:0.72rem;color:var(--text-soft);text-align:right;margin-top:24px;">更新: 2026-06-28 08:58</p>
 </div>
 
-<script>alert("[A-0] 通常script OK");</script>
 <script type="module">
-  alert("[A-1] module開始");
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -177,7 +175,6 @@ TRUNCATE ab_sandbox
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  alert("[A-2] Firebase OK");
 
   const COLLECTIONS = ["ab_items2", "ab_sandbox", "ab_visits", "ab_checks", "ab_reviews"];
   const SKIP_FIELDS = ["createdAt", "updatedAt"];
@@ -210,7 +207,6 @@ TRUNCATE ab_sandbox
   }
 
   async function load() {
-    alert("[A-4] load()開始");
     const statusEl = document.getElementById("status");
     statusEl.textContent = "処理中...";
     const allData = {};
@@ -241,7 +237,6 @@ TRUNCATE ab_sandbox
       try {
         snap = await getDocs(collection(db, colName));
       } catch(e) {
-        alert("[ERR-fetch] " + colName + ": " + e.message);
         continue;
       }
 
@@ -330,7 +325,6 @@ TRUNCATE ab_sandbox
         colDiv.appendChild(docList);
 
       } catch(e) {
-        alert("[CATCH] " + colName + ": " + e.message);
         schemaItem.innerHTML = `
           <div class="schema-header"><span class="schema-col-name">${colName}</span></div>
           <p class="schema-error">エラー: ${e.message}</p>
@@ -468,7 +462,6 @@ TRUNCATE ab_sandbox
     }
   });
 
-  alert("[A-3] load()呼び出し直前");
   load();
 </script>
 </body>
