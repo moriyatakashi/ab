@@ -589,6 +589,7 @@ alert("★m2スクリプト開始");
 
   // 履歴表示
   async function loadHistory() {
+    alert("★loadHistory開始");
     const listEl = document.getElementById("historyList");
     const emptyMsg = document.getElementById("emptyMsg");
     listEl.innerHTML = "";
@@ -696,6 +697,7 @@ alert("★m2スクリプト開始");
     });
   }
 
+  alert("★初期化開始 today=" + today);
   loadChecks(today);
   loadTodayScore(today);
 
@@ -707,6 +709,7 @@ alert("★m2スクリプト開始");
     loadTodayScore(d);
   });
   showDateConfirm();
+  alert("★loadHistory呼び出し直前");
   loadHistory();
 </script>
 </body>
