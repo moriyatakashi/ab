@@ -60,6 +60,14 @@
   .neg-run { background: #2a1a1a; border: 1px solid #f08060; color: #f08060; border-radius: 6px; padding: 8px 16px; font-size: 0.8rem; cursor: pointer; }
   .neg-run:hover { background: #3a2020; }
   .neg-summary { font-size: 0.75rem; margin-top: 6px; color: #888; }
+  .copy-btn {
+    display: block; width: 100%; margin-top: 12px;
+    padding: 11px; background: #1a1a22; border: 1px solid #333;
+    border-radius: 8px; color: #888; font-size: 0.8rem; cursor: pointer;
+    transition: background 0.1s;
+  }
+  .copy-btn:hover { background: #2a2a38; color: #ccc; }
+  .copy-btn.copied { background: #1a3a1a; border-color: #4ec94e; color: #4ec94e; }
 </style>
 </head>
 <body>
@@ -69,6 +77,7 @@
 
 <div id="results"></div>
 <div class="summary" id="summary">実行中...</div>
+<button class="copy-btn" id="btnCopyResult">📋 テスト結果をコピーしてClaudeに貼る</button>
 
   <div class="neg-section">
     <div class="neg-title">⚠ 異常系テスト（ネガティブテスト）</div>
@@ -485,6 +494,61 @@ document.getElementById("btnManual").addEventListener("click", async () => {
 const sumEl = document.getElementById("summary");
 sumEl.textContent  = `${passed} passed / ${failed} failed`;
 sumEl.className    = `summary ${failed === 0 ? "all-ok" : "has-fail"}`;
+
+// コピーボタン
+document.getElementById("btnCopyResult").addEventListener("click", async () => {
+  const btn = document.getElementById("btnCopyResult");
+
+  // 正常系テスト結果を収集
+  const rows = document.querySelectorAll(".test");
+  const normalLines = ["=== 正常系テスト ==="];
+  rows.forEach(row => {
+    const badge = row.querySelector(".badge");
+    const name  = row.querySelector(".test-name");
+    if (!badge || !name) return;
+    const detail = name.querySelector(".test-detail");
+    normalLines.push(
+      badge.textContent.trim() + " " +
+      name.childNodes[0].textContent.trim() +
+      (detail ? " (" + detail.textContent.trim() + ")" : "")
+    );
+  });
+
+  // 異常系テスト結果を収集
+  const negRows = document.querySelectorAll("#negLog .neg-row");
+  const negLines = ["", "=== 異常系テスト ==="];
+  negRows.forEach(row => {
+    const badge = row.querySelector(".neg-badge");
+    const what  = row.querySelector(".what");
+    const msg   = row.querySelector(".ok, .err");
+    if (!badge || !what) return;
+    negLines.push(badge.textContent.trim() + " " + what.textContent.trim() + " → " + (msg ? msg.textContent.trim() : ""));
+  });
+
+  // サマリー
+  const sumText = sumEl.textContent;
+  const negSum  = document.getElementById("negSummary").textContent || "（異常系未実行）";
+  const lines = [
+    "【lib/test.html 結果】",
+    "正常系: " + sumText,
+    "異常系: " + negSum,
+    "",
+    ...normalLines,
+    ...negLines
+  ];
+
+  try {
+    await navigator.clipboard.writeText(lines.join("\n"));
+    btn.textContent = "✓ コピーしました";
+    btn.classList.add("copied");
+    setTimeout(() => {
+      btn.textContent = "📋 テスト結果をコピーしてClaudeに貼る";
+      btn.classList.remove("copied");
+    }, 2500);
+  } catch(e) {
+    alert("コピー失敗: " + e.message);
+  }
+});
 </script>
 </body>
 </html>
