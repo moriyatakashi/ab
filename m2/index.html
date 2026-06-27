@@ -173,12 +173,78 @@
   .visit-item-time { color: var(--text-soft); font-size: 0.72rem; }
 
   .updated { font-size:0.72rem; color:var(--text-soft); margin-top:32px; text-align:right; }
+
+  /* チェック項目 */
+  .check-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+  .check-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    cursor: pointer; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-box {
+    width: 24px; height: 24px; border-radius: 6px;
+    border: 2px solid var(--border); background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 0.85rem; transition: all 0.15s;
+  }
+  .check-box.checked { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .check-label { font-size: 0.9rem; font-weight: 600; color: var(--text); flex: 1; }
+  .check-done { font-size: 0.72rem; color: var(--text-soft); }
+  .check-item.done .check-label { color: var(--text-soft); text-decoration: line-through; }
+
+  /* 日付確認バナー */
+  .date-confirm {
+    background: #fff8e8; border: 1px solid #f0c040;
+    border-radius: 10px; padding: 12px 14px;
+    margin-bottom: 12px; display: none;
+  }
+  .date-confirm.show { display: flex; align-items: center; gap: 10px; }
+  .date-confirm-text { font-size: 0.82rem; color: #7a6020; flex: 1; }
+  .date-confirm-btns { display: flex; gap: 6px; }
+  .date-btn {
+    font-size: 0.75rem; padding: 5px 10px; border-radius: 6px;
+    border: 1px solid #f0c040; background: #fff; color: #7a6020; cursor: pointer;
+  }
+  .date-btn.primary { background: #f0c040; color: #1a1a00; font-weight: 700; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <a class="back-link" href="../">← ab トップ</a>
   <h1>今日の記録</h1>
+
+
+  <!-- 日付確認バナー -->
+  <div class="date-confirm" id="dateConfirm">
+    <div class="date-confirm-text" id="dateConfirmText"></div>
+    <div class="date-confirm-btns">
+      <button class="date-btn primary" id="dateConfirmYes">はい</button>
+      <button class="date-btn" id="dateConfirmNo" id="dateConfirmNo">変更する</button>
+    </div>
+  </div>
+
+  <!-- チェック項目 -->
+  <div class="check-section" id="checkSection">
+    <div class="section-title">チェック</div>
+    <div class="check-item" id="checkMidnight" data-key="crossed_midnight">
+      <div class="check-box" id="boxMidnight"></div>
+      <div class="check-label">日を跨いだ</div>
+      <div class="check-done" id="doneMidnight"></div>
+    </div>
+    <div class="check-item" id="checkMeal" data-key="ate_meal">
+      <div class="check-box" id="boxMeal"></div>
+      <div class="check-label">ご飯食べた</div>
+      <div class="check-done" id="doneMeal"></div>
+    </div>
+  </div>
 
   <!-- スコア入力 -->
   <div class="section">
@@ -221,12 +287,12 @@
     <a href="../m1/" style="display:block; text-align:center; font-size:0.8rem; color:var(--accent); padding:12px 0; text-decoration:none;">もっと見る →</a>
   </div>
 
-  <p class="updated">更新: 2026-06-27 20:30</p>
+  <p class="updated">更新: 2026-06-28 10:00</p>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, getDocs, doc, setDoc, addDoc, orderBy, query }
+  import { getFirestore, collection, getDocs, doc, setDoc, getDoc, addDoc, orderBy, query }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const app = initializeApp({
@@ -248,6 +314,100 @@
   const now = new Date();
   document.getElementById("timeInput").value =
     String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
+
+
+  // ── チェック項目 ──────────────────────────────────────
+  const CHECK_COL = "ab_checks";
+  let checkData = { crossed_midnight: false, ate_meal: false };
+
+  async function loadChecks(date) {
+    try {
+      const d = await getDoc(doc(db, CHECK_COL, date));
+      if (d.exists()) checkData = { ...checkData, ...d.data() };
+    } catch(e) {}
+    renderChecks();
+  }
+
+  async function saveCheck(key, value) {
+    checkData[key] = value;
+    try {
+      await setDoc(doc(db, CHECK_COL, document.getElementById("dateInput").value), {
+        ...checkData,
+        date: document.getElementById("dateInput").value,
+        updatedAt: new Date().toISOString()
+      });
+    } catch(e) { console.warn("check save failed:", e); }
+    renderChecks();
+  }
+
+  function renderChecks() {
+    [
+      { key: "crossed_midnight", boxId: "boxMidnight", itemId: "checkMidnight", doneId: "doneMidnight" },
+      { key: "ate_meal",         boxId: "boxMeal",     itemId: "checkMeal",     doneId: "doneMeal" }
+    ].forEach(({ key, boxId, itemId, doneId }) => {
+      const checked = checkData[key];
+      const box  = document.getElementById(boxId);
+      const item = document.getElementById(itemId);
+      const done = document.getElementById(doneId);
+      box.textContent  = checked ? "✓" : "";
+      box.className    = "check-box" + (checked ? " checked" : "");
+      item.className   = "check-item" + (checked ? " done" : "");
+      done.textContent = checked ? "済" : "";
+    });
+  }
+
+  document.getElementById("checkMidnight").addEventListener("click", () => {
+    saveCheck("crossed_midnight", !checkData.crossed_midnight);
+  });
+  document.getElementById("checkMeal").addEventListener("click", () => {
+    saveCheck("ate_meal", !checkData.ate_meal);
+  });
+
+  // ── 日付確認バナー ────────────────────────────────────
+  function showDateConfirm() {
+    const now  = new Date();
+    const h    = now.getHours();
+    const m    = now.getMinutes();
+    const hm   = h * 60 + m;
+
+    // 22:15〜23:59 または 0:00〜7:00 の場合に表示
+    const isLateNight  = hm >= 22 * 60 + 15;
+    const isEarlyMorning = hm < 7 * 60;
+    if (!isLateNight && !isEarlyMorning) return;
+
+    const confirmEl = document.getElementById("dateConfirm");
+    const textEl    = document.getElementById("dateConfirmText");
+
+    if (isLateNight) {
+      const d = now.getDate();
+      const m2 = now.getMonth() + 1;
+      textEl.textContent = `⚠️ ${m2}/${d}（今日）の記録でいいですか？`;
+    } else {
+      // 0:00〜7:00 → 前日を提案
+      const yesterday = new Date(now);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const d = yesterday.getDate();
+      const m2 = yesterday.getMonth() + 1;
+      textEl.textContent = `⚠️ ${m2}/${d}（昨日）の記録ですか？`;
+      // 「はい」で前日にセット
+      document.getElementById("dateConfirmYes").addEventListener("click", () => {
+        const yStr = yesterday.toLocaleDateString("sv-SE");
+        document.getElementById("dateInput").value  = yStr;
+        document.getElementById("scoreDate").textContent = yStr;
+        loadChecks(yStr);
+        confirmEl.classList.remove("show");
+      }, { once: true });
+    }
+
+    confirmEl.classList.add("show");
+    document.getElementById("dateConfirmYes").addEventListener("click", () => {
+      confirmEl.classList.remove("show");
+    }, { once: true });
+    document.getElementById("dateConfirmNo").addEventListener("click", () => {
+      confirmEl.classList.remove("show");
+      document.getElementById("dateInput").focus();
+    });
+  }
 
   // スライダー
   const slider   = document.getElementById("slider");
@@ -402,6 +562,8 @@
     });
   }
 
+  loadChecks(today);
+  showDateConfirm();
   loadHistory();
 </script>
 </body>
