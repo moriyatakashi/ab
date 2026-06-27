@@ -85,8 +85,6 @@
 
 <div id="results"></div>
 <div class="summary" id="summary">実行中...</div>
-<button class="copy-btn" id="btnCopyResult">📋 テスト結果をコピーしてClaudeに貼る</button>
-<button class="reset-btn" id="btnResetTest">🗑 テストデータをリセット（ab_lib_test_hist / ab_lib_test_hi）</button>
 
   <div class="neg-section">
     <div class="neg-title">⚠ 異常系テスト（ネガティブテスト）</div>
@@ -117,7 +115,10 @@
       </select>
       <label>入力値（JS式として評価されます）</label>
       <input class="neg-input" id="manualValue" type="text" placeholder='例: null, "", -1, "abc", [], NaN'>
-      <button class="neg-run" id="btnManual">▶ 実行</button>
+      <div style="display:flex; gap:8px;">
+        <button class="neg-run" id="btnManual">▶ 異常値として実行</button>
+        <button class="neg-run" id="btnManualOk" style="background:#111; border-color:#333; color:#555; font-size:0.72rem;">正常値として実行</button>
+      </div>
       <div class="neg-log" id="manualLog" style="margin-top:4px;"></div>
     </div>
   </div>
@@ -497,6 +498,36 @@ document.getElementById("btnManual").addEventListener("click", async () => {
     negLog("manualLog", true, label, e.message);
   }
 });
+
+// 正常値として実行（エラーなし＝正解）
+document.getElementById("btnManualOk").addEventListener("click", async () => {
+  const target = document.getElementById("manualTarget").value;
+  const rawVal = document.getElementById("manualValue").value.trim();
+  document.getElementById("manualLog").innerHTML = "";
+  let val;
+  try {
+    val = Function('"use strict"; return (' + rawVal + ')')();
+  } catch(e) {
+    negLog("manualLog", false, "入力値のパース失敗", "JS式として評価できません: " + e.message);
+    return;
+  }
+  const MANUAL_FNS2 = {
+    score_score:     async (v) => { const s = new ScoreManager(db, "ab_lib_test_hist", "ab_lib_test_hi"); await s.saveResult(v); },
+    score_histCol:   async (v) => { new ScoreManager(db, v, "ab_lib_test_hi"); },
+    score_n:         async (v) => { const s = new ScoreManager(db, "ab_lib_test_hist", "ab_lib_test_hi"); await s.loadHistory(v); },
+    input_elementId: async (v) => { const inp = new Input(); inp.bind(v, "left"); },
+    input_keyName:   async (v) => { const inp = new Input(); inp.bind("btnLeft", v); },
+    gameloop_update: async (v) => { new GameLoop({ update: v, draw: () => {} }); },
+    gameloop_maxDt:  async (v) => { new GameLoop({ update: () => {}, draw: () => {}, maxDt: v }); },
+  };
+  const label = target + " ← " + badLabel(val) + "（正常値として実行）";
+  try {
+    await MANUAL_FNS2[target](val);
+    negLog("manualLog", true, label, "エラーなし ✓ 正常値として想定通り");
+  } catch(e) {
+    negLog("manualLog", false, label, "エラーが出てしまった（正常値のはずなのに）: " + e.message);
+  }
+});
 // ────────────────────────────────────────────────
 
 // ── テストデータリセット ──────────────────────────
@@ -610,5 +641,9 @@ document.getElementById("btnCopyResult").addEventListener("click", async () => {
   }
 });
 </script>
+<div style="padding: 0 0 24px;">
+  <button class="copy-btn" id="btnCopyResult">📋 結果をコピー</button>
+  <button class="reset-btn" id="btnResetTest">🗑 テストデータをリセット（ab_lib_test_hist / ab_lib_test_hi）</button>
+</div>
 </body>
 </html>
