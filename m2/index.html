@@ -172,6 +172,16 @@
   .visit-item-place { font-weight: 600; }
   .visit-item-time { color: var(--text-soft); font-size: 0.72rem; }
   .check-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+  .review-banner {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--accent); color: #fff;
+    border-radius: 12px; padding: 16px 18px; margin-bottom: 12px;
+    text-decoration: none; transition: opacity 0.15s;
+  }
+  .review-banner:hover { opacity: 0.88; }
+  .review-banner-icon { font-size: 1.6rem; flex-shrink: 0; }
+  .review-banner-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 2px; }
+  .review-banner-sub { font-size: 0.75rem; opacity: 0.85; }
   .review-section {
     background: var(--panel); border: 1px solid var(--border);
     border-radius: 14px; padding: 14px 16px; margin-bottom: 16px;
@@ -264,13 +274,6 @@
     </div>
   </div>
 
-  <!-- 次回振り返り日 -->
-  <div class="review-section">
-    <div class="review-label">次回振り返り</div>
-    <input class="review-input" type="date" id="reviewDate">
-    <div class="review-saved" id="reviewSaved"></div>
-  </div>
-
   <!-- スコア入力 -->
   <div class="section">
     <div class="section-title">スコア</div>
@@ -312,7 +315,7 @@
     <a href="../m1/" style="display:block; text-align:center; font-size:0.8rem; color:var(--accent); padding:12px 0; text-decoration:none;">もっと見る →</a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 12:00</p>
+  <p class="updated">更新: 2026-06-28 13:00</p>
 </div>
 
 <script type="module">
@@ -354,6 +357,16 @@
         // 振り返り日を復元
         if (data.reviewDate) {
           document.getElementById("reviewDate").value = data.reviewDate;
+          // 今日が振り返り日かチェック
+          const reviewDateVal = data.reviewDate;
+          const todayVal = new Date().toLocaleDateString("sv-SE");
+          if (reviewDateVal === todayVal) {
+            document.getElementById("reviewBanner").style.display = "flex";
+          } else {
+            document.getElementById("reviewBanner").style.display = "none";
+          }
+        } else {
+          document.getElementById("reviewBanner").style.display = "none";
         }
       }
     } catch(e) {}
@@ -404,6 +417,10 @@
       });
       saved.textContent = "✓";
       setTimeout(() => saved.textContent = "", 2000);
+      // バナー更新
+      const todayVal = new Date().toLocaleDateString("sv-SE");
+      document.getElementById("reviewBanner").style.display =
+        reviewDate === todayVal ? "flex" : "none";
     } catch(e) { console.warn("review save failed:", e); }
   });
 
