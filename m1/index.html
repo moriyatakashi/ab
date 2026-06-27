@@ -3,49 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>m1</title>
+<title>m1 / 記録一覧</title>
+<link rel="stylesheet" href="../style.css">
 <style>
-  :root {
-    --bg: #f7f6f3;
-    --panel: #ffffff;
-    --border: #e2ded6;
-    --text: #2b2b2b;
-    --text-soft: #7a7568;
-    --accent: #b5651d;
-    --accent-soft: #f1e3d3;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
-    padding: 24px 16px 60px;
-  }
-  .wrap { max-width: 480px; margin: 0 auto; }
-  h1 { font-size: 1.2rem; font-weight: 600; margin-bottom: 4px; }
-  .sub { font-size: 0.78rem; color: var(--text-soft); margin-bottom: 20px; }
-  .status { font-size: 0.75rem; color: var(--text-soft); margin-bottom: 16px; min-height: 16px; }
-  .list { display: flex; flex-direction: column; gap: 8px; }
-  .item {
+  .back-link { display:inline-block; font-size:0.8rem; color:var(--text-soft); text-decoration:none; margin-bottom:20px; }
+  .back-link:hover { color:var(--accent); }
+
+  .day-card {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 16px;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .day-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .day-date {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .day-dow {
+    font-size: 0.75rem;
+    color: var(--text-soft);
+  }
+
+  /* スコア行 */
+  .score-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 10px;
   }
-  .item-date { font-size: 0.9rem; color: var(--text-soft); }
-  .item-score {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: var(--accent);
-    min-width: 60px;
-    text-align: right;
+  .score-label {
+    font-size: 0.7rem;
+    color: var(--text-soft);
+    width: 36px;
+    flex-shrink: 0;
   }
   .bar-wrap {
     flex: 1;
-    margin: 0 12px;
     height: 6px;
     background: var(--accent-soft);
     border-radius: 3px;
@@ -55,18 +57,66 @@
     height: 100%;
     background: var(--accent);
     border-radius: 3px;
-    transition: width 0.3s ease;
   }
-  .empty { text-align: center; color: var(--text-soft); font-size: 0.85rem; padding: 40px 0; }
+  .score-val {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 40px;
+    text-align: right;
+  }
+  .score-note {
+    font-size: 0.78rem;
+    color: var(--text-soft);
+    padding-left: 46px;
+    margin-top: -4px;
+  }
+
+  /* 訪問行 */
+  .visit-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .visit-icon {
+    font-size: 0.85rem;
+    width: 36px;
+    flex-shrink: 0;
+    color: var(--text-soft);
+    padding-top: 1px;
+  }
+  .visit-info { flex: 1; min-width: 0; }
+  .visit-place {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .visit-time {
+    font-size: 0.72rem;
+    color: var(--text-soft);
+    margin-top: 1px;
+  }
+  .visit-memo {
+    font-size: 0.75rem;
+    color: var(--text-soft);
+    margin-top: 2px;
+  }
+
+  .empty { text-align:center; color:var(--text-soft); font-size:0.85rem; padding:40px 0; }
+  .list { display:flex; flex-direction:column; gap:10px; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>m1</h1>
-  <p class="sub">スコア履歴</p>
-  <p class="status" id="status">読み込み中...</p>
+  <a class="back-link" href="../">← ab トップ</a>
+  <h1>記録一覧</h1>
+  <p class="sub" id="status">読み込み中...</p>
   <div class="list" id="list"></div>
-  <p class="empty" id="emptyMsg" style="display:none;">有効なデータがありません</p>
+  <p class="empty" id="emptyMsg" style="display:none;">記録はまだありません</p>
+  <p class="updated">更新: 2026-06-27 17:20</p>
 </div>
 
 <script type="module">
@@ -86,68 +136,103 @@
   const db = getFirestore(app);
 
   const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-  function isValidDate(s) {
-    if (!DATE_RE.test(s)) return false;
-    const d = new Date(s);
-    return d instanceof Date && !isNaN(d);
-  }
-
-  function isValidScore(s) {
-    const n = Number(s);
-    return !isNaN(n) && n >= 0 && n <= 100 && String(s).trim() !== "";
-  }
+  const DOW = ["日","月","火","水","木","金","土"];
 
   function formatDate(s) {
     const [y, m, d] = s.split("-");
-    return `${y}年${parseInt(m)}月${parseInt(d)}日`;
+    const dow = DOW[new Date(s).getDay()];
+    return { label: `${y}年${parseInt(m)}月${parseInt(d)}日`, dow };
   }
 
   async function load() {
+    const statusEl = document.getElementById("status");
+    const listEl   = document.getElementById("list");
+    const emptyMsg = document.getElementById("emptyMsg");
+
     try {
-      const snap = await getDocs(collection(db, "ab_items2"));
-      const valid = [];
-
-      snap.forEach(doc => {
-        const { col1, col2 } = doc.data();
-        if (isValidDate(col1) && isValidScore(col2)) {
-          valid.push({ date: col1, score: Number(col2) });
+      // スコア取得（ab_items2 から日付IDのもの）
+      const scoreSnap = await getDocs(collection(db, "ab_items2"));
+      const scoreMap  = {}; // date -> { score, note }
+      scoreSnap.forEach(doc => {
+        const id   = doc.id;
+        const data = doc.data();
+        if (DATE_RE.test(id) && !isNaN(Number(data.col2)) && Number(data.col2) >= 0 && Number(data.col2) <= 100) {
+          scoreMap[id] = { score: Number(data.col2), note: data.col3 || "" };
         }
       });
 
-      // 同じ日付が複数あれば最後のもの（createdAtが無い場合はscoreが大きい方）を採用
-      const map = {};
-      valid.forEach(item => {
-        if (!map[item.date] || item.score >= map[item.date].score) {
-          map[item.date] = item;
-        }
+      // 訪問記録取得（ab_visits）
+      const visitSnap = await getDocs(collection(db, "ab_visits"));
+      const visitMap  = {}; // date -> [{ place, time, memo }]
+      visitSnap.forEach(doc => {
+        const d = doc.data();
+        if (!d.date) return;
+        if (!visitMap[d.date]) visitMap[d.date] = [];
+        visitMap[d.date].push({ place: d.place || "—", time: d.time || "", memo: d.memo || "" });
       });
 
-      const sorted = Object.values(map).sort((a, b) => b.date.localeCompare(a.date));
+      // 日付一覧をマージ・新しい順
+      const allDates = [...new Set([...Object.keys(scoreMap), ...Object.keys(visitMap)])]
+        .sort((a, b) => b.localeCompare(a));
 
-      const listEl = document.getElementById("list");
-      const emptyMsg = document.getElementById("emptyMsg");
-
-      if (sorted.length === 0) {
+      if (allDates.length === 0) {
         emptyMsg.style.display = "block";
-        document.getElementById("status").textContent = "データなし";
+        statusEl.textContent = "記録なし";
         return;
       }
 
-      sorted.forEach(({ date, score }) => {
-        const item = document.createElement("div");
-        item.className = "item";
-        item.innerHTML = `
-          <span class="item-date">${formatDate(date)}</span>
-          <div class="bar-wrap"><div class="bar" style="width:${score}%"></div></div>
-          <span class="item-score">${score}</span>
+      allDates.forEach(date => {
+        const { label, dow } = formatDate(date);
+        const score  = scoreMap[date];
+        const visits = visitMap[date] || [];
+
+        const card = document.createElement("div");
+        card.className = "day-card";
+
+        // ヘッダー
+        card.innerHTML = `
+          <div class="day-header">
+            <span class="day-date">${label}</span>
+            <span class="day-dow">${dow}曜</span>
+          </div>
         `;
-        listEl.appendChild(item);
+
+        // スコア
+        if (score) {
+          const scoreDiv = document.createElement("div");
+          scoreDiv.innerHTML = `
+            <div class="score-row">
+              <span class="score-label">スコア</span>
+              <div class="bar-wrap"><div class="bar" style="width:${score.score}%"></div></div>
+              <span class="score-val">${score.score}</span>
+            </div>
+            ${score.note ? `<div class="score-note">${score.note}</div>` : ""}
+          `;
+          card.appendChild(scoreDiv);
+        }
+
+        // 訪問
+        visits.sort((a, b) => a.time.localeCompare(b.time));
+        visits.forEach(v => {
+          const vDiv = document.createElement("div");
+          vDiv.className = "visit-row";
+          vDiv.innerHTML = `
+            <span class="visit-icon">📍</span>
+            <div class="visit-info">
+              <div class="visit-place">${v.place}</div>
+              ${v.time ? `<div class="visit-time">${v.time}</div>` : ""}
+              ${v.memo ? `<div class="visit-memo">${v.memo}</div>` : ""}
+            </div>
+          `;
+          card.appendChild(vDiv);
+        });
+
+        listEl.appendChild(card);
       });
 
-      document.getElementById("status").textContent = `${sorted.length} 件`;
+      statusEl.textContent = `${allDates.length} 日分`;
     } catch(e) {
-      document.getElementById("status").textContent = "エラー: " + e.message;
+      statusEl.textContent = "エラー: " + e.message;
     }
   }
 
