@@ -32,6 +32,13 @@
     color: var(--text); margin-bottom: 16px;
   }
   .btn-reload:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-copy {
+    cursor: pointer; border: 1px solid var(--accent); border-radius: 6px;
+    font-size: 0.78rem; padding: 5px 12px; background: var(--accent-soft);
+    color: var(--accent); margin-bottom: 16px; margin-left: 6px; font-weight: 600;
+  }
+  .btn-copy:hover { background: var(--accent); color: #fff; }
+  .btn-copy.copied { background: #4caf50; border-color: #4caf50; color: #fff; }
 
   /* 構造サマリー */
   .schema-section { margin-bottom: 28px; }
@@ -96,6 +103,7 @@
   <h1>m3</h1>
   <p class="sub">Firestore ビューア（ab01-9f35a）</p>
   <button class="btn-reload" id="btnReload">↻ 再読み込み</button>
+  <button class="btn-copy" id="btnCopy">📋 全データコピー</button>
   <p class="status" id="status">読み込み中...</p>
   <div id="content"></div>
 </div>
@@ -148,6 +156,7 @@
 
   async function load() {
     const statusEl = document.getElementById("status");
+    const allData = {};
     const contentEl = document.getElementById("content");
     contentEl.innerHTML = "";
 
@@ -174,6 +183,7 @@
 
       try {
         const snap = await getDocs(collection(db, colName));
+      allData[colName] = [];
 
         // スキーマ収集
         const fieldTypes = {}; // { fieldName: Set<type> }
@@ -225,6 +235,7 @@
 
         const docs = [];
         snap.forEach(d => docs.push({ id: d.id, data: d.data() }));
+        allData[colName] = docs.map(d => ({ id: d.id, ...d.data }));
         docs.sort((a, b) => b.id.localeCompare(a.id));
 
         docs.forEach(({ id, data }) => {
@@ -269,10 +280,24 @@
     schemaSection.appendChild(schemaList);
     contentEl.appendChild(schemaSection);
     contentEl.appendChild(dataSection);
+    window._allData = allData;
     statusEl.textContent = `合計 ${totalDocs} 件`;
   }
 
   document.getElementById("btnReload").addEventListener("click", load);
+
+  document.getElementById("btnCopy").addEventListener("click", async () => {
+    const btn = document.getElementById("btnCopy");
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(window._allData, null, 2));
+      btn.textContent = "✓ コピーしました";
+      btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "📋 全データコピー"; btn.classList.remove("copied"); }, 2000);
+    } catch(e) {
+      alert("コピー失敗: " + e.message);
+    }
+  });
+
   load();
 </script>
 </body>
