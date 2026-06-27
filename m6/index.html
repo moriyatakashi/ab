@@ -299,7 +299,6 @@ function draw() {
 // ── Update ────────────────────────────────────────────
 function update(dt) {
   if (state !== "playing") return;
-  pollGamepad();
 
   // 自機移動
   if (keys.left  && player.x - player.w/2 > 0)  player.x -= player.speed;
