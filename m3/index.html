@@ -96,6 +96,49 @@
   .field-key { color: var(--text-soft); min-width: 80px; font-size: 0.72rem; flex-shrink: 0; font-family: monospace; }
   .field-val { color: var(--text); word-break: break-all; }
   .col-error { font-size: 0.78rem; color: #b34444; padding: 8px 0; }
+
+  /* SQL コンソール */
+  .sql-console {
+    margin-top: 32px;
+    border-top: 2px solid var(--accent-soft);
+    padding-top: 20px;
+  }
+  .sql-console h2 {
+    font-size: 0.8rem; font-weight: 600; color: var(--text-soft);
+    letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .sql-warn {
+    font-size: 0.72rem; color: #b34444; background: #fdf0f0;
+    border: 1px solid #f5c6c6; border-radius: 6px;
+    padding: 6px 10px; margin-bottom: 10px;
+  }
+  .sql-input {
+    width: 100%; font-family: monospace; font-size: 0.82rem;
+    padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: 8px; background: #fafaf8; color: var(--text);
+    resize: vertical; min-height: 100px;
+    line-height: 1.6;
+  }
+  .sql-input:focus { outline: none; border-color: var(--accent); }
+  .sql-run {
+    margin-top: 8px; padding: 10px 20px;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 8px; font-size: 0.88rem;
+    font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+  }
+  .sql-run:hover { opacity: 0.85; }
+  .sql-run:disabled { opacity: 0.4; cursor: not-allowed; }
+  .sql-log {
+    margin-top: 10px; font-family: monospace; font-size: 0.78rem;
+    max-height: 200px; overflow-y: auto;
+    background: #1e1e1e; color: #d4d4d4;
+    border-radius: 8px; padding: 10px 12px;
+    display: none;
+  }
+  .sql-log.show { display: block; }
+  .log-ok { color: #4ec9b0; }
+  .log-err { color: #f48771; }
+  .log-info { color: #9cdcfe; }
 </style>
 </head>
 <body>
@@ -106,6 +149,18 @@
   <button class="btn-copy" id="btnCopy">📋 全データコピー</button>
   <p class="status" id="status">読み込み中...</p>
   <div id="content"></div>
+
+  <div class="sql-console">
+    <h2>🛠 SQL コンソール</h2>
+    <div class="sql-warn">⚠️ 認証なし・本番直結。操作は取り消せません。</div>
+    <textarea class="sql-input" id="sqlInput" placeholder="INSERT ab_items2 col1=&quot;値&quot; col2=&quot;値&quot; col3=&quot;値&quot;
+UPDATE ab_items2 id=&quot;docId&quot; col1=&quot;新しい値&quot;
+DELETE ab_items id=&quot;docId&quot;
+TRUNCATE ab_items
+-- 複数行まとめて実行可"></textarea>
+    <button class="sql-run" id="sqlRun">▶ 実行</button>
+    <div class="sql-log" id="sqlLog"></div>
+  </div>
 </div>
 
 <script type="module">
@@ -283,6 +338,108 @@
     window._allData = allData;
     statusEl.textContent = `合計 ${totalDocs} 件`;
   }
+
+
+  // ── SQL コンソール ──────────────────────────────
+  function parseArgs(str) {
+    const re = /([\w]+)=(?:"([^"]*)"|([^\s]*))/g;
+    const obj = {};
+    let m;
+    while ((m = re.exec(str)) !== null) {
+      obj[m[1]] = m[2] !== undefined ? m[2] : m[3];
+    }
+    return obj;
+  }
+
+  function logLine(msg, cls = '') {
+    const logEl = document.getElementById('sqlLog');
+    logEl.classList.add('show');
+    const line = document.createElement('div');
+    if (cls) line.className = cls;
+    line.textContent = msg;
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  async function execSQL(raw) {
+    const { addDoc, setDoc, updateDoc, deleteDoc,
+            doc: fsDoc, collection: fsCol } =
+      await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+
+    const lines = raw.split('\n')
+      .map(l => l.trim())
+      .filter(l => l && !l.startsWith('--'));
+
+    let ok = 0, err = 0;
+    for (const line of lines) {
+      const tokens = line.match(/^(\S+)\s+(\S+)\s*(.*)$/);
+      if (!tokens) { logLine('? 構文不明: ' + line, 'log-err'); err++; continue; }
+      const [, cmd, colName, rest] = tokens;
+      const args = parseArgs(rest);
+
+      try {
+        switch (cmd.toUpperCase()) {
+          case 'INSERT': {
+            const data = {};
+            ['col1','col2','col3'].forEach(k => { if (args[k] !== undefined) data[k] = args[k]; });
+            data.createdAt = new Date().toISOString();
+            if (args.id) {
+              await setDoc(fsDoc(db, colName, args.id), data);
+              logLine('✓ INSERT (id指定) → ' + colName + '/' + args.id, 'log-ok');
+            } else {
+              const ref = await addDoc(fsCol(db, colName), data);
+              logLine('✓ INSERT → ' + colName + '/' + ref.id, 'log-ok');
+            }
+            ok++; break;
+          }
+          case 'UPDATE': {
+            if (!args.id) throw new Error('id= が必要');
+            const data = {};
+            ['col1','col2','col3'].forEach(k => { if (args[k] !== undefined) data[k] = args[k]; });
+            await updateDoc(fsDoc(db, colName, args.id), data);
+            logLine('✓ UPDATE → ' + colName + '/' + args.id, 'log-ok');
+            ok++; break;
+          }
+          case 'DELETE': {
+            if (!args.id) throw new Error('id= が必要');
+            await deleteDoc(fsDoc(db, colName, args.id));
+            logLine('✓ DELETE → ' + colName + '/' + args.id, 'log-ok');
+            ok++; break;
+          }
+          case 'TRUNCATE': {
+            const { getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+            const snap = await getDocs(fsCol(db, colName));
+            let cnt = 0;
+            for (const d of snap.docs) {
+              await deleteDoc(fsDoc(db, colName, d.id));
+              cnt++;
+            }
+            logLine('✓ TRUNCATE → ' + colName + ' (' + cnt + '件削除)', 'log-ok');
+            ok++; break;
+          }
+          default:
+            logLine('? 未対応コマンド: ' + cmd, 'log-err'); err++;
+        }
+      } catch(e) {
+        logLine('✗ ' + line + ' → ' + e.message, 'log-err'); err++;
+      }
+    }
+    logLine('── 完了: ' + ok + '成功 / ' + err + 'エラー ──', 'log-info');
+    if (ok > 0) setTimeout(() => load(), 800);
+  }
+
+  document.getElementById('sqlRun').addEventListener('click', async () => {
+    const btn = document.getElementById('sqlRun');
+    const input = document.getElementById('sqlInput').value.trim();
+    if (!input) return;
+    document.getElementById('sqlLog').innerHTML = '';
+    btn.disabled = true;
+    btn.textContent = '実行中...';
+    await execSQL(input);
+    btn.disabled = false;
+    btn.textContent = '▶ 実行';
+  });
+  // ────────────────────────────────────────────────
 
   document.getElementById("btnReload").addEventListener("click", load);
 
