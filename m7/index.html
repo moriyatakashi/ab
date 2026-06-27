@@ -169,7 +169,7 @@
     };
   }
 
-  getRedirectResult(auth).catch(() => {});
+
 
   const now = new Date();
   const dateStr = now.getFullYear() + "-" +
@@ -261,10 +261,21 @@
     }
   });
 
-  onAuthStateChanged(auth, user => {
+  onAuthStateChanged(auth, async user => {
+    // リダイレクト結果を先に処理
+    try {
+      const result = await getRedirectResult(auth);
+      if (result?.user) { user = result.user; }
+    } catch(e) {}
+
     const badge = document.getElementById("auth-badge");
     if (badge) badge.remove();
-    if (!user) { showLogin(); } else { showBadge(user); load(); }
+    if (!user) {
+      showLogin();
+    } else {
+      showBadge(user);
+      load();
+    }
   });
 </script>
 </body>
