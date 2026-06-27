@@ -46,6 +46,7 @@ function renderLoginScreen() {
     </div>
   `;
   document.getElementById("btnLogin").addEventListener("click", async () => {
+    alert("ボタン押されました");
     try {
       await signInWithRedirect(auth, new GoogleAuthProvider());
     } catch(e) {
