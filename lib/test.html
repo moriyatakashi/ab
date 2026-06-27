@@ -68,6 +68,14 @@
   }
   .copy-btn:hover { background: #2a2a38; color: #ccc; }
   .copy-btn.copied { background: #1a3a1a; border-color: #4ec94e; color: #4ec94e; }
+  .reset-btn {
+    display: block; width: 100%; margin-top: 8px;
+    padding: 11px; background: #1a0a0a; border: 1px solid #5a2020;
+    border-radius: 8px; color: #c05050; font-size: 0.8rem; cursor: pointer;
+    transition: background 0.1s;
+  }
+  .reset-btn:hover { background: #2a1010; color: #f08060; }
+  .reset-btn.done { background: #1a3a1a; border-color: #4ec94e; color: #4ec94e; }
 </style>
 </head>
 <body>
@@ -78,6 +86,7 @@
 <div id="results"></div>
 <div class="summary" id="summary">実行中...</div>
 <button class="copy-btn" id="btnCopyResult">📋 テスト結果をコピーしてClaudeに貼る</button>
+<button class="reset-btn" id="btnResetTest">🗑 テストデータをリセット（ab_lib_test_hist / ab_lib_test_hi）</button>
 
   <div class="neg-section">
     <div class="neg-title">⚠ 異常系テスト（ネガティブテスト）</div>
@@ -489,6 +498,41 @@ document.getElementById("btnManual").addEventListener("click", async () => {
   }
 });
 // ────────────────────────────────────────────────
+
+// ── テストデータリセット ──────────────────────────
+document.getElementById("btnResetTest").addEventListener("click", async () => {
+  const btn = document.getElementById("btnResetTest");
+  if (!confirm("ab_lib_test_hist を全件削除し、ab_lib_test_hi の最高得点を削除します。よろしいですか？")) return;
+
+  btn.textContent = "削除中...";
+  btn.disabled = true;
+
+  const { collection: col, getDocs, deleteDoc, doc } =
+    await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+
+  let count = 0;
+  try {
+    // ab_lib_test_hist を全件削除
+    const snap = await getDocs(col(db, "ab_lib_test_hist"));
+    for (const d of snap.docs) {
+      await deleteDoc(doc(db, "ab_lib_test_hist", d.id));
+      count++;
+    }
+    // ab_lib_test_hi の record を削除
+    await deleteDoc(doc(db, "ab_lib_test_hi", "record"));
+
+    btn.textContent = "✓ リセット完了（" + count + "件削除）";
+    btn.classList.add("done");
+    setTimeout(() => {
+      btn.textContent = "🗑 テストデータをリセット（ab_lib_test_hist / ab_lib_test_hi）";
+      btn.classList.remove("done");
+      btn.disabled = false;
+    }, 3000);
+  } catch(e) {
+    btn.textContent = "エラー: " + e.message;
+    btn.disabled = false;
+  }
+});
 
 // ── サマリー ──────────────────────────────────────
 const sumEl = document.getElementById("summary");
