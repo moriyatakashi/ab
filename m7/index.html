@@ -128,9 +128,48 @@
 </div>
 
 <script type="module">
-  import { requireAuth, db } from "../auth.js";
-  import { collection, getDocs, doc, setDoc, deleteDoc }
+  import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getAuth, GoogleAuthProvider, signInWithRedirect,
+           getRedirectResult, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+  const _app = getApps().length ? getApps()[0] : initializeApp({
+    apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
+    authDomain: "ab01-9f35a.firebaseapp.com",
+    projectId: "ab01-9f35a",
+    storageBucket: "ab01-9f35a.firebasestorage.app",
+    messagingSenderId: "502154862201",
+    appId: "1:502154862201:web:4ca0c72225af6bd0147ea8"
+  });
+  const db   = getFirestore(_app);
+  const auth = getAuth(_app);
+
+  // 認証バッジ
+  function showBadge(user) {
+    const b = document.createElement("div");
+    b.style.cssText = "position:fixed;top:10px;right:12px;z-index:999;display:flex;align-items:center;gap:8px;";
+    b.innerHTML = `<span style="font-size:0.72rem;color:#7a7568;">${user.displayName||user.email}</span>
+      <button id="btnLogout" style="font-size:0.7rem;padding:4px 10px;border-radius:6px;border:1px solid #e2ded6;background:#fff;color:#7a7568;cursor:pointer;">ログアウト</button>`;
+    document.body.appendChild(b);
+    document.getElementById("btnLogout").addEventListener("click", () => signOut(auth));
+  }
+
+  // ログイン画面
+  function showLogin() {
+    document.body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#f7f6f3;font-family:-apple-system,sans-serif;padding:24px;">
+      <div style="font-size:2rem;margin-bottom:16px;">📊</div>
+      <div style="font-size:1.1rem;font-weight:700;color:#2b2b2b;margin-bottom:6px;">m7</div>
+      <div style="font-size:0.82rem;color:#7a7568;margin-bottom:32px;">ログインが必要です</div>
+      <button id="btnLogin" style="background:#fff;border:1px solid #e2ded6;border-radius:10px;padding:13px 22px;font-size:0.92rem;font-weight:600;color:#2b2b2b;cursor:pointer;">Googleでログイン</button>
+    </div>`;
+    document.getElementById("btnLogin").onclick = () => {
+      signInWithRedirect(auth, new GoogleAuthProvider());
+    };
+  }
+
+  getRedirectResult(auth).catch(() => {});
 
   const now = new Date();
   const dateStr = now.getFullYear() + "-" +
@@ -222,7 +261,11 @@
     }
   });
 
-  requireAuth(() => load());
+  onAuthStateChanged(auth, user => {
+    const badge = document.getElementById("auth-badge");
+    if (badge) badge.remove();
+    if (!user) { showLogin(); } else { showBadge(user); load(); }
+  });
 </script>
 </body>
 </html>
