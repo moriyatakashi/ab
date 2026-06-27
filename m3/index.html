@@ -157,9 +157,12 @@ TRUNCATE ab_sandbox
     <button class="sql-run" id="sqlRun">▶ 実行</button>
     <div class="sql-log" id="sqlLog"></div>
   </div>
+  <p style="font-size:0.72rem;color:var(--text-soft);text-align:right;margin-top:24px;">更新: 2026-06-28 08:47</p>
 </div>
 
+<script>alert("[A-0] 通常script OK");</script>
 <script type="module">
+  alert("[A-1] module開始");
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -174,6 +177,7 @@ TRUNCATE ab_sandbox
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  alert("[A-2] Firebase OK");
 
   const COLLECTIONS = ["ab_items2", "ab_sandbox", "ab_visits", "ab_checks", "ab_reviews"];
   const SKIP_FIELDS = ["createdAt", "updatedAt"];
@@ -206,6 +210,7 @@ TRUNCATE ab_sandbox
   }
 
   async function load() {
+    alert("[A-4] load()開始");
     const statusEl = document.getElementById("status");
     const allData = {};
     const contentEl = document.getElementById("content");
@@ -452,6 +457,7 @@ TRUNCATE ab_sandbox
     }
   });
 
+  alert("[A-3] load()呼び出し直前");
   load();
 </script>
 </body>
