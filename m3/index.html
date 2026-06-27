@@ -157,7 +157,7 @@ TRUNCATE ab_sandbox
     <button class="sql-run" id="sqlRun">▶ 実行</button>
     <div class="sql-log" id="sqlLog"></div>
   </div>
-  <p style="font-size:0.72rem;color:var(--text-soft);text-align:right;margin-top:24px;">更新: 2026-06-28 08:47</p>
+  <p style="font-size:0.72rem;color:var(--text-soft);text-align:right;margin-top:24px;">更新: 2026-06-28 08:49</p>
 </div>
 
 <script>alert("[A-0] 通常script OK");</script>
@@ -212,6 +212,7 @@ TRUNCATE ab_sandbox
   async function load() {
     alert("[A-4] load()開始");
     const statusEl = document.getElementById("status");
+    statusEl.textContent = "処理中...";
     const allData = {};
     const contentEl = document.getElementById("content");
     contentEl.innerHTML = "";
@@ -230,7 +231,9 @@ TRUNCATE ab_sandbox
 
     let totalDocs = 0;
 
+    alert("[A-5] forループ開始 cols=" + COLLECTIONS.join(","));
     for (const colName of COLLECTIONS) {
+      alert("[A-6] コレクション処理: " + colName);
       const schemaItem = document.createElement("div");
       schemaItem.className = "schema-item";
 
@@ -239,6 +242,7 @@ TRUNCATE ab_sandbox
 
       try {
         const snap = await getDocs(collection(db, colName));
+      alert("[A-7] snap取得: " + colName + " " + snap.size + "件");
       allData[colName] = [];
 
         // スキーマ収集
