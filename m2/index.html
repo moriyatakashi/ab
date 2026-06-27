@@ -171,6 +171,12 @@
   .visit-item-icon { color: var(--text-soft); flex-shrink: 0; }
   .visit-item-place { font-weight: 600; }
   .visit-item-time { color: var(--text-soft); font-size: 0.72rem; }
+  .check-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+  .check-tag {
+    font-size: 0.68rem; color: var(--accent);
+    background: var(--accent-soft); border-radius: 10px;
+    padding: 2px 8px; pointer-events: none;
+  }
 
   .updated { font-size:0.72rem; color:var(--text-soft); margin-top:32px; text-align:right; }
 
@@ -287,7 +293,7 @@
     <a href="../m1/" style="display:block; text-align:center; font-size:0.8rem; color:var(--accent); padding:12px 0; text-decoration:none;">もっと見る →</a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 10:30</p>
+  <p class="updated">更新: 2026-06-28 11:00</p>
 </div>
 
 <script type="module">
@@ -524,10 +530,15 @@
     const emptyMsg = document.getElementById("emptyMsg");
     listEl.innerHTML = "";
 
-    const [scoreSnap, visitSnap] = await Promise.all([
+    const [scoreSnap, visitSnap, checkSnap] = await Promise.all([
       getDocs(collection(db, SCORE_COL)),
-      getDocs(query(collection(db, VISIT_COL), orderBy("createdAt", "desc")))
+      getDocs(query(collection(db, VISIT_COL), orderBy("createdAt", "desc"))),
+      getDocs(collection(db, CHECK_COL))
     ]);
+
+    // チェックマップ
+    const checkMap = {};
+    checkSnap.forEach(d => { checkMap[d.id] = d.data(); });
 
     // スコアマップ
     const scoreMap = {};
@@ -578,6 +589,20 @@
           ${score.note ? `<div class="score-note">${score.note}</div>` : ""}
         `;
         card.appendChild(s);
+      }
+
+      // チェックタグ
+      const chk = checkMap[date];
+      if (chk) {
+        const tags = [];
+        if (chk.crossed_midnight) tags.push("日を跨いだ");
+        if (chk.ate_meal)         tags.push("ご飯食べた");
+        if (tags.length) {
+          const tagDiv = document.createElement("div");
+          tagDiv.className = "check-tags";
+          tagDiv.innerHTML = tags.map(t => `<span class="check-tag">✓ ${t}</span>`).join("");
+          card.appendChild(tagDiv);
+        }
       }
 
       visits.sort((a, b) => a.time.localeCompare(b.time));
