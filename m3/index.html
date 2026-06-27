@@ -157,7 +157,7 @@ TRUNCATE ab_sandbox
     <button class="sql-run" id="sqlRun">▶ 実行</button>
     <div class="sql-log" id="sqlLog"></div>
   </div>
-  <p style="font-size:0.72rem;color:var(--text-soft);text-align:right;margin-top:24px;">更新: 2026-06-28 08:49</p>
+  <p style="font-size:0.72rem;color:var(--text-soft);text-align:right;margin-top:24px;">更新: 2026-06-28 08:51</p>
 </div>
 
 <script>alert("[A-0] 通常script OK");</script>
@@ -243,7 +243,9 @@ TRUNCATE ab_sandbox
       try {
         const snap = await getDocs(collection(db, colName));
       alert("[A-7] snap取得: " + colName + " " + snap.size + "件");
+      alert("[A-8] allData初期化前");
       allData[colName] = [];
+      alert("[A-8b] allData初期化後");
 
         // スキーマ収集
         const fieldTypes = {}; // { fieldName: Set<type> }
@@ -333,7 +335,9 @@ TRUNCATE ab_sandbox
         `;
       }
 
-      if (snap.size === 0) continue;
+      alert("[A-9] size===0チェック前 size=" + snap.size);
+      if (snap.size === 0) { alert("[A-9-SKIP] 0件スキップ"); continue; }
+      alert("[A-10] appendChild前");
       schemaList.appendChild(schemaItem);
       dataSection.appendChild(colDiv);
     }
