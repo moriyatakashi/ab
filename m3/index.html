@@ -108,9 +108,8 @@
     letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px;
   }
   .sql-warn {
-    font-size: 0.72rem; color: #b34444; background: #fdf0f0;
-    border: 1px solid #f5c6c6; border-radius: 6px;
-    padding: 6px 10px; margin-bottom: 10px;
+    font-size: 0.68rem; color: var(--text-soft);
+    margin-bottom: 8px;
   }
   .sql-input {
     width: 100%; font-family: monospace; font-size: 0.82rem;
@@ -152,7 +151,7 @@
 
   <div class="sql-console">
     <h2>🛠 SQL コンソール</h2>
-    <div class="sql-warn">⚠️ 認証なし・本番直結。操作は取り消せません。</div>
+    <div class="sql-warn">※ 認証なし・操作は取り消せません</div>
     <textarea class="sql-input" id="sqlInput" placeholder="INSERT ab_items2 col1=&quot;値&quot; col2=&quot;値&quot; col3=&quot;値&quot;
 UPDATE ab_items2 id=&quot;docId&quot; col1=&quot;新しい値&quot;
 DELETE ab_items id=&quot;docId&quot;
