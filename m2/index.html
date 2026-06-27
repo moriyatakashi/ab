@@ -315,24 +315,15 @@
     <a href="../m1/" style="display:block; text-align:center; font-size:0.8rem; color:var(--accent); padding:12px 0; text-decoration:none;">もっと見る →</a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 08:13</p>
+  <p class="updated">更新: 2026-06-28 08:15</p>
 </div>
 
 <script>alert("[C-0] 通常スクリプトOK");</script>
 <script type="module">
-alert("[C-1] moduleスクリプト開始");
-  try { from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, collection, getDocs, doc, setDoc, getDoc, addDoc, orderBy, query }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  const app = initializeApp({
-    apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
-    authDomain: "ab01-9f35a.firebaseapp.com",
-    projectId: "ab01-9f35a"
-  });
-  const db = getFirestore(app);
-  alert("[C-1.5] Firebase初期化OK");
-
+alert("[E-1] moduleスクリプト開始");
   const SCORE_COL = "ab_items2";
   const VISIT_COL = "ab_visits";
   const DATE_RE   = /^\d{4}-\d{2}-\d{2}$/;
