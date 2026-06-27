@@ -514,9 +514,9 @@ document.getElementById("btnCopyResult").addEventListener("click", async () => {
     );
   });
 
-  // 異常系テスト結果を収集
+  // 異常系テスト結果を収集（自動）
   const negRows = document.querySelectorAll("#negLog .neg-row");
-  const negLines = ["", "=== 異常系テスト ==="];
+  const negLines = ["", "=== 異常系テスト（自動） ==="];
   negRows.forEach(row => {
     const badge = row.querySelector(".neg-badge");
     const what  = row.querySelector(".what");
@@ -524,6 +524,21 @@ document.getElementById("btnCopyResult").addEventListener("click", async () => {
     if (!badge || !what) return;
     negLines.push(badge.textContent.trim() + " " + what.textContent.trim() + " → " + (msg ? msg.textContent.trim() : ""));
   });
+
+  // 手動テスト結果を収集
+  const manualRows = document.querySelectorAll("#manualLog .neg-row");
+  const manualLines = ["", "=== 異常系テスト（手動） ==="];
+  if (manualRows.length === 0) {
+    manualLines.push("（未実行）");
+  } else {
+    manualRows.forEach(row => {
+      const badge = row.querySelector(".neg-badge");
+      const what  = row.querySelector(".what");
+      const msg   = row.querySelector(".ok, .err");
+      if (!badge || !what) return;
+      manualLines.push(badge.textContent.trim() + " " + what.textContent.trim() + " → " + (msg ? msg.textContent.trim() : ""));
+    });
+  }
 
   // サマリー
   const sumText = sumEl.textContent;
@@ -534,7 +549,8 @@ document.getElementById("btnCopyResult").addEventListener("click", async () => {
     "異常系: " + negSum,
     "",
     ...normalLines,
-    ...negLines
+    ...negLines,
+    ...manualLines
   ];
 
   try {
