@@ -315,7 +315,7 @@
     <a href="../m1/" style="display:block; text-align:center; font-size:0.8rem; color:var(--accent); padding:12px 0; text-decoration:none;">もっと見る →</a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 13:00</p>
+  <p class="updated">更新: 2026-06-28 07:58</p>
 </div>
 
 <script type="module">
@@ -592,10 +592,17 @@
     const emptyMsg = document.getElementById("emptyMsg");
     listEl.innerHTML = "";
 
-    const [scoreSnap, visitSnap] = await Promise.all([
-      getDocs(collection(db, SCORE_COL)),
-      getDocs(query(collection(db, VISIT_COL), orderBy("createdAt", "desc")))
-    ]);
+    let scoreSnap, visitSnap;
+    try {
+      [scoreSnap, visitSnap] = await Promise.all([
+        getDocs(collection(db, SCORE_COL)),
+        getDocs(query(collection(db, VISIT_COL), orderBy("createdAt", "desc")))
+      ]);
+    } catch(e) {
+      alert("履歴読み込みエラー: " + e.message);
+      return;
+    }
+    alert("scoreSnap: " + scoreSnap.size + "件 / visitSnap: " + visitSnap.size + "件");
 
     // チェックマップ（失敗してもスコア・訪問には影響させない）
     const checkMap = {};
