@@ -106,10 +106,7 @@
 
     <div class="nav-section">管理</div>
     <div class="nav-item" data-page="main" onclick="go('main',this)">
-      <span class="nav-icon">🗄</span><span>main CRUD</span>
-    </div>
-    <div class="nav-item" data-page="sandbox" onclick="go('sandbox',this)">
-      <span class="nav-icon">🧪</span><span>sandbox</span>
+      <span class="nav-icon">🗄</span><span>CRUD</span>
     </div>
     <div class="nav-item" data-page="m3" onclick="go('m3',this)">
       <span class="nav-icon">🔍</span><span>Firestoreビューア</span>
@@ -142,10 +139,7 @@
 
 <div id="drawer">
   <div class="drawer-item" data-page="main" onclick="go('main',this);closeDrawer()">
-    <span class="drawer-icon">🗄</span>main CRUD
-  </div>
-  <div class="drawer-item" data-page="sandbox" onclick="go('sandbox',this);closeDrawer()">
-    <span class="drawer-icon">🧪</span>sandbox
+    <span class="drawer-icon">🗄</span>CRUD
   </div>
   <div class="drawer-item" data-page="m3" onclick="go('m3',this);closeDrawer()">
     <span class="drawer-icon">🔍</span>Firestoreビューア
@@ -156,7 +150,7 @@
 const PAGES = {
   m7: '../m7/', m5: '../m5/',
   m1: '../m1/', m4: '../m4/',
-  main: '../main/', sandbox: '../sandbox/', m3: '../m3/'
+  main: '../main/', m3: '../m3/'
 };
 
 function go(page, el) {
