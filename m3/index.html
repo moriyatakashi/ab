@@ -157,7 +157,7 @@ TRUNCATE ab_sandbox
     <button class="sql-run" id="sqlRun">▶ 実行</button>
     <div class="sql-log" id="sqlLog"></div>
   </div>
-  <p style="font-size:0.72rem;color:var(--text-soft);text-align:right;margin-top:24px;">更新: 2026-06-28 08:55</p>
+  <p style="font-size:0.72rem;color:var(--text-soft);text-align:right;margin-top:24px;">更新: 2026-06-28 08:56</p>
 </div>
 
 <script>alert("[A-0] 通常script OK");</script>
@@ -231,21 +231,26 @@ TRUNCATE ab_sandbox
 
     let totalDocs = 0;
 
-    alert("[A-5] forループ開始 cols=" + COLLECTIONS.join(","));
     for (const colName of COLLECTIONS) {
-      alert("[A-6] コレクション処理: " + colName);
       const schemaItem = document.createElement("div");
       schemaItem.className = "schema-item";
-
       const colDiv = document.createElement("div");
       colDiv.className = "collection";
 
+      let snap;
       try {
-        const snap = await getDocs(collection(db, colName));
-        alert("[A-7] snap取得: " + colName + " " + snap.size + "件");
-        alert("[A-8] allData初期化前");
-        allData[colName] = [];
-        alert("[A-8b] allData初期化後");
+        snap = await getDocs(collection(db, colName));
+      } catch(e) {
+        alert("[ERR-fetch] " + colName + ": " + e.message);
+        continue;
+      }
+
+      // 0件スキップ
+      if (snap.size === 0) continue;
+
+      allData[colName] = [];
+
+      try {
 
         // スキーマ収集
         const fieldTypes = {}; // { fieldName: Set<type> }
@@ -325,7 +330,7 @@ TRUNCATE ab_sandbox
         colDiv.appendChild(docList);
 
       } catch(e) {
-        alert("[CATCH] " + colName + " エラー: " + e.message + " / " + e.stack?.split("\n")[0]);
+        alert("[CATCH] " + colName + ": " + e.message);
         schemaItem.innerHTML = `
           <div class="schema-header"><span class="schema-col-name">${colName}</span></div>
           <p class="schema-error">エラー: ${e.message}</p>
@@ -336,9 +341,6 @@ TRUNCATE ab_sandbox
         `;
       }
 
-        alert("[A-9] size===0チェック前 size=" + snap.size);
-        if (snap.size === 0) { alert("[A-9-SKIP] 0件スキップ"); continue; }
-        alert("[A-10] appendChild前");
         schemaList.appendChild(schemaItem);
       dataSection.appendChild(colDiv);
     }
