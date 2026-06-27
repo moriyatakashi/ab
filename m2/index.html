@@ -320,7 +320,7 @@
 
 <script type="module">
 alert("[1] m2スクリプト開始");
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  try { from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, collection, getDocs, doc, setDoc, getDoc, addDoc, orderBy, query }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -330,6 +330,7 @@ alert("[1] m2スクリプト開始");
     projectId: "ab01-9f35a"
   });
   const db = getFirestore(app);
+  alert("[1.5] Firebase初期化OK");
 
   const SCORE_COL = "ab_items2";
   const VISIT_COL = "ab_visits";
