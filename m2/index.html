@@ -315,7 +315,7 @@
     <a href="../m1/" style="display:block; text-align:center; font-size:0.8rem; color:var(--accent); padding:12px 0; text-decoration:none;">もっと見る →</a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 08:16</p>
+  <p class="updated">更新: 2026-06-28 08:18</p>
 </div>
 
 <script>alert("[C-0] 通常スクリプトOK");</script>
@@ -340,6 +340,7 @@ alert("[F-2] initializeApp前");
 
   // 今日の日付をセット
   const today = new Date().toLocaleDateString("sv-SE");
+  alert("[G-1] today=" + today);
   document.getElementById("scoreDate").textContent = today;
   document.getElementById("dateInput").value = today;
   const now = new Date();
@@ -349,6 +350,7 @@ alert("[F-2] initializeApp前");
 
   // ── チェック項目 ──────────────────────────────────────
   const CHECK_COL = "ab_checks";
+  alert("[G-2] 定数定義完了");
   let checkData = { crossed_midnight: false, ate_meal: false };
 
   async function loadChecks(date) {
@@ -699,7 +701,7 @@ alert("[F-2] initializeApp前");
     });
   }
 
-  alert("[C-2] 初期化開始 today=" + today);
+  alert("[G-3] 関数定義完了・初期化開始 today=" + today);
   loadChecks(today);
   loadTodayScore(today);
 
