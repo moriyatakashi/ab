@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>m8 / RUNNER</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #1a1a2e; font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; touch-action: none; }
+  .wrap { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; height: 100dvh; }
+
+  #header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px 4px; background: #1a1a2e; flex-shrink: 0;
+  }
+  #header a { font-size: 0.7rem; color: #555; text-decoration: none; }
+  .hud { display: flex; gap: 18px; align-items: baseline; }
+  .hud-item { text-align: center; }
+  .hud-label { font-size: 0.55rem; color: #555; letter-spacing: 0.1em; text-transform: uppercase; }
+  .hud-val { font-size: 0.95rem; font-weight: 700; color: #e8e4d4; font-variant-numeric: tabular-nums; }
+  .hud-val.gold { color: #f0c040; }
+
+  #gameCanvas { display: block; width: 100%; flex: 1; min-height: 0; }
+
+  #controls {
+    display: flex; gap: 10px; padding: 8px 14px 10px;
+    background: #1a1a2e; flex-shrink: 0;
+  }
+  .ctrl { flex: 1; height: 52px; background: #16213e; border: 1px solid #2a2a4a;
+    border-radius: 10px; color: #888; font-size: 1.3rem; cursor: pointer;
+    user-select: none; -webkit-tap-highlight-color: transparent; display: flex;
+    align-items: center; justify-content: center; transition: background 0.08s; }
+  .ctrl:active, .ctrl.on { background: #2a2a5e; color: #fff; }
+  #btnJump { flex: 1.4; border-color: #f0c040; color: #f0c040; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.06em; }
+  #btnJump:active, #btnJump.on { background: #2e2810; }
+
+  #histSection { background: #1a1a2e; padding: 0 14px 10px; flex-shrink: 0; max-height: 110px; overflow-y: auto; }
+  .hist-label { font-size: 0.55rem; color: #333; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 0; }
+  .hist-row { display: flex; justify-content: space-between; font-size: 0.72rem; color: #555; padding: 2px 0; border-bottom: 1px solid #111; }
+  .hist-row.best { color: #f0c040; }
+
+  #overlay {
+    position: fixed; inset: 0; background: rgba(26,26,46,0.94);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20;
+  }
+  #overlay.hidden { display: none; }
+  .ov-title { font-size: 2.2rem; font-weight: 800; color: #f0c040; letter-spacing: 0.1em; margin-bottom: 4px;
+    text-shadow: 0 0 24px rgba(240,192,64,0.35); }
+  .ov-sub { font-size: 0.75rem; color: #555; letter-spacing: 0.08em; margin-bottom: 24px; }
+  .ov-score { font-size: 1rem; color: #e8e4d4; margin-bottom: 4px; }
+  .ov-hi { font-size: 0.85rem; color: #f0c040; margin-bottom: 28px; }
+  #btnStart { background: #f0c040; color: #1a1a2e; border: none; border-radius: 10px;
+    padding: 13px 44px; font-size: 1rem; font-weight: 800; letter-spacing: 0.08em; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="header">
+    <a href="../">← ab</a>
+    <div class="hud">
+      <div class="hud-item"><div class="hud-label">SCORE</div><div class="hud-val" id="dScore">0</div></div>
+      <div class="hud-item"><div class="hud-label">BEST</div><div class="hud-val gold" id="dBest">---</div></div>
+      <div class="hud-item"><div class="hud-label">COINS</div><div class="hud-val" id="dCoins">0</div></div>
+      <div class="hud-item"><div class="hud-label">LIVES</div><div class="hud-val" id="dLives">♥♥♥</div></div>
+    </div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="controls">
+    <button class="ctrl" id="btnLeft">◀</button>
+    <button class="ctrl" id="btnJump">JUMP</button>
+    <button class="ctrl" id="btnRight">▶</button>
+  </div>
+
+  <div id="histSection">
+    <div class="hist-label">PLAY HISTORY</div>
+    <div id="histList"></div>
+  </div>
+</div>
+
+<div id="overlay">
+  <div class="ov-title">RUNNER</div>
+  <div class="ov-sub">m8 · platformer</div>
+  <div class="ov-score" id="ovScore"></div>
+  <div class="ov-hi"    id="ovHi"></div>
+  <button id="btnStart">START</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc, orderBy, query, limit }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
+  authDomain: "ab01-9f35a.firebaseapp.com",
+  projectId: "ab01-9f35a"
+});
+const db = getFirestore(app);
+const COL_HIST = "ab_runner_history";
+const DOC_HI   = "ab_runner_hi";
+
+// ── Canvas ────────────────────────────────────────────
+const canvas = document.getElementById("gameCanvas");
+const ctx    = canvas.getContext("2d");
+let W, H;
+function resize() {
+  const rect = canvas.getBoundingClientRect();
+  W = canvas.width  = rect.width;
+  H = canvas.height = rect.height;
+}
+resize();
+window.addEventListener("resize", resize);
+
+// ── Constants ─────────────────────────────────────────
+const GRAV = 0.45, JUMP_V = -10, PLAYER_SPD = 3.2;
+const TILE = 32;
+
+// ── State ─────────────────────────────────────────────
+let state = "idle";
+let score = 0, coins = 0, lives = 3, hiScore = 0, level = 1;
+let player, platforms, enemies, coinItems, particles;
+let cam = { x: 0 };
+let keys = { left: false, right: false, jump: false };
+let jumpPressed = false;
+let frameId, lastTime = 0;
+
+// ── Firestore ─────────────────────────────────────────
+async function loadHi() {
+  try {
+    const d = await getDoc(doc(db, DOC_HI, "record"));
+    if (d.exists()) hiScore = d.data().score || 0;
+  } catch(e) {}
+  updateHUD();
+  loadHistory();
+}
+async function saveResult(s) {
+  const date = new Date().toLocaleDateString("sv-SE");
+  try {
+    await addDoc(collection(db, COL_HIST), { score: s, coins, level, date, createdAt: new Date().toISOString() });
+    if (s > hiScore) {
+      hiScore = s;
+      await setDoc(doc(db, DOC_HI, "record"), { score: s, date });
+    }
+  } catch(e) {}
+  updateHUD();
+  loadHistory();
+}
+async function loadHistory() {
+  try {
+    const q = query(collection(db, COL_HIST), orderBy("createdAt","desc"), limit(8));
+    const snap = await getDocs(q);
+    const list = document.getElementById("histList");
+    list.innerHTML = "";
+    let maxS = 0;
+    snap.forEach(d => { if (d.data().score > maxS) maxS = d.data().score; });
+    snap.forEach(d => {
+      const dt = d.data();
+      const row = document.createElement("div");
+      row.className = "hist-row" + (dt.score === maxS ? " best" : "");
+      row.innerHTML = `<span>${dt.score.toLocaleString()} pt</span><span>🪙${dt.coins||0}</span><span>Lv${dt.level||1}</span><span>${dt.date}</span>`;
+      list.appendChild(row);
+    });
+  } catch(e) {}
+}
+
+// ── HUD ───────────────────────────────────────────────
+function updateHUD() {
+  document.getElementById("dScore").textContent = score.toLocaleString();
+  document.getElementById("dBest").textContent  = hiScore > 0 ? hiScore.toLocaleString() : "---";
+  document.getElementById("dCoins").textContent = coins;
+  document.getElementById("dLives").textContent = "♥".repeat(Math.max(0, lives));
+}
+
+// ── Level generation ──────────────────────────────────
+function genLevel(lvl) {
+  platforms = [];
+  enemies   = [];
+  coinItems = [];
+
+  const WORLD_W = 3200 + lvl * 400;
+
+  // 地面
+  for (let x = 0; x < WORLD_W; x += TILE) {
+    platforms.push({ x, y: H - TILE, w: TILE, h: TILE, type: "ground" });
+  }
+
+  // 足場ランダム生成
+  let px = 200;
+  while (px < WORLD_W - 400) {
+    const pw = (3 + Math.floor(Math.random() * 5)) * TILE;
+    const py = H - TILE * (3 + Math.floor(Math.random() * 5));
+    platforms.push({ x: px, y: py, w: pw, h: TILE / 2, type: "platform" });
+
+    // コインを足場の上に配置
+    const nc = 1 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < nc; i++) {
+      coinItems.push({ x: px + i * TILE + TILE/2, y: py - 18, r: 8, alive: true });
+    }
+
+    // 敵を足場に配置（確率）
+    if (Math.random() < 0.5 + lvl * 0.05) {
+      enemies.push({
+        x: px + pw / 2, y: py - 20,
+        w: 20, h: 20,
+        vx: (Math.random() < 0.5 ? 1 : -1) * (0.8 + lvl * 0.15),
+        alive: true, floor: py, floorLeft: px, floorRight: px + pw
+      });
+    }
+
+    px += pw + TILE * (2 + Math.floor(Math.random() * 4));
+  }
+
+  // ゴール旗
+  platforms.push({ x: WORLD_W - 80, y: H - TILE * 6, w: 12, h: TILE * 5, type: "goal_pole" });
+  platforms.push({ x: WORLD_W - 80, y: H - TILE * 6, w: 40, h: 20, type: "goal_flag" });
+}
+
+function spawnPlayer() {
+  player = {
+    x: 60, y: H - TILE * 2 - 28,
+    w: 22, h: 28,
+    vx: 0, vy: 0,
+    onGround: false,
+    invincible: 0,
+    facingRight: true
+  };
+  cam.x = 0;
+}
+
+// ── Physics & collision ───────────────────────────────
+function playerPlatformCollision() {
+  player.onGround = false;
+  for (const p of platforms) {
+    if (p.type === "goal_pole" || p.type === "goal_flag") continue;
+    const overlapX = player.x + player.w > p.x && player.x < p.x + p.w;
+    const overlapY = player.y + player.h > p.y && player.y < p.y + p.h;
+    if (!overlapX || !overlapY) continue;
+
+    const fromTop    = Math.abs((player.y + player.h) - p.y);
+    const fromBottom = Math.abs(player.y - (p.y + p.h));
+    const fromLeft   = Math.abs((player.x + player.w) - p.x);
+    const fromRight  = Math.abs(player.x - (p.x + p.w));
+    const minD = Math.min(fromTop, fromBottom, fromLeft, fromRight);
+
+    if (minD === fromTop && player.vy >= 0) {
+      player.y = p.y - player.h;
+      player.vy = 0;
+      player.onGround = true;
+    } else if (minD === fromBottom && player.vy < 0) {
+      player.y = p.y + p.h;
+      player.vy = 0;
+    } else if (minD === fromLeft) {
+      player.x = p.x - player.w; player.vx = 0;
+    } else if (minD === fromRight) {
+      player.x = p.x + p.w; player.vx = 0;
+    }
+  }
+}
+
+function updatePlayer(dt) {
+  // 横移動
+  if (keys.left)  { player.vx = -PLAYER_SPD; player.facingRight = false; }
+  else if (keys.right) { player.vx = PLAYER_SPD; player.facingRight = true; }
+  else player.vx *= 0.75;
+
+  // ジャンプ
+  if (keys.jump && !jumpPressed && player.onGround) {
+    player.vy = JUMP_V;
+    jumpPressed = true;
+    spawnParticle(player.x + player.w/2, player.y + player.h, "#f0c040", 4);
+  }
+  if (!keys.jump) jumpPressed = false;
+
+  player.vy += GRAV;
+  player.x  += player.vx;
+  player.y  += player.vy;
+
+  if (player.invincible > 0) player.invincible--;
+
+  // 画面端
+  if (player.x < 0) { player.x = 0; player.vx = 0; }
+
+  playerPlatformCollision();
+
+  // 落下死
+  if (player.y > H + 100) { loseLife(); }
+}
+
+function updateEnemies() {
+  enemies.forEach(e => {
+    if (!e.alive) return;
+    e.x += e.vx;
+    if (e.x < e.floorLeft || e.x + e.w > e.floorRight) e.vx *= -1;
+
+    // 敵 vs プレイヤー
+    if (player.invincible > 0) return;
+    const ox = player.x + player.w > e.x && player.x < e.x + e.w;
+    const oy = player.y + player.h > e.y && player.y < e.y + e.h;
+    if (!ox || !oy) return;
+
+    // 踏む（上から）
+    const stomped = player.vy > 0 && player.y + player.h < e.y + e.h * 0.6;
+    if (stomped) {
+      e.alive = false;
+      player.vy = JUMP_V * 0.7;
+      score += 100;
+      updateHUD();
+      spawnParticle(e.x + e.w/2, e.y, "#f08060", 6);
+    } else {
+      loseLife();
+    }
+  });
+}
+
+function updateCoins() {
+  coinItems.forEach(c => {
+    if (!c.alive) return;
+    const dx = player.x + player.w/2 - c.x;
+    const dy = player.y + player.h/2 - c.y;
+    if (Math.sqrt(dx*dx + dy*dy) < c.r + player.w/2) {
+      c.alive = false;
+      coins++;
+      score += 50;
+      updateHUD();
+      spawnParticle(c.x, c.y, "#f0c040", 5);
+    }
+  });
+}
+
+function checkGoal() {
+  const gx = platforms.find(p => p.type === "goal_flag");
+  if (!gx) return;
+  if (player.x + player.w > gx.x && player.x < gx.x + gx.w &&
+      player.y + player.h > gx.y && player.y < gx.y + gx.h) {
+    score += 1000 * level;
+    level++;
+    updateHUD();
+    genLevel(level);
+    spawnPlayer();
+  }
+}
+
+function loseLife() {
+  lives--;
+  updateHUD();
+  if (lives <= 0) {
+    gameOver();
+  } else {
+    player.invincible = 120;
+    spawnPlayer();
+  }
+}
+
+// ── Particles ─────────────────────────────────────────
+function spawnParticle(x, y, color, n) {
+  for (let i = 0; i < n; i++) {
+    particles.push({
+      x, y, color,
+      vx: (Math.random() - 0.5) * 4,
+      vy: -Math.random() * 5 - 1,
+      life: 30
+    });
+  }
+}
+
+// ── Draw ──────────────────────────────────────────────
+const SKY_TOP = "#0f0c29", SKY_BOT = "#302b63";
+
+function drawBg() {
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, SKY_TOP);
+  grad.addColorStop(1, SKY_BOT);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // 遠景の山
+  ctx.fillStyle = "rgba(60,50,100,0.4)";
+  [[80,H-120,160,120],[220,H-90,120,90],[380,H-150,200,150]].forEach(([x,y,w,h]) => {
+    ctx.beginPath(); ctx.moveTo(x,y+h); ctx.lineTo(x+w/2,y); ctx.lineTo(x+w,y+h); ctx.fill();
+  });
+}
+
+function drawPlatform(p) {
+  if (p.type === "ground") {
+    ctx.fillStyle = "#4a7c4e";
+    ctx.fillRect(p.x - cam.x, p.y, p.w, 8);
+    ctx.fillStyle = "#3a5c3e";
+    ctx.fillRect(p.x - cam.x, p.y + 8, p.w, p.h - 8);
+  } else if (p.type === "platform") {
+    ctx.fillStyle = "#6a5c3e";
+    ctx.fillRect(p.x - cam.x, p.y, p.w, p.h);
+    ctx.fillStyle = "#8a7c4e";
+    ctx.fillRect(p.x - cam.x, p.y, p.w, 4);
+  } else if (p.type === "goal_pole") {
+    ctx.fillStyle = "#888";
+    ctx.fillRect(p.x - cam.x, p.y, p.w, p.h);
+  } else if (p.type === "goal_flag") {
+    ctx.fillStyle = "#f0c040";
+    ctx.fillRect(p.x - cam.x, p.y, p.w, p.h);
+  }
+}
+
+function drawPlayer() {
+  const { x, y, w, h, facingRight, invincible } = player;
+  if (invincible > 0 && Math.floor(invincible / 4) % 2 === 0) return;
+  const sx = x - cam.x;
+  const dir = facingRight ? 1 : -1;
+
+  // 体
+  ctx.fillStyle = "#e8a020";
+  ctx.fillRect(sx, y + h * 0.35, w, h * 0.65);
+  // 顔
+  ctx.fillStyle = "#f0c880";
+  ctx.fillRect(sx, y, w, h * 0.45);
+  // 目
+  ctx.fillStyle = "#1a1a2e";
+  const ex = facingRight ? sx + w * 0.6 : sx + w * 0.15;
+  ctx.fillRect(ex, y + h * 0.12, 4, 4);
+  // 帽子
+  ctx.fillStyle = "#c03030";
+  ctx.fillRect(sx - 2, y - 6, w + 4, 6);
+  ctx.fillRect(sx + 2, y - 12, w - 4, 7);
+  // 足
+  ctx.fillStyle = "#3a3a6e";
+  ctx.fillRect(sx + 1, y + h - 7, w/2 - 2, 7);
+  ctx.fillRect(sx + w/2 + 1, y + h - 7, w/2 - 2, 7);
+}
+
+function drawEnemy(e) {
+  if (!e.alive) return;
+  const sx = e.x - cam.x;
+  ctx.fillStyle = "#c04040";
+  ctx.beginPath();
+  ctx.ellipse(sx + e.w/2, e.y + e.h/2, e.w/2, e.h/2, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(sx + 4, e.y + 4, 5, 5);
+  ctx.fillRect(sx + e.w - 9, e.y + 4, 5, 5);
+  ctx.fillStyle = "#1a1a2e";
+  ctx.fillRect(sx + 5, e.y + 5, 3, 3);
+  ctx.fillRect(sx + e.w - 8, e.y + 5, 3, 3);
+  // 足
+  ctx.fillStyle = "#c04040";
+  ctx.fillRect(sx + 2, e.y + e.h, 6, 5);
+  ctx.fillRect(sx + e.w - 8, e.y + e.h, 6, 5);
+}
+
+function drawCoin(c) {
+  if (!c.alive) return;
+  const sx = c.x - cam.x;
+  const t  = Date.now() / 600;
+  const rx = c.r * Math.abs(Math.cos(t));
+  ctx.fillStyle = "#f0c040";
+  ctx.beginPath();
+  ctx.ellipse(sx, c.y, rx, c.r, 0, 0, Math.PI*2);
+  ctx.fill();
+}
+
+function drawParticles() {
+  particles.forEach(p => {
+    ctx.globalAlpha = p.life / 30;
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x - cam.x - 3, p.y - 3, 6, 6);
+  });
+  ctx.globalAlpha = 1;
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  drawBg();
+  platforms.forEach(drawPlatform);
+  coinItems.forEach(drawCoin);
+  enemies.forEach(drawEnemy);
+  if (state === "playing") drawPlayer();
+  drawParticles();
+}
+
+// ── Game loop ─────────────────────────────────────────
+function update(dt) {
+  if (state !== "playing") return;
+
+  updatePlayer(dt);
+  updateEnemies();
+  updateCoins();
+  checkGoal();
+
+  // パーティクル
+  particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life--; });
+  particles = particles.filter(p => p.life > 0);
+
+  // カメラ
+  const targetCamX = player.x - W * 0.35;
+  cam.x += (targetCamX - cam.x) * 0.12;
+  if (cam.x < 0) cam.x = 0;
+}
+
+function loop(ts) {
+  const dt = ts - lastTime; lastTime = ts;
+  update(dt);
+  draw();
+  frameId = requestAnimationFrame(loop);
+}
+
+function gameOver() {
+  state = "over";
+  cancelAnimationFrame(frameId);
+  saveResult(score);
+  showOverlay(true);
+}
+
+function showOverlay(isOver) {
+  const ol = document.getElementById("overlay");
+  ol.classList.remove("hidden");
+  document.querySelector(".ov-title").textContent = isOver ? "GAME OVER" : "RUNNER";
+  document.querySelector(".ov-sub").textContent   = isOver ? `Lv${level}  🪙${coins}` : "m8 · platformer";
+  document.getElementById("ovScore").textContent  = isOver ? `SCORE  ${score.toLocaleString()}` : "";
+  document.getElementById("ovHi").textContent     = hiScore > 0 ? `BEST  ${hiScore.toLocaleString()}` : "";
+  document.getElementById("btnStart").textContent = isOver ? "RETRY" : "START";
+}
+
+function startGame() {
+  document.getElementById("overlay").classList.add("hidden");
+  score = 0; coins = 0; lives = 3; level = 1;
+  particles = [];
+  genLevel(level);
+  spawnPlayer();
+  updateHUD();
+  state = "playing";
+  lastTime = performance.now();
+  cancelAnimationFrame(frameId);
+  frameId = requestAnimationFrame(loop);
+}
+
+document.getElementById("btnStart").addEventListener("click", startGame);
+
+// ── Controls ──────────────────────────────────────────
+function bind(id, key) {
+  const btn = document.getElementById(id);
+  ["touchstart","mousedown"].forEach(ev => btn.addEventListener(ev, e => {
+    e.preventDefault(); keys[key] = true; btn.classList.add("on");
+  }, { passive: false }));
+  ["touchend","mouseup","mouseleave"].forEach(ev => btn.addEventListener(ev, e => {
+    e.preventDefault(); keys[key] = false; btn.classList.remove("on");
+  }, { passive: false }));
+}
+bind("btnLeft",  "left");
+bind("btnRight", "right");
+bind("btnJump",  "jump");
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowLeft")  keys.left  = true;
+  if (e.key === "ArrowRight") keys.right = true;
+  if (e.key === " " || e.key === "ArrowUp" || e.key === "z") keys.jump = true;
+});
+document.addEventListener("keyup", e => {
+  if (e.key === "ArrowLeft")  keys.left  = false;
+  if (e.key === "ArrowRight") keys.right = false;
+  if (e.key === " " || e.key === "ArrowUp" || e.key === "z") keys.jump = false;
+});
+
+// ── Init ──────────────────────────────────────────────
+resize();
+loadHi();
+draw();
+</script>
+</body>
+</html>
