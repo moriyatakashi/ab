@@ -480,6 +480,7 @@ function draw() {
 // ── Game loop ─────────────────────────────────────────
 function update(dt) {
   if (state !== "playing") return;
+  pollGamepad();
 
   updatePlayer(dt);
   updateEnemies();
