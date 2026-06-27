@@ -1,7 +1,7 @@
 // auth.js — 共通認証モジュール（ab01-9f35a）
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+  getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -47,7 +47,7 @@ function renderLoginScreen() {
   `;
   document.getElementById("btnLogin").addEventListener("click", async () => {
     try {
-      await signInWithPopup(auth, new GoogleAuthProvider());
+      await signInWithRedirect(auth, new GoogleAuthProvider());
     } catch(e) {
       alert("ログイン失敗: " + e.message);
     }
@@ -80,6 +80,9 @@ function renderUserBadge(user) {
  * @param {function} onReady - ログイン済みユーザーを引数に呼ばれるコールバック
  */
 export function requireAuth(onReady) {
+  // リダイレクト後の結果を処理
+  getRedirectResult(auth).catch(() => {});
+
   onAuthStateChanged(auth, user => {
     const badge = document.getElementById("auth-badge");
     if (badge) badge.remove();
