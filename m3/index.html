@@ -139,6 +139,7 @@
 </head>
 <body>
 <div class="wrap">
+  <a style="display:inline-block;font-size:0.8rem;color:var(--text-soft);text-decoration:none;margin-bottom:16px;" href="../">← ab トップ</a>
   <h1>m3</h1>
   <p class="sub">Firestore ビューア（ab01-9f35a）</p>
   <button class="btn-reload" id="btnReload">↻ 再読み込み</button>
@@ -174,7 +175,7 @@ TRUNCATE ab_sandbox
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  const COLLECTIONS = ["ab_items2", "ab_sandbox", "ab_visits"];
+  const COLLECTIONS = ["ab_items2", "ab_sandbox", "ab_visits", "ab_checks", "ab_reviews"];
   const SKIP_FIELDS = ["createdAt", "updatedAt"];
   const FIELD_ORDER = ["col1", "col2", "col3"];
 
@@ -323,6 +324,7 @@ TRUNCATE ab_sandbox
         `;
       }
 
+      if (snap.size === 0) continue;
       schemaList.appendChild(schemaItem);
       dataSection.appendChild(colDiv);
     }
