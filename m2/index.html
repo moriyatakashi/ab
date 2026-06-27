@@ -319,7 +319,7 @@
 </div>
 
 <script type="module">
-alert("★m2スクリプト開始");
+alert("[1] m2スクリプト開始");
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getFirestore, collection, getDocs, doc, setDoc, getDoc, addDoc, orderBy, query }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -589,7 +589,7 @@ alert("★m2スクリプト開始");
 
   // 履歴表示
   async function loadHistory() {
-    alert("★loadHistory開始");
+    alert("[4] loadHistory開始");
     const listEl = document.getElementById("historyList");
     const emptyMsg = document.getElementById("emptyMsg");
     listEl.innerHTML = "";
@@ -601,10 +601,10 @@ alert("★m2スクリプト開始");
         getDocs(query(collection(db, VISIT_COL), orderBy("createdAt", "desc")))
       ]);
     } catch(e) {
-      alert("履歴読み込みエラー: " + e.message);
+      alert("[5-ERR] 履歴読み込みエラー: " + e.message);
       return;
     }
-    alert("scoreSnap: " + scoreSnap.size + "件 / visitSnap: " + visitSnap.size + "件");
+    alert("[5] scoreSnap: " + scoreSnap.size + "件 / visitSnap: " + visitSnap.size + "件");
 
     // チェックマップ（失敗してもスコア・訪問には影響させない）
     const checkMap = {};
@@ -697,7 +697,7 @@ alert("★m2スクリプト開始");
     });
   }
 
-  alert("★初期化開始 today=" + today);
+  alert("[2] 初期化開始 today=" + today);
   loadChecks(today);
   loadTodayScore(today);
 
@@ -709,7 +709,7 @@ alert("★m2スクリプト開始");
     loadTodayScore(d);
   });
   showDateConfirm();
-  alert("★loadHistory呼び出し直前");
+  alert("[3] loadHistory呼び出し直前");
   loadHistory();
 </script>
 </body>
