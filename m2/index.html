@@ -330,30 +330,52 @@
     <a href="../m1/" style="display:block; text-align:center; font-size:0.8rem; color:var(--accent); padding:12px 0; text-decoration:none;">もっと見る →</a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 08:41</p>
+  <p class="updated">更新: 2026-06-28 10:29</p>
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, getDocs, doc, setDoc, getDoc, addDoc, orderBy, query }
+  import { db } from "../lib/firebase.js";
+  import { collection, getDocs, doc, setDoc, getDoc, addDoc, orderBy, query }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  const app = initializeApp({
-    apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
-    authDomain: "ab01-9f35a.firebaseapp.com",
-    projectId: "ab01-9f35a"
-  });
-  const db = getFirestore(app);
   const SCORE_COL = "ab_items2";
   const VISIT_COL = "ab_visits";
   const DATE_RE   = /^\d{4}-\d{2}-\d{2}$/;
   const DOW       = ["日","月","火","水","木","金","土"];
 
+  // DOM要素キャッシュ
+  const $ = id => document.getElementById(id);
+  const elDateInput    = $("dateInput");
+  const elScoreDate    = $("scoreDate");
+  const elReviewDate   = $("reviewDate");
+  const elReviewBanner = $("reviewBanner");
+  const elReviewBannerSub = $("reviewBannerSub");
+  const elReviewSaved  = $("reviewSaved");
+  const elBtnSaveScore = $("btnSaveScore");
+  const elNoteInput    = $("noteInput");
+  const elScoreSaved   = $("scoreSaved");
+  const elPlaceInput   = $("placeInput");
+  const elMemoInput    = $("memoInput");
+  const elVisitStatus  = $("visitStatus");
+  const elHistoryList  = $("historyList");
+  const elEmptyMsg     = $("emptyMsg");
+  const elTimeInput    = $("timeInput");
+  const elSlider       = $("slider");
+  const elScoreNum     = $("scoreNum");
+  const elBtnGps       = $("btnGps");
+  const elBtnAddVisit  = $("btnAddVisit");
+  const elCheckMidnight = $("checkMidnight");
+  const elCheckMeal    = $("checkMeal");
+  const elDateConfirm  = $("dateConfirm");
+  const elDateConfirmText = $("dateConfirmText");
+  const elDateConfirmYes  = $("dateConfirmYes");
+  const elDateConfirmNo   = $("dateConfirmNo");
+
   // 今日の日付をセット
   const today = new Date().toLocaleDateString("sv-SE");
-  document.getElementById("scoreDate").textContent = today;
-  document.getElementById("dateInput").value = today;
+  elScoreDate.textContent = today;
+  elDateInput.value = today;
   const now = new Date();
-  document.getElementById("timeInput").value =
+  elTimeInput.value =
     String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
 
 
@@ -369,16 +391,16 @@
         checkData = { ...checkData, ...data };
         // 振り返り日を復元
         if (data.reviewDate) {
-          document.getElementById("reviewDate").value = data.reviewDate;
+          elReviewDate.value = data.reviewDate;
           const reviewDateVal = data.reviewDate;
           const todayVal = new Date().toLocaleDateString("sv-SE");
           if (reviewDateVal === todayVal) {
-            document.getElementById("reviewBanner").style.display = "flex";
+            elReviewBanner.style.display = "flex";
           } else {
-            document.getElementById("reviewBanner").style.display = "none";
+            elReviewBanner.style.display = "none";
           }
         } else {
-          document.getElementById("reviewBanner").style.display = "none";
+          elReviewBanner.style.display = "none";
         }
         // 前回の振り返り日を取得してバナーに表示
         try {
@@ -388,7 +410,7 @@
           past.sort((a, b) => b.date.localeCompare(a.date));
           if (past.length > 0) {
             const [y, m, d2] = past[0].date.split("-");
-            document.getElementById("reviewBannerSub").textContent =
+            elReviewBannerSub.textContent =
               `前回: ${parseInt(m)}/${parseInt(d2)} → m9 振り返りページへ →`;
           }
         } catch(e) {}
@@ -400,10 +422,10 @@
   async function saveCheck(key, value) {
     checkData[key] = value;
     try {
-      const reviewDate = document.getElementById("reviewDate").value;
-      await setDoc(doc(db, CHECK_COL, document.getElementById("dateInput").value), {
+      const reviewDate = elReviewDate.value;
+      await setDoc(doc(db, CHECK_COL, elDateInput.value), {
         ...checkData,
-        date: document.getElementById("dateInput").value,
+        date: elDateInput.value,
         reviewDate: reviewDate || null,
         updatedAt: new Date().toISOString()
       });
@@ -428,10 +450,10 @@
   }
 
   // 振り返り日を変更したら即保存
-  document.getElementById("reviewDate").addEventListener("change", async () => {
-    const date = document.getElementById("dateInput").value;
-    const reviewDate = document.getElementById("reviewDate").value;
-    const saved = document.getElementById("reviewSaved");
+  elReviewDate.addEventListener("change", async () => {
+    const date = elDateInput.value;
+    const reviewDate = elReviewDate.value;
+    const saved = elReviewSaved;
     try {
       await setDoc(doc(db, CHECK_COL, date), {
         ...checkData,
@@ -443,15 +465,15 @@
       setTimeout(() => saved.textContent = "", 2000);
       // バナー更新
       const todayVal = new Date().toLocaleDateString("sv-SE");
-      document.getElementById("reviewBanner").style.display =
+      elReviewBanner.style.display =
         reviewDate === todayVal ? "flex" : "none";
     } catch(e) { console.warn("review save failed:", e); }
   });
 
-  document.getElementById("checkMidnight").addEventListener("click", () => {
+  elCheckMidnight.addEventListener("click", () => {
     saveCheck("crossed_midnight", !checkData.crossed_midnight);
   });
-  document.getElementById("checkMeal").addEventListener("click", () => {
+  elCheckMeal.addEventListener("click", () => {
     saveCheck("ate_meal", !checkData.ate_meal);
   });
 
@@ -467,8 +489,8 @@
     const isEarlyMorning = hm < 7 * 60;
     if (!isLateNight && !isEarlyMorning) return;
 
-    const confirmEl = document.getElementById("dateConfirm");
-    const textEl    = document.getElementById("dateConfirmText");
+    const confirmEl = elDateConfirm;
+    const textEl    = elDateConfirmText;
 
     if (isLateNight) {
       const d = now.getDate();
@@ -482,10 +504,10 @@
       const m2 = yesterday.getMonth() + 1;
       textEl.textContent = `⚠️ ${m2}/${d}（昨日）の記録ですか？`;
       // 「はい」で前日にセット
-      document.getElementById("dateConfirmYes").addEventListener("click", () => {
+      elDateConfirmYes.addEventListener("click", () => {
         const yStr = yesterday.toLocaleDateString("sv-SE");
-        document.getElementById("dateInput").value  = yStr;
-        document.getElementById("scoreDate").textContent = yStr;
+        elDateInput.value  = yStr;
+        elScoreDate.textContent = yStr;
         loadChecks(yStr);
         loadTodayScore(yStr);
         confirmEl.classList.remove("show");
@@ -493,18 +515,18 @@
     }
 
     confirmEl.classList.add("show");
-    document.getElementById("dateConfirmYes").addEventListener("click", () => {
+    elDateConfirmYes.addEventListener("click", () => {
       confirmEl.classList.remove("show");
     }, { once: true });
-    document.getElementById("dateConfirmNo").addEventListener("click", () => {
+    elDateConfirmNo.addEventListener("click", () => {
       confirmEl.classList.remove("show");
-      document.getElementById("dateInput").focus();
+      elDateInput.focus();
     });
   }
 
   // スライダー ↔ 数値 双方向連動
-  const slider   = document.getElementById("slider");
-  const scoreNum = document.getElementById("scoreNum");
+  const slider   = elSlider;
+  const scoreNum = elScoreNum;
 
   function setScore(val) {
     const v = Math.min(100, Math.max(0, Number(val)));
@@ -518,7 +540,7 @@
 
   // 今日のスコアをFirestoreから読み込む
   async function loadTodayScore(date) {
-    const saveBtn = document.getElementById("btnSaveScore");
+    const saveBtn = elBtnSaveScore;
     try {
       const d = await getDoc(doc(db, SCORE_COL, date));
       if (d.exists()) {
@@ -526,7 +548,7 @@
         const v = Number(data.col2);
         if (!isNaN(v)) {
           setScore(v);
-          document.getElementById("noteInput").value = data.col3 || "";
+          elNoteInput.value = data.col3 || "";
           saveBtn.textContent = "更新";
         } else {
           setScore(50);
@@ -542,17 +564,17 @@
   }
 
   // スコア保存
-  document.getElementById("btnSaveScore").addEventListener("click", async () => {
+  elBtnSaveScore.addEventListener("click", async () => {
     const score = slider.value;
-    const note  = document.getElementById("noteInput").value.trim();
-    const saved = document.getElementById("scoreSaved");
-    const date  = document.getElementById("dateInput").value;
+    const note  = elNoteInput.value.trim();
+    const saved = elScoreSaved;
+    const date  = elDateInput.value;
     try {
       await setDoc(doc(db, SCORE_COL, date), {
         col1: date, col2: score, col3: note,
         createdAt: new Date().toISOString()
       });
-      document.getElementById("btnSaveScore").textContent = "更新";
+      elBtnSaveScore.textContent = "更新";
       saved.textContent = "✓ 保存しました";
       setTimeout(() => saved.textContent = "", 2000);
       loadHistory();
@@ -562,9 +584,9 @@
   });
 
   // GPS
-  document.getElementById("btnGps").addEventListener("click", () => {
+  elBtnGps.addEventListener("click", () => {
     if (!navigator.geolocation) { alert("位置情報非対応"); return; }
-    const btn = document.getElementById("btnGps");
+    const btn = elBtnGps;
     btn.textContent = "取得中...";
     navigator.geolocation.getCurrentPosition(async pos => {
       const { latitude: lat, longitude: lng } = pos.coords;
@@ -576,9 +598,9 @@
         const addr = data.address;
         const place = [addr.city||addr.town||addr.village, addr.suburb||addr.neighbourhood||addr.quarter]
           .filter(Boolean).join(" ");
-        document.getElementById("placeInput").value = place || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        elPlaceInput.value = place || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
       } catch {
-        document.getElementById("placeInput").value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        elPlaceInput.value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
       }
       btn.textContent = "📍 現在地";
     }, () => {
@@ -588,20 +610,20 @@
   });
 
   // 訪問記録追加
-  document.getElementById("btnAddVisit").addEventListener("click", async () => {
-    const place  = document.getElementById("placeInput").value.trim();
-    const date   = document.getElementById("dateInput").value;
-    const time   = document.getElementById("timeInput").value;
-    const memo   = document.getElementById("memoInput").value.trim();
-    const status = document.getElementById("visitStatus");
-    if (!place) { document.getElementById("placeInput").focus(); return; }
+  elBtnAddVisit.addEventListener("click", async () => {
+    const place  = elPlaceInput.value.trim();
+    const date   = elDateInput.value;
+    const time   = elTimeInput.value;
+    const memo   = elMemoInput.value.trim();
+    const status = elVisitStatus;
+    if (!place) { elPlaceInput.focus(); return; }
     try {
       await addDoc(collection(db, VISIT_COL), {
         place, date, time, memo, lat: null, lng: null,
         createdAt: new Date().toISOString()
       });
-      document.getElementById("placeInput").value = "";
-      document.getElementById("memoInput").value  = "";
+      elPlaceInput.value = "";
+      elMemoInput.value  = "";
       status.textContent = "✓ 追加しました";
       setTimeout(() => status.textContent = "", 2000);
       loadHistory();
@@ -613,8 +635,8 @@
   // 履歴表示
   async function loadHistory() {
     
-    const listEl = document.getElementById("historyList");
-    const emptyMsg = document.getElementById("emptyMsg");
+    const listEl = elHistoryList;
+    const emptyMsg = elEmptyMsg;
     listEl.innerHTML = "";
 
     let scoreSnap, visitSnap;
@@ -724,9 +746,9 @@
   loadTodayScore(today);
 
   // 日付を手動変更したときも再読み込み
-  document.getElementById("dateInput").addEventListener("change", (e) => {
+  elDateInput.addEventListener("change", (e) => {
     const d = e.target.value;
-    document.getElementById("scoreDate").textContent = d;
+    elScoreDate.textContent = d;
     loadChecks(d);
     loadTodayScore(d);
   });
