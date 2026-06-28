@@ -105,6 +105,10 @@
     margin-top: 2px;
   }
 
+  .memo-item { display:flex; gap:8px; align-items:flex-start; font-size:0.82rem; padding:3px 0; }
+  .memo-icon { color:var(--text-soft); flex-shrink:0; font-size:0.85rem; }
+  .memo-text { color:var(--text-soft); flex:1; }
+  .memo-input-tag { font-size:0.65rem; color:var(--text-soft); margin-left:4px; }
   .empty { text-align:center; color:var(--text-soft); font-size:0.85rem; padding:40px 0; }
   .list { display:flex; flex-direction:column; gap:10px; }
 </style>
@@ -116,12 +120,12 @@
   <p class="sub" id="status">読み込み中...</p>
   <div class="list" id="list"></div>
   <p class="empty" id="emptyMsg" style="display:none;">記録はまだありません</p>
-  <p class="updated">更新: 2026-06-28 10:29</p>
+  <p class="updated">更新: 2026-06-28 11:12</p>
 </div>
 
 <script type="module">
   import { db } from "../lib/firebase.js";
-  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { collection, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
   const DOW = ["日","月","火","水","木","金","土"];
@@ -138,9 +142,25 @@
     const emptyMsg = document.getElementById("emptyMsg");
 
     try {
+      const [scoreSnap, visitSnap, memoSnap] = await Promise.all([
+        getDocs(collection(db, "ab_items2")),
+        getDocs(collection(db, "ab_visits")),
+        getDocs(query(collection(db, "ab_memos"), orderBy("createdAt", "asc")))
+      ]);
+
+      // メモマップ
+      const memoMap = {};
+      memoSnap.forEach(d => {
+        const data = d.data();
+        if (!data.date) return;
+        if (!memoMap[data.date]) memoMap[data.date] = [];
+        memoMap[data.date].push({ memo: data.memo, createdAt: data.createdAt });
+      });
+
       // スコア取得（ab_items2 から日付IDのもの）
-      const scoreSnap = await getDocs(collection(db, "ab_items2"));
-      const scoreMap  = {}; // date -> { score, note }
+      const scoreSnap2 = scoreSnap;
+
+    const scoreMap  = {}; // date -> { score, note }
       scoreSnap.forEach(doc => {
         const id   = doc.id;
         const data = doc.data();
@@ -150,7 +170,6 @@
       });
 
       // 訪問記録取得（ab_visits）
-      const visitSnap = await getDocs(collection(db, "ab_visits"));
       const visitMap  = {}; // date -> [{ place, time, memo }]
       visitSnap.forEach(doc => {
         const d = doc.data();
@@ -213,6 +232,18 @@
             </div>
           `;
           card.appendChild(vDiv);
+        });
+
+        // メモ
+        const memos = memoMap[date] || [];
+        memos.forEach(m => {
+          const mDiv = document.createElement("div");
+          mDiv.className = "memo-item";
+          // 入力日と対象日が違う場合は入力日を表示
+          const inputDate = m.createdAt ? m.createdAt.substring(0, 10) : "";
+          const tag = inputDate && inputDate !== date ? `<span class="memo-input-tag">（${inputDate}入力）</span>` : "";
+          mDiv.innerHTML = `<span class="memo-icon">📝</span><span class="memo-text">${m.memo}${tag}</span>`;
+          card.appendChild(mDiv);
         });
 
         listEl.appendChild(card);
