@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>m7 / 日次スコア</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .back-link { display:inline-block; font-size:0.8rem; color:var(--text-soft); text-decoration:none; margin-bottom:20px; }
+  .back-link:hover { color:var(--accent); }
+
+  .section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+
+  .range-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .range-tab {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text-soft);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .range-tab.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .chart-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 12px 10px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  canvas {
+    width: 100%;
+    display: block;
+    touch-action: none;
+  }
+
+  .tooltip-box {
+    position: absolute;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    pointer-events: none;
+    display: none;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    z-index: 10;
+  }
+  .tooltip-date { color: var(--text-soft); font-size: 0.72rem; }
+  .tooltip-score { font-weight: 700; color: var(--accent); font-size: 1rem; }
+
+  .stat-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    flex: 1 1 80px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .stat-label { font-size: 0.68rem; color: var(--text-soft); margin-bottom: 4px; }
+  .stat-val { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+
+  .list-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .list-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+  }
+  .list-row:last-child { border-bottom: none; }
+  .list-date { font-size: 0.8rem; color: var(--text-soft); min-width: 70px; }
+  .list-bar-wrap { flex: 1; background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
+  .list-bar { height: 6px; border-radius: 4px; background: var(--accent); }
+  .list-score { font-size: 0.9rem; font-weight: 700; min-width: 32px; text-align: right; }
+
+  #status { font-size: 0.8rem; color: var(--text-soft); margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <a class="back-link" href="../">← トップへ</a>
+  <h1 class="page-title">📈 m7 — 日次スコア</h1>
+  <div id="status">読み込み中…</div>
+
+  <div class="range-tabs" id="rangeTabs">
+    <button class="range-tab active" data-days="30">30日</button>
+    <button class="range-tab" data-days="90">90日</button>
+    <button class="range-tab" data-days="180">180日</button>
+    <button class="range-tab" data-days="0">全期間</button>
+  </div>
+
+  <div class="chart-wrap" id="chartWrap">
+    <canvas id="chart"></canvas>
+    <div class="tooltip-box" id="tooltip">
+      <div class="tooltip-date" id="tipDate"></div>
+      <div class="tooltip-score" id="tipScore"></div>
+    </div>
+  </div>
+
+  <div class="stat-row" id="statRow"></div>
+
+  <div class="section-title">記録一覧</div>
+  <div class="list-wrap" id="listWrap"></div>
+</div>
+
+<script type="module">
+  import { db } from "../lib/firebase.js";
+  import { collection, getDocs, orderBy, query }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // ── データ取得 ──────────────────────────────────────────
+  const snap = await getDocs(query(collection(db, "ab_items2"), orderBy("__name__")));
+  const ALL = [];
+  snap.forEach(d => {
+    const id    = d.id;
+    const score = Number(d.data().col2);
+    if (id.match(/^\d{4}-\d{2}-\d{2}$/) && !isNaN(score)) {
+      ALL.push({ date: id, score });
+    }
+  });
+
+  const statusEl = document.getElementById("status");
+  if (!ALL.length) { statusEl.textContent = "データなし"; }
+  else { statusEl.textContent = `${ALL.length} 日分`; }
+
+  // ── フィルタ状態 ─────────────────────────────────────────
+  let days = 30;
+  function filtered() {
+    if (!days) return ALL;
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const cut = cutoff.toISOString().slice(0, 10);
+    return ALL.filter(r => r.date >= cut);
+  }
+
+  // ── Canvas グラフ ─────────────────────────────────────────
+  const canvas  = document.getElementById("chart");
+  const tooltip = document.getElementById("tooltip");
+  const tipDate  = document.getElementById("tipDate");
+  const tipScore = document.getElementById("tipScore");
+  const wrap     = document.getElementById("chartWrap");
+
+  function drawChart(data) {
+    if (!data.length) return;
+    const DPR = window.devicePixelRatio || 1;
+    const W   = wrap.clientWidth - 24;
+    const H   = 180;
+    canvas.width  = W * DPR;
+    canvas.height = H * DPR;
+    canvas.style.height = H + "px";
+    const ctx = canvas.getContext("2d");
+    ctx.scale(DPR, DPR);
+
+    const PAD = { top: 12, right: 10, bottom: 28, left: 28 };
+    const gW = W - PAD.left - PAD.right;
+    const gH = H - PAD.top  - PAD.bottom;
+
+    const scores = data.map(r => r.score);
+    const minS   = Math.max(0, Math.min(...scores) - 5);
+    const maxS   = Math.min(100, Math.max(...scores) + 5);
+
+    const xs = (i) => PAD.left + (i / (data.length - 1 || 1)) * gW;
+    const ys = (s) => PAD.top  + gH - ((s - minS) / (maxS - minS || 1)) * gH;
+
+    // グリッド
+    ctx.strokeStyle = getComputedStyle(document.documentElement)
+      .getPropertyValue("--border").trim() || "#333";
+    ctx.lineWidth = 0.5;
+    [0, 25, 50, 75, 100].forEach(v => {
+      if (v < minS || v > maxS) return;
+      const y = ys(v);
+      ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(PAD.left + gW, y); ctx.stroke();
+      ctx.fillStyle = getComputedStyle(document.documentElement)
+        .getPropertyValue("--text-soft").trim() || "#888";
+      ctx.font = "9px sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(v, PAD.left - 4, y + 3);
+    });
+
+    // X軸ラベル（最初・中間・最後）
+    ctx.fillStyle = getComputedStyle(document.documentElement)
+      .getPropertyValue("--text-soft").trim() || "#888";
+    ctx.font = "9px sans-serif";
+    ctx.textAlign = "center";
+    const labelIdx = data.length <= 1 ? [0]
+      : [0, Math.floor((data.length - 1) / 2), data.length - 1];
+    labelIdx.forEach(i => {
+      ctx.fillText(data[i].date.slice(5), xs(i), H - PAD.bottom + 14);
+    });
+
+    // 折れ線（塗りつぶし）
+    const accent = getComputedStyle(document.documentElement)
+      .getPropertyValue("--accent").trim() || "#7c6cff";
+
+    ctx.beginPath();
+    data.forEach((r, i) => {
+      i === 0 ? ctx.moveTo(xs(i), ys(r.score))
+              : ctx.lineTo(xs(i), ys(r.score));
+    });
+    const grad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + gH);
+    grad.addColorStop(0, accent + "55");
+    grad.addColorStop(1, accent + "00");
+    ctx.lineTo(xs(data.length - 1), PAD.top + gH);
+    ctx.lineTo(xs(0), PAD.top + gH);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.beginPath();
+    data.forEach((r, i) => {
+      i === 0 ? ctx.moveTo(xs(i), ys(r.score))
+              : ctx.lineTo(xs(i), ys(r.score));
+    });
+    ctx.strokeStyle = accent;
+    ctx.lineWidth   = 2;
+    ctx.lineJoin    = "round";
+    ctx.stroke();
+
+    // タッチ/クリックでツールチップ
+    function showTip(cx) {
+      const rect = canvas.getBoundingClientRect();
+      const px   = cx - rect.left;
+      const idx  = Math.round((px - PAD.left) / gW * (data.length - 1));
+      const i    = Math.max(0, Math.min(data.length - 1, idx));
+      const r    = data[i];
+      tipDate.textContent  = r.date;
+      tipScore.textContent = r.score + " pt";
+      const tx = xs(i);
+      const ty = ys(r.score);
+      let left = tx + PAD.left - 10;
+      if (left + 110 > W) left = W - 115;
+      tooltip.style.left    = left + "px";
+      tooltip.style.top     = (ty + PAD.top - 10) + "px";
+      tooltip.style.display = "block";
+    }
+    canvas.onmousemove  = e => showTip(e.clientX);
+    canvas.ontouchmove  = e => { e.preventDefault(); showTip(e.touches[0].clientX); };
+    canvas.ontouchstart = e => { e.preventDefault(); showTip(e.touches[0].clientX); };
+    canvas.onmouseleave = () => { tooltip.style.display = "none"; };
+    canvas.ontouchend   = () => setTimeout(() => { tooltip.style.display = "none"; }, 1200);
+  }
+
+  // ── 統計 ─────────────────────────────────────────────────
+  function renderStats(data) {
+    const el = document.getElementById("statRow");
+    if (!data.length) { el.innerHTML = ""; return; }
+    const scores = data.map(r => r.score);
+    const avg    = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
+    const max    = Math.max(...scores);
+    const min    = Math.min(...scores);
+    const last   = data[data.length - 1].score;
+    el.innerHTML = [
+      ["最新", last],
+      ["平均", avg],
+      ["最高", max],
+      ["最低", min],
+    ].map(([l, v]) => `
+      <div class="stat-card">
+        <div class="stat-label">${l}</div>
+        <div class="stat-val">${v}</div>
+      </div>`).join("");
+  }
+
+  // ── リスト ───────────────────────────────────────────────
+  function renderList(data) {
+    const el = document.getElementById("listWrap");
+    const rev = [...data].reverse();
+    el.innerHTML = rev.map(r => `
+      <div class="list-row">
+        <span class="list-date">${r.date}</span>
+        <div class="list-bar-wrap"><div class="list-bar" style="width:${r.score}%"></div></div>
+        <span class="list-score">${r.score}</span>
+      </div>`).join("");
+  }
+
+  // ── レンダリング ─────────────────────────────────────────
+  function render() {
+    const data = filtered();
+    drawChart(data);
+    renderStats(data);
+    renderList(data);
+  }
+
+  // ── タブ切り替え ─────────────────────────────────────────
+  document.getElementById("rangeTabs").addEventListener("click", e => {
+    const btn = e.target.closest("[data-days]");
+    if (!btn) return;
+    days = Number(btn.dataset.days);
+    document.querySelectorAll(".range-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    render();
+  });
+
+  window.addEventListener("resize", () => { drawChart(filtered()); });
+
+  render();
+</script>
+<!-- updated: 2026-06-29 JST -->
+</body>
+</html>
