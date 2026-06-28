@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>m5 / 訪問地図</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  .back-link { display:inline-block; font-size:0.8rem; color:var(--text-soft); text-decoration:none; margin-bottom:16px; }
+  .back-link:hover { color:var(--accent); }
+
+  #map {
+    width: 100%; height: 65vh; border-radius: 12px;
+    border: 1px solid var(--border); margin-bottom: 16px;
+  }
+
+  .stats {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;
+    display: flex; gap: 20px;
+  }
+  .stat-item { text-align: center; }
+  .stat-num { font-size: 1.6rem; font-weight: 800; color: var(--accent); line-height: 1; }
+  .stat-label { font-size: 0.7rem; color: var(--text-soft); margin-top: 2px; }
+
+  .visit-list { display: flex; flex-direction: column; gap: 6px; }
+  .visit-row {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px;
+    display: flex; gap: 10px; align-items: flex-start;
+    cursor: pointer; transition: border-color 0.15s;
+  }
+  .visit-row:hover { border-color: var(--accent); }
+  .visit-row-icon { color: var(--accent); flex-shrink: 0; font-size: 1rem; margin-top: 1px; }
+  .visit-row-body { flex: 1; min-width: 0; }
+  .visit-row-place { font-size: 0.88rem; font-weight: 600; }
+  .visit-row-meta { font-size: 0.72rem; color: var(--text-soft); margin-top: 2px; }
+
+  .empty { text-align: center; color: var(--text-soft); font-size: 0.85rem; padding: 20px 0; }
+  .section-label { font-size:0.68rem; font-weight:600; color:var(--text-soft); letter-spacing:0.08em; text-transform:uppercase; margin:16px 0 8px 2px; }
+  .updated { font-size:0.72rem; color:var(--text-soft); margin-top:32px; text-align:right; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="../">← ab トップ</a>
+  <h1>訪問地図</h1>
+
+  <!-- 統計 -->
+  <div class="stats">
+    <div class="stat-item">
+      <div class="stat-num" id="statTotal">—</div>
+      <div class="stat-label">訪問件数</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="statPlaces">—</div>
+      <div class="stat-label">場所数</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="statDays">—</div>
+      <div class="stat-label">訪問日数</div>
+    </div>
+  </div>
+
+  <!-- 地図 -->
+  <div id="map"></div>
+
+  <!-- 訪問リスト -->
+  <div class="section-label">訪問記録（緯度経度あり）</div>
+  <div class="visit-list" id="visitList"></div>
+  <p class="empty" id="emptyMsg" style="display:none;">緯度経度のある訪問記録がありません</p>
+
+  <p class="updated">更新: 2026-06-28 12:18</p>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module">
+import { db } from "../lib/firebase.js";
+import { collection, getDocs, orderBy, query }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const VISIT_COL = "ab_visits";
+
+// 地図初期化（日本中心）
+const map = L.map("map").setView([36.5, 136.5], 5);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  maxZoom: 18
+}).addTo(map);
+
+// カスタムマーカー
+const markerIcon = L.divIcon({
+  className: "",
+  html: '<div style="width:12px;height:12px;border-radius:50%;background:#b5651d;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>',
+  iconSize: [12, 12],
+  iconAnchor: [6, 6],
+  popupAnchor: [0, -8]
+});
+
+async function load() {
+  const snap = await getDocs(query(collection(db, VISIT_COL), orderBy("createdAt", "desc")));
+  const all = [];
+  snap.forEach(d => all.push({ id: d.id, ...d.data() }));
+
+  // 統計
+  const withLatLng = all.filter(v => v.lat && v.lng);
+  const places = new Set(all.map(v => v.place).filter(Boolean));
+  const days   = new Set(all.map(v => v.date).filter(Boolean));
+  document.getElementById("statTotal").textContent  = all.length;
+  document.getElementById("statPlaces").textContent = places.size;
+  document.getElementById("statDays").textContent   = days.size;
+
+  // lat/lngあるもののみプロット
+  if (withLatLng.length === 0) {
+    document.getElementById("emptyMsg").style.display = "block";
+    return;
+  }
+
+  const listEl = document.getElementById("visitList");
+  const bounds = [];
+
+  withLatLng.forEach(v => {
+    const marker = L.marker([v.lat, v.lng], { icon: markerIcon }).addTo(map);
+    const dateStr = v.date || "";
+    const timeStr = v.time || "";
+    const memo    = v.memo || "";
+    marker.bindPopup(`
+      <div style="font-size:0.82rem;min-width:120px;">
+        <div style="font-weight:700;margin-bottom:4px;">${v.place || "—"}</div>
+        <div style="color:#7a7568;">${dateStr} ${timeStr}</div>
+        ${memo ? `<div style="margin-top:4px;">${memo}</div>` : ""}
+      </div>
+    `);
+    bounds.push([v.lat, v.lng]);
+
+    // リスト行
+    const row = document.createElement("div");
+    row.className = "visit-row";
+    row.innerHTML = `
+      <span class="visit-row-icon">📍</span>
+      <div class="visit-row-body">
+        <div class="visit-row-place">${v.place || "—"}</div>
+        <div class="visit-row-meta">${dateStr} ${timeStr}</div>
+      </div>
+    `;
+    row.addEventListener("click", () => {
+      map.setView([v.lat, v.lng], 15);
+      marker.openPopup();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+    listEl.appendChild(row);
+  });
+
+  // 全マーカーが収まるようにズーム
+  if (bounds.length === 1) {
+    map.setView(bounds[0], 14);
+  } else {
+    map.fitBounds(bounds, { padding: [30, 30] });
+  }
+}
+
+load();
+</script>
+</body>
+</html>
