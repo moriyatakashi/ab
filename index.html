@@ -6,20 +6,39 @@
 <title>ab</title>
 <style>
   :root { --bg:#f7f6f3; --panel:#ffffff; --border:#e2ded6; --text:#2b2b2b; --text-soft:#7a7568; --accent:#b5651d; --accent-soft:#f1e3d3; }
-  * { box-sizing: border-box; }
+  * { box-sizing:border-box; }
   body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif; background:var(--bg); color:var(--text); padding:24px 16px 80px; }
   .wrap { max-width:480px; margin:0 auto; }
   h1 { font-size:1.4rem; font-weight:600; margin:0 0 4px; }
-  .sub { color:var(--text-soft); font-size:0.85rem; margin:0 0 20px; }
-  .links { display:flex; flex-direction:column; gap:8px; }
-  a.link-card {
-    display:block; background:var(--panel); border:1px solid var(--border);
-    border-radius:10px; padding:14px 18px; text-decoration:none; color:var(--text); transition:border-color 0.15s;
+  .sub { color:var(--text-soft); font-size:0.85rem; margin:0 0 24px; }
+
+  /* 振り返りバナー（今日が振り返り日のとき） */
+  .review-banner {
+    display:none; align-items:center; gap:14px;
+    background:var(--accent); color:#fff; border-radius:12px;
+    padding:16px 18px; text-decoration:none; margin-bottom:20px;
+    transition:opacity 0.15s;
   }
-  a.link-card:hover { border-color:var(--accent); }
-  .link-title { font-size:0.95rem; font-weight:600; margin-bottom:2px; }
-  .link-desc { font-size:0.78rem; color:var(--text-soft); }
-  .section-label { font-size:0.68rem; font-weight:600; color:var(--text-soft); letter-spacing:0.08em; text-transform:uppercase; margin:18px 0 8px 2px; }
+  .review-banner:hover { opacity:0.88; }
+  .review-banner-icon { font-size:1.6rem; flex-shrink:0; }
+  .review-banner-title { font-size:0.95rem; font-weight:700; margin-bottom:2px; }
+  .review-banner-sub { font-size:0.75rem; opacity:0.85; }
+
+  /* カードグリッド */
+  .cards { display:flex; flex-direction:column; gap:8px; }
+  a.card {
+    display:flex; align-items:center; gap:14px;
+    background:var(--panel); border:1px solid var(--border);
+    border-radius:12px; padding:16px 18px; text-decoration:none;
+    color:var(--text); transition:border-color 0.15s;
+  }
+  a.card:hover { border-color:var(--accent); }
+  .card-icon { font-size:1.4rem; flex-shrink:0; width:32px; text-align:center; }
+  .card-body { flex:1; min-width:0; }
+  .card-title { font-size:0.95rem; font-weight:600; margin-bottom:2px; }
+  .card-desc { font-size:0.78rem; color:var(--text-soft); }
+  .card-arrow { color:var(--border); font-size:1rem; flex-shrink:0; }
+
   .updated { font-size:0.72rem; color:var(--text-soft); margin-top:32px; text-align:right; }
 </style>
 </head>
@@ -28,25 +47,69 @@
   <h1>ab</h1>
   <p class="sub">ページ一覧</p>
 
+  <!-- 振り返りバナー -->
+  <a class="review-banner" id="reviewBanner" href="m9/">
+    <span class="review-banner-icon">🔁</span>
+    <div>
+      <div class="review-banner-title">今日は振り返りの日です</div>
+      <div class="review-banner-sub">m9 振り返りページへ →</div>
+    </div>
+  </a>
 
-  <div class="links">
-    <div class="section-label">残す</div>
-    <a class="link-card" href="m2/"><div class="link-title">m2 — 今日の記録</div><div class="link-desc">スコア＋訪問記録を1ページで。直近3日の履歴付き。</div></a>
+  <!-- カード一覧（JS で生成） -->
+  <div class="cards" id="cards"></div>
 
-    <div class="section-label">みる</div>
-    <a class="link-card" href="m9/"><div class="link-title">m9 — 振り返り</div><div class="link-desc">振り返りスコアを記録・履歴を確認する。</div></a>
-    <a class="link-card" href="m1/"><div class="link-title">m1 — 記録一覧</div><div class="link-desc">スコア・訪問を日付でまとめて表示。</div></a>
-
-    <div class="section-label">遊ぶ</div>
-    <a class="link-card" href="m8/"><div class="link-title">m8 — ランナー</div><div class="link-desc">横スクロールアクション。ジャンプ・踏む・コイン収集。</div></a>
-    <a class="link-card" href="m6/"><div class="link-title">m6 — インベーダー</div><div class="link-desc">スコア記録・プレイ履歴付き。タッチ操作対応。</div></a>
-    <a class="link-card" href="m4/"><div class="link-title">m4 — トリビア</div><div class="link-desc">鉄道・地理・乗り物のちょっと面白い話。</div></a>
-
-    <div class="section-label">管理</div>
-    <a class="link-card" href="main/"><div class="link-title">main — CRUD</div><div class="link-desc">本番（ab_items2）と実験（ab_sandbox）をタブで切り替え</div></a>
-    <a class="link-card" href="m3/"><div class="link-title">m3 — Firestoreビューア</div><div class="link-desc">コレクション構造・データ確認用。</div></a>
-  </div>
-  <div class="updated">更新: 2026-06-28 09:30</div>
+  <p class="updated">更新: 2026-06-28 09:45</p>
 </div>
+
+<script type="module">
+// ── ページ定義（追加はここだけ） ──────────────────────
+const PAGES = [
+  { icon:"📝", title:"m2 — 今日の記録",  desc:"スコア・訪問・チェックを記録する。",  href:"m2/" },
+  { icon:"🔁", title:"m9 — 振り返り",    desc:"振り返りスコアを記録・履歴を確認。",  href:"m9/" },
+  { icon:"📋", title:"m1 — 記録一覧",    desc:"スコア・訪問を日付でまとめて表示。",  href:"m1/" },
+  { icon:"🎮", title:"遊ぶ",             desc:"ゲーム一覧（m6・m8・m4）。",          href:"play/" },
+  { icon:"⚙️", title:"管理",             desc:"CRUD・Firestoreビューア・テスト。",   href:"admin/" },
+];
+
+// カード生成
+const container = document.getElementById("cards");
+PAGES.forEach(p => {
+  const a = document.createElement("a");
+  a.className = "card";
+  a.href = p.href;
+  a.innerHTML = `
+    <span class="card-icon">${p.icon}</span>
+    <div class="card-body">
+      <div class="card-title">${p.title}</div>
+      <div class="card-desc">${p.desc}</div>
+    </div>
+    <span class="card-arrow">›</span>
+  `;
+  container.appendChild(a);
+});
+
+// 振り返りバナー（今日が振り返り日かチェック）
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+try {
+  const app = initializeApp({
+    apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
+    authDomain: "ab01-9f35a.firebaseapp.com",
+    projectId: "ab01-9f35a"
+  });
+  const db = getFirestore(app);
+  const today = new Date().toLocaleDateString("sv-SE");
+
+  const snap = await getDocs(collection(db, "ab_checks"));
+  snap.forEach(d => {
+    if (d.id === today && d.data().reviewDate === today) {
+      document.getElementById("reviewBanner").style.display = "flex";
+    }
+  });
+} catch(e) {}
+</script>
 </body>
 </html>
