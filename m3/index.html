@@ -32,6 +32,22 @@
     color: var(--text); margin-bottom: 16px;
   }
   .btn-reload:hover { border-color: var(--accent); color: var(--accent); }
+  .col-select-wrap {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;
+  }
+  .col-check-label {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 0.72rem; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 10px; cursor: pointer; user-select: none;
+    transition: border-color 0.15s;
+  }
+  .col-check-label:hover { border-color: var(--accent); }
+  .col-check-label input[type=checkbox] { accent-color: var(--accent); }
+  .col-check-label.checked { border-color: var(--accent); background: var(--accent-soft); }
+  .select-all-btn {
+    font-size: 0.7rem; color: var(--text-soft); background: none; border: none;
+    cursor: pointer; padding: 4px 6px; text-decoration: underline;
+  }
   .btn-copy {
     cursor: pointer; border: 1px solid var(--accent); border-radius: 6px;
     font-size: 0.78rem; padding: 5px 12px; background: var(--accent-soft);
@@ -143,7 +159,15 @@
   <h1>m3</h1>
   <p class="sub">Firestore ビューア（ab01-9f35a）</p>
   <button class="btn-reload" id="btnReload">↻ 再読み込み</button>
-  <button class="btn-copy" id="btnCopy">📋 全データコピー</button>
+  <div style="margin: 10px 0 4px;">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+      <span style="font-size:0.7rem; color:var(--text-soft);">コピー対象：</span>
+      <button class="select-all-btn" id="btnSelectAll">全選択</button>
+      <button class="select-all-btn" id="btnSelectNone">全解除</button>
+    </div>
+    <div class="col-select-wrap" id="colSelectWrap"></div>
+  </div>
+  <button class="btn-copy" id="btnCopy">📋 選択したコレクションをコピー</button>
   <p class="status" id="status">読み込み中...</p>
   <div id="content"></div>
 
@@ -157,7 +181,7 @@ TRUNCATE ab_sandbox
     <button class="sql-run" id="sqlRun">▶ 実行</button>
     <div class="sql-log" id="sqlLog"></div>
   </div>
-  <p style="font-size:0.72rem;color:var(--text-soft);text-align:right;margin-top:24px;">更新: 2026-06-28 08:58</p>
+  <p style="font-size:0.72rem;color:var(--text-soft);text-align:right;margin-top:24px;">更新: 2026-06-28 16:06</p>
 </div>
 
 <script type="module">
@@ -343,6 +367,7 @@ TRUNCATE ab_sandbox
     contentEl.appendChild(schemaSection);
     contentEl.appendChild(dataSection);
     window._allData = allData;
+    buildColCheckboxes(Object.keys(allData));
     statusEl.textContent = `合計 ${totalDocs} 件`;
   }
 
@@ -450,13 +475,50 @@ TRUNCATE ab_sandbox
 
   document.getElementById("btnReload").addEventListener("click", load);
 
+  // チェックボックスを生成（load完了後に呼ぶ）
+  function buildColCheckboxes(colNames) {
+    const wrap = document.getElementById("colSelectWrap");
+    wrap.innerHTML = "";
+    colNames.forEach(col => {
+      const label = document.createElement("label");
+      label.className = "col-check-label checked";
+      label.innerHTML = `<input type="checkbox" value="${col}" checked> ${col}`;
+      label.querySelector("input").addEventListener("change", e => {
+        label.classList.toggle("checked", e.target.checked);
+      });
+      wrap.appendChild(label);
+    });
+  }
+
+  document.getElementById("btnSelectAll").addEventListener("click", () => {
+    document.querySelectorAll("#colSelectWrap input[type=checkbox]").forEach(cb => {
+      cb.checked = true;
+      cb.closest("label").classList.add("checked");
+    });
+  });
+  document.getElementById("btnSelectNone").addEventListener("click", () => {
+    document.querySelectorAll("#colSelectWrap input[type=checkbox]").forEach(cb => {
+      cb.checked = false;
+      cb.closest("label").classList.remove("checked");
+    });
+  });
+
   document.getElementById("btnCopy").addEventListener("click", async () => {
     const btn = document.getElementById("btnCopy");
+    const selected = [...document.querySelectorAll("#colSelectWrap input[type=checkbox]:checked")]
+      .map(cb => cb.value);
+    const base = window._allData || {};
+    const out = {};
+    if (selected.length > 0) {
+      selected.forEach(col => { if (base[col] !== undefined) out[col] = base[col]; });
+    } else {
+      Object.assign(out, base);
+    }
     try {
-      await navigator.clipboard.writeText(JSON.stringify(window._allData, null, 2));
+      await navigator.clipboard.writeText(JSON.stringify(out, null, 2));
       btn.textContent = "✓ コピーしました";
       btn.classList.add("copied");
-      setTimeout(() => { btn.textContent = "📋 全データコピー"; btn.classList.remove("copied"); }, 2000);
+      setTimeout(() => { btn.textContent = "📋 選択したコレクションをコピー"; btn.classList.remove("copied"); }, 2000);
     } catch(e) {
       alert("コピー失敗: " + e.message);
     }
