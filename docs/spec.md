@@ -1,5 +1,5 @@
 # roreki 仕様書 — アーキテクチャ編
-## 更新日: 2026-06-28（第4版）
+## 更新日: 2026-06-28（第5版）
 
 ---
 
@@ -9,7 +9,8 @@
 - Firebase / Firestore（データ永続化、NoSQL）
 - Firebase JS SDK v10.12.2（CDN経由、ESモジュール）
 - Vanilla JS / ES Modules（npmビルド不要）
-- GeoJSON（日本地図データ、dataofjapan/land より取得）
+- GeoJSON（境界線データ、smartnews-smri/japan-topography より取得）
+- Canvas API（自作地図描画）
 
 ---
 
@@ -38,20 +39,22 @@ ab/
 │   ├── pages.md        # ページ一覧・機能説明
 │   ├── testing.md      # テスト方法・lib説明
 │   └── pitfalls.md     # 既知の落とし穴・デバッグ手順
+├── geo/
+│   ├── higashiosaka.geojson  # 東大阪市境界線
+│   └── osaka_city.geojson    # 大阪市境界線（24区）
 ├── lib/
 │   ├── firebase.js     # Firebase初期化共通モジュール（全ページ共通）
 │   ├── score.js        # スコア管理クラス（ScoreManager）
 │   ├── input.js        # タッチ・キー入力管理クラス（Input）
 │   ├── gameloop.js     # ゲームループ管理クラス（GameLoop）
 │   └── test.html       # ライブラリテストページ
-├── play/
-│   └── index.html      # 遊ぶサブページ（m6・m8・m4へのリンク）
-├── admin/
-│   └── index.html      # 管理サブページ（m3・lib/testへのリンク）
+├── play/index.html     # 遊ぶサブページ（m6・m8・m4へのリンク）
+├── admin/index.html    # 管理サブページ（m3・lib/testへのリンク）
 ├── m1/index.html       # 記録一覧（スコア+訪問+メモ 全件）
 ├── m2/index.html       # 今日の記録（スコア+訪問+チェック+メモ入力）
 ├── m3/index.html       # Firestoreビューア + SQLコンソール
 ├── m4/index.html       # トリビア
+├── m5/index.html       # 訪問地図（Canvas自作、GeoJSON境界線）
 ├── m6/index.html       # インベーダーゲーム
 ├── m8/index.html       # ランナー（横スクロールアクション）
 └── m9/index.html       # 振り返り（スコア記録・タスク管理・次回日設定）
@@ -63,29 +66,33 @@ ab/
 
 ```
 ac/
-└── index.html          # 日本地図5地域カラーマップ
+├── index.html          # 日本地図5地域カラーマップ
+└── faithjs/            # NESエミュレーター（参考実装、PC作業前提）
+    ├── public/
+    │   ├── index.html
+    │   ├── js/main.js  # ビルド済み
+    │   └── rom/        # フリーROM4本
+    ├── src/js/
+    │   ├── NES.js      # エミュレーター本体
+    │   ├── main.js
+    │   └── Mapper/     # マッパー55ファイル
+    ├── package.json
+    ├── webpack.config.js
+    └── .babelrc
 ```
 
 ---
 
 ## 4. トップページの設計思想
 
-トップページ（index.html）のカード一覧はJS配列で管理する。
-ページを追加するときは `PAGES` 配列に1行追加するだけ。
-
-```javascript
-const PAGES = [
-  { icon:"📝", title:"m2 — 今日の記録", desc:"...", href:"m2/" },
-  // ここに追加するだけ
-];
-```
+JS配列（PAGES）でカードを生成。ページ追加は1行追加するだけ。
 
 **ナビゲーション設計：**
-- トップは5枚程度のカードに絞る
+- トップは6枚程度のカードに絞る
 - ゲームは `play/` サブページにまとめる
 - 管理ツールは `admin/` サブページにまとめる
 - 全ページ2ステップ以内で到達できる
-- 今日が振り返り日のとき最上部にバナー表示（ab_checksのreviewDate===today）
+- 今日が振り返り日のとき最上部にバナー表示
 
 ---
 
@@ -101,123 +108,55 @@ const PAGES = [
 
 ---
 
-## 6. コレクション構成
+## 6. コレクション構成（ab01-9f35a）
 
-### ab_items2（ab01-9f35a）★スコアコレクション
-| フィールド | 型 | 用途 |
-|-----------|-----|------|
-| col1 | string | 日付（YYYY-MM-DD） |
-| col2 | string | スコア（0〜100） |
-| col3 | string | 一言メモ |
-| createdAt | string | ISO文字列 |
+| コレクション | ID | 用途 |
+|------------|-----|------|
+| ab_items2 | 日付（YYYY-MM-DD） | 日次スコア（col2=点数、col3=メモ） |
+| ab_visits | 自動採番 | 訪問記録（place・date・time・lat・lng・memo） |
+| ab_memos | 自動採番 | 出来事メモ（date・memo・createdAt）複数件/日可 |
+| ab_checks | 日付 | 日次チェック（crossed_midnight・ate_meal・reviewDate） |
+| ab_reviews | 日付 | 振り返りスコア（score 0〜100、後勝ち） |
+| ab_tasks | 自動採番 | タスク（col1=タイトル・col2=カテゴリ・col3=メモ） |
+| ab_invader_history/hi | - | m6プレイ履歴・最高得点 |
+| ab_runner_history/hi | - | m8プレイ履歴・最高得点 |
+| ab_sandbox | - | 実験用（現在未使用） |
+| ab_lib_test_hist/hi | - | テスト用（定期削除推奨） |
 
-ドキュメントIDは日付文字列（setDoc、同日上書き）。
-
-### ab_visits（ab01-9f35a）
-| フィールド | 型 | 用途 |
-|-----------|-----|------|
-| place | string | 場所名 |
-| date | string | 日付（YYYY-MM-DD） |
-| time | string | 時刻（HH:MM） |
-| memo | string | メモ |
-| lat | number / null | 緯度 |
-| lng | number / null | 経度 |
-| createdAt | string | ISO文字列 |
-
-ドキュメントIDは自動採番。
-
-### ab_memos（ab01-9f35a）
-| フィールド | 型 | 用途 |
-|-----------|-----|------|
-| date | string | 対象日（YYYY-MM-DD） |
-| memo | string | 出来事メモ |
-| createdAt | string | 入力日時（ISO文字列）|
-
-ドキュメントIDは自動採番。1日複数件OK。
-createdAtと対象dateが異なる場合は「後から追加した記録」として表示で区別。
-
-### ab_checks（ab01-9f35a）
-| フィールド | 型 | 用途 |
-|-----------|-----|------|
-| date | string | 日付（YYYY-MM-DD） |
-| crossed_midnight | boolean | 日を跨いだか |
-| ate_meal | boolean | ご飯食べたか |
-| reviewDate | string / null | 次回振り返り日（YYYY-MM-DD） |
-| updatedAt | string | 更新日時 |
-
-ドキュメントIDは日付文字列（setDoc、同日上書き）。
-
-### ab_reviews（ab01-9f35a）
-| フィールド | 型 | 用途 |
-|-----------|-----|------|
-| date | string | 振り返りをした日（YYYY-MM-DD） |
-| score | number | 振り返りの質（0〜100） |
-| createdAt | string | ISO文字列 |
-
-ドキュメントIDは日付文字列（setDoc、同日上書き＝後のが勝つ）。
-
-### ab_tasks（ab01-9f35a）
-| フィールド | 型 | 用途 |
-|-----------|-----|------|
-| col1 | string | タイトル |
-| col2 | string | カテゴリ（片付け・設計・開発・検証 など） |
-| col3 | string | メモ |
-| createdAt | string | ISO文字列 |
-
-ドキュメントIDは自動採番。将来的にカテゴリや状態遷移の再設計予定。
-
-### ab_invader_history / ab_invader_hi（ab01-9f35a）
-m6のプレイ履歴・最高得点。
-
-### ab_runner_history / ab_runner_hi（ab01-9f35a）
-m8のプレイ履歴・最高得点。
-
-### ac_map（ac01-fab17）
-地域ID→カラーコードのマップ。ドキュメントID固定で "region_colors"。
-
-### 廃止済み / テスト用
-- ab_sandbox: 実験用（現在未使用）
-- ab_lib_test_hist / ab_lib_test_hi: テスト用（定期削除推奨）
+**重要：** ab_memosのcreatedAtと対象dateが異なる場合は「後から追加した記録」として表示で区別。
 
 ---
 
 ## 7. セキュリティルール
 
-### ab01-9f35a（現状）
-全コレクション `allow read, write: if true;`
-認証なし・完全オープン（Stage 0の意図的な設計）。
-
-### ac01-fab17
-同上。
+全コレクション `allow read, write: if true;`（Stage 0、認証なし）。
 
 ---
 
-## 8. 共通CSS（style.css）の設計思想
+## 8. geo/フォルダの運用
 
-CSSカスタムプロパティ（変数）でデザイントークンを定義。
+市区町村境界線GeoJSONを必要に応じて追加していく。
 
-主な変数:
-- `--bg`: #f7f6f3 / `--panel`: #ffffff / `--border`: #e2ded6
-- `--accent`: #b5651d（茶系） / `--accent-soft`: #f1e3d3
-- `--text`: #2b2b2b / `--text-soft`: #7a7568
+**データソース：** smartnews-smri/japan-topography（国土数値情報ベース）
+**命名規則：** `{市名ローマ字}.geojson`（例: higashiosaka.geojson）
+**追加タイミング：** 新しい市を訪問したタイミングで振り返り日に追加
 
 ---
 
-## 9. 開発ルール
+## 9. チャット引き継ぎルール
+
+- 「ズンドコベロンチョわかる？」→ 確認の合言葉
+- 「ズンドコベロンチョお願い」→ PAT込みの引き継ぎプロンプトを出力
+- テンプレート（PATなし）: Google Driveの `roreki_handover_template.md`
+
+---
+
+## 10. 開発ルール
 
 - ファイル削除は明示的に言われるまで確認を取る
 - pushのたびにHTMLの更新時刻を更新する（JST換算）
-- 作業前に確認が必要な場合は必ず聞く
 - devブランチ = mainの退避スナップショット（壊す前に必ず取る）
 - GitHub PATはリポジトリ単位で発行（Fine-grained tokens）
-- indexから辿れないファイルは定期的に削除して整理
-
----
-
-## 10. 運用メモ
-
-- ab → 今のメイン開発 / ac → 地図機能
+- m1・m2・m9はlib/firebase.jsを使用。m6・m8はまだ直接初期化（後回し）
 - Firestore REST APIはClaude環境から直接アクセス不可
   → データ確認はm3のコピーボタン経由でJSONをClaudeに貼る
-- 更新時刻はコード作成時刻+9時間（JST換算）で手書き
-- m1・m2・m9はlib/firebase.jsを使用。m6・m8はまだ直接初期化（後回し）
