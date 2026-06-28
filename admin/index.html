@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ab / 管理</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .back-link { display:inline-block; font-size:0.8rem; color:var(--text-soft); text-decoration:none; margin-bottom:20px; }
+  .back-link:hover { color:var(--accent); }
+  .links { display:flex; flex-direction:column; gap:8px; }
+  a.link-card { display:block; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:14px 18px; text-decoration:none; color:var(--text); transition:border-color 0.15s; }
+  a.link-card:hover { border-color:var(--accent); }
+  .link-title { font-size:0.95rem; font-weight:600; margin-bottom:2px; }
+  .link-desc { font-size:0.78rem; color:var(--text-soft); }
+  .updated { font-size:0.72rem; color:var(--text-soft); margin-top:32px; text-align:right; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="../">← ab トップ</a>
+  <h1>管理</h1>
+  <p class="sub">開発・データ管理用</p>
+  <div class="links">
+    <a class="link-card" href="../main/"><div class="link-title">main — CRUD</div><div class="link-desc">本番（ab_items2）と実験（ab_sandbox）をタブで切り替え。</div></a>
+    <a class="link-card" href="../m3/"><div class="link-title">m3 — Firestoreビューア</div><div class="link-desc">コレクション構造・データ確認・SQLコンソール。</div></a>
+    <a class="link-card" href="../lib/test.html"><div class="link-title">lib/test — テスト</div><div class="link-desc">ライブラリの動作確認。正常系・異常系テスト。</div></a>
+  </div>
+  <p class="updated">更新: 2026-06-28 09:45</p>
+</div>
+</body>
+</html>
