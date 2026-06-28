@@ -50,6 +50,20 @@
   .nav-card-title { font-size:0.95rem; font-weight:600; margin-bottom:2px; }
   .nav-card-desc { font-size:0.78rem; color:var(--text-soft); }
 
+  .task-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .task-item:last-child { border-bottom: none; }
+  .task-cat {
+    font-size: 0.65rem; font-weight: 700; color: var(--accent);
+    background: var(--accent-soft); border-radius: 8px;
+    padding: 2px 8px; flex-shrink: 0; margin-top: 2px;
+    white-space: nowrap;
+  }
+  .task-title { font-size: 0.88rem; color: var(--text); flex: 1; }
+  .task-memo { font-size: 0.75rem; color: var(--text-soft); margin-top: 2px; }
+  .task-empty { font-size: 0.82rem; color: var(--text-soft); text-align: center; padding: 16px 0; }
   .empty { text-align:center; color:var(--text-soft); font-size:0.85rem; padding:20px 0; }
   .updated { font-size:0.72rem; color:var(--text-soft); margin-top:32px; text-align:right; }
 </style>
@@ -84,6 +98,13 @@
     <p class="empty" id="reviewHistEmpty" style="display:none;">まだ記録がありません</p>
   </div>
 
+  <!-- タスク一覧 -->
+  <div class="section-label">やること・気になること</div>
+  <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+    <div id="taskList"></div>
+    <p class="task-empty" id="taskEmpty" style="display:none;">タスクはまだありません</p>
+  </div>
+
   <!-- ここから始める -->
   <div class="section-label">ここから始める</div>
   <div class="nav-cards">
@@ -97,7 +118,7 @@
     </a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 09:05</p>
+  <p class="updated">更新: 2026-06-28 09:57</p>
 </div>
 
 <script type="module">
@@ -112,6 +133,7 @@ const app = initializeApp({
 });
 const db = getFirestore(app);
 const REVIEW_COL = "ab_reviews";
+  const TASK_COL = "ab_tasks";
 const DOW = ["日","月","火","水","木","金","土"];
 
 const today = new Date().toLocaleDateString("sv-SE");
@@ -173,7 +195,44 @@ async function loadReviews() {
   });
 }
 
-// 振り返りを記録
+// タスク一覧を読み込む
+  async function loadTasks() {
+    const listEl  = document.getElementById("taskList");
+    const emptyEl = document.getElementById("taskEmpty");
+    try {
+      const snap = await getDocs(collection(db, TASK_COL));
+      if (snap.size === 0) {
+        emptyEl.style.display = "block";
+        return;
+      }
+      emptyEl.style.display = "none";
+      listEl.innerHTML = "";
+      const items = [];
+      snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+      // カテゴリ順、同カテゴリ内はcreatedAt順
+      items.sort((a, b) => {
+        if ((a.col2 || "") !== (b.col2 || "")) return (a.col2||"").localeCompare(b.col2||"");
+        return (a.createdAt||"").localeCompare(b.createdAt||"");
+      });
+      items.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "task-item";
+        div.innerHTML = `
+          ${item.col2 ? `<span class="task-cat">${item.col2}</span>` : ""}
+          <div>
+            <div class="task-title">${item.col1 || "—"}</div>
+            ${item.col3 ? `<div class="task-memo">${item.col3}</div>` : ""}
+          </div>
+        `;
+        listEl.appendChild(div);
+      });
+    } catch(e) {
+      emptyEl.style.display = "block";
+      emptyEl.textContent = "読み込みエラー";
+    }
+  }
+
+  // 振り返りを記録
 document.getElementById("btnRecord").addEventListener("click", async () => {
   const score = Number(slider.value);
   const savedEl = document.getElementById("recordSaved");
@@ -193,6 +252,7 @@ document.getElementById("btnRecord").addEventListener("click", async () => {
 });
 
 loadReviews();
+  loadTasks();
 </script>
 </body>
 </html>
