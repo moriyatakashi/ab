@@ -118,20 +118,13 @@
     </a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 09:57</p>
+  <p class="updated">更新: 2026-06-28 10:29</p>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, setDoc, orderBy, query }
+import { db } from "../lib/firebase.js";
+import { collection, getDocs, doc, setDoc, orderBy, query }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const app = initializeApp({
-  apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
-  authDomain: "ab01-9f35a.firebaseapp.com",
-  projectId: "ab01-9f35a"
-});
-const db = getFirestore(app);
 const REVIEW_COL = "ab_reviews";
   const TASK_COL = "ab_tasks";
 const DOW = ["日","月","火","水","木","金","土"];
