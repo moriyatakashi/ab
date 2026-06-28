@@ -182,18 +182,6 @@
   .review-banner-icon { font-size: 1.6rem; flex-shrink: 0; }
   .review-banner-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 2px; }
   .review-banner-sub { font-size: 0.75rem; opacity: 0.85; }
-  .review-section {
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 14px; padding: 14px 16px; margin-bottom: 16px;
-    display: flex; align-items: center; gap: 12px;
-  }
-  .review-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-soft); flex-shrink: 0; }
-  .review-input {
-    flex: 1; padding: 8px 10px; border: 1px solid var(--border);
-    border-radius: 8px; font-size: 0.88rem; background: var(--bg); color: var(--text);
-  }
-  .review-input:focus { outline: none; border-color: var(--accent); }
-  .review-saved { font-size: 0.72rem; color: var(--accent); flex-shrink: 0; min-width: 2em; }
   .check-tag {
     font-size: 0.68rem; color: var(--accent);
     background: var(--accent-soft); border-radius: 10px;
@@ -257,13 +245,6 @@
       <div class="review-banner-sub" id="reviewBannerSub">m9 振り返りページへ →</div>
     </div>
   </a>
-
-  <!-- 次回振り返り日 -->
-  <div class="review-section">
-    <div class="review-label">次回振り返り</div>
-    <input class="review-input" type="date" id="reviewDate">
-    <div class="review-saved" id="reviewSaved"></div>
-  </div>
 
   <!-- 日付確認バナー -->
   <div class="date-confirm" id="dateConfirm">
@@ -330,7 +311,7 @@
     <a href="../m1/" style="display:block; text-align:center; font-size:0.8rem; color:var(--accent); padding:12px 0; text-decoration:none;">もっと見る →</a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 10:29</p>
+  <p class="updated">更新: 2026-06-28 10:36</p>
 </div>
 
 <script type="module">
@@ -346,10 +327,8 @@
   const $ = id => document.getElementById(id);
   const elDateInput    = $("dateInput");
   const elScoreDate    = $("scoreDate");
-  const elReviewDate   = $("reviewDate");
   const elReviewBanner = $("reviewBanner");
   const elReviewBannerSub = $("reviewBannerSub");
-  const elReviewSaved  = $("reviewSaved");
   const elBtnSaveScore = $("btnSaveScore");
   const elNoteInput    = $("noteInput");
   const elScoreSaved   = $("scoreSaved");
@@ -389,10 +368,7 @@
       if (d.exists()) {
         const data = d.data();
         checkData = { ...checkData, ...data };
-        // 振り返り日を復元
         if (data.reviewDate) {
-          elReviewDate.value = data.reviewDate;
-          const reviewDateVal = data.reviewDate;
           const todayVal = new Date().toLocaleDateString("sv-SE");
           if (reviewDateVal === todayVal) {
             elReviewBanner.style.display = "flex";
@@ -422,11 +398,9 @@
   async function saveCheck(key, value) {
     checkData[key] = value;
     try {
-      const reviewDate = elReviewDate.value;
       await setDoc(doc(db, CHECK_COL, elDateInput.value), {
         ...checkData,
         date: elDateInput.value,
-        reviewDate: reviewDate || null,
         updatedAt: new Date().toISOString()
       });
     } catch(e) { console.warn("check save failed:", e); }
@@ -450,24 +424,9 @@
   }
 
   // 振り返り日を変更したら即保存
-  elReviewDate.addEventListener("change", async () => {
-    const date = elDateInput.value;
-    const reviewDate = elReviewDate.value;
-    const saved = elReviewSaved;
-    try {
-      await setDoc(doc(db, CHECK_COL, date), {
-        ...checkData,
-        date,
-        reviewDate: reviewDate || null,
-        updatedAt: new Date().toISOString()
-      });
       saved.textContent = "✓";
       setTimeout(() => saved.textContent = "", 2000);
-      // バナー更新
-      const todayVal = new Date().toLocaleDateString("sv-SE");
-      elReviewBanner.style.display =
-        reviewDate === todayVal ? "flex" : "none";
-    } catch(e) { console.warn("review save failed:", e); }
+      } catch(e) { console.warn("review save failed:", e); }
   });
 
   elCheckMidnight.addEventListener("click", () => {
