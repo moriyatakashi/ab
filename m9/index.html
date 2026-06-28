@@ -64,6 +64,17 @@
   .task-title { font-size: 0.88rem; color: var(--text); flex: 1; }
   .task-memo { font-size: 0.75rem; color: var(--text-soft); margin-top: 2px; }
   .task-empty { font-size: 0.82rem; color: var(--text-soft); text-align: center; padding: 16px 0; }
+  .next-review-row {
+    display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .next-review-label { font-size: 0.75rem; color: var(--text-soft); flex-shrink: 0; }
+  .next-review-input {
+    flex: 1; padding: 7px 10px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 0.85rem; background: var(--bg); color: var(--text);
+  }
+  .next-review-input:focus { outline: none; border-color: var(--accent); }
+  .next-review-saved { font-size: 0.72rem; color: var(--accent); flex-shrink: 0; min-width: 1.5em; }
   .empty { text-align:center; color:var(--text-soft); font-size:0.85rem; padding:20px 0; }
   .updated { font-size:0.72rem; color:var(--text-soft); margin-top:32px; text-align:right; }
 </style>
@@ -89,6 +100,11 @@
     </div>
     <button class="btn-record" id="btnRecord">📝 振り返りを記録する</button>
     <div class="record-saved" id="recordSaved"></div>
+    <div class="next-review-row">
+      <span class="next-review-label">次回振り返り日</span>
+      <input class="next-review-input" type="date" id="nextReviewDate">
+      <span class="next-review-saved" id="nextReviewSaved"></span>
+    </div>
   </div>
 
   <!-- 振り返り履歴 -->
@@ -118,7 +134,7 @@
     </a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 10:29</p>
+  <p class="updated">更新: 2026-06-28 10:35</p>
 </div>
 
 <script type="module">
@@ -225,6 +241,34 @@ async function loadReviews() {
     }
   }
 
+  // 次回振り返り日を読み込む
+  async function loadNextReview() {
+    try {
+      const todayStr = new Date().toLocaleDateString("sv-SE");
+      const d = await getDoc(doc(db, "ab_checks", todayStr));
+      if (d.exists() && d.data().reviewDate) {
+        document.getElementById("nextReviewDate").value = d.data().reviewDate;
+      }
+    } catch(e) {}
+  }
+
+  // 次回振り返り日を保存（ab_checksに書く）
+  document.getElementById("nextReviewDate").addEventListener("change", async () => {
+    const todayStr = new Date().toLocaleDateString("sv-SE");
+    const reviewDate = document.getElementById("nextReviewDate").value;
+    const savedEl = document.getElementById("nextReviewSaved");
+    try {
+      // ab_checksの今日のドキュメントにreviewDateをmerge
+      await setDoc(doc(db, "ab_checks", todayStr), {
+        date: todayStr,
+        reviewDate: reviewDate || null,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      savedEl.textContent = "✓";
+      setTimeout(() => savedEl.textContent = "", 2000);
+    } catch(e) { savedEl.textContent = "!"; }
+  });
+
   // 振り返りを記録
 document.getElementById("btnRecord").addEventListener("click", async () => {
   const score = Number(slider.value);
@@ -246,6 +290,7 @@ document.getElementById("btnRecord").addEventListener("click", async () => {
 
 loadReviews();
   loadTasks();
+  loadNextReview();
 </script>
 </body>
 </html>
