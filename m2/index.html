@@ -332,16 +332,16 @@
     <a href="../m1/" style="display:block; text-align:center; font-size:0.8rem; color:var(--accent); padding:12px 0; text-decoration:none;">もっと見る →</a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 11:13</p>
+  <p class="updated">更新: 2026-06-28 11:15</p>
 </div>
 
 <script>alert("[A-0] 通常scriptOK");</script>
 <script type="module">
 alert("[A-1] module開始");
   import { db } from "../lib/firebase.js";
-alert("[A-2] import後");
   import { collection, getDocs, doc, setDoc, getDoc, addDoc, orderBy, query }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+alert("[A-2] import完了");
   const SCORE_COL = "ab_items2";
   const MEMO_COL  = "ab_memos";
   const VISIT_COL = "ab_visits";
