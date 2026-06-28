@@ -9,56 +9,14 @@
   .back-link { display:inline-block; font-size:0.8rem; color:var(--text-soft); text-decoration:none; margin-bottom:20px; }
   .back-link:hover { color:var(--accent); }
 
-  .hero {
-    background: var(--accent); color: #fff;
-    border-radius: 14px; padding: 20px 18px; margin-bottom: 20px;
-    text-align: center;
-  }
-  .hero-icon { font-size: 2rem; margin-bottom: 6px; }
-  .hero-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
-  .hero-sub { font-size: 0.78rem; opacity: 0.85; }
+  .hero { background:var(--accent); color:#fff; border-radius:14px; padding:20px 18px; margin-bottom:16px; text-align:center; }
+  .hero-icon { font-size:2rem; margin-bottom:6px; }
+  .hero-title { font-size:1.1rem; font-weight:700; margin-bottom:4px; }
+  .hero-sub { font-size:0.78rem; opacity:0.85; }
 
-  .nav-cards { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
-  a.nav-card {
-    display: block; background: var(--panel); border: 1px solid var(--border);
-    border-radius: 10px; padding: 14px 18px; text-decoration: none; color: var(--text);
-    transition: border-color 0.15s;
-  }
-  a.nav-card:hover { border-color: var(--accent); }
-  .nav-card-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 2px; }
-  .nav-card-desc { font-size: 0.78rem; color: var(--text-soft); }
-
-  .section-label { font-size: 0.68rem; font-weight: 600; color: var(--text-soft);
-    letter-spacing: 0.08em; text-transform: uppercase; margin: 18px 0 8px 2px; }
-
-  /* 直近記録 */
-  .day-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; }
-  .day-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; }
-  .day-date { font-size:0.9rem; font-weight:700; }
-  .day-dow { font-size:0.75rem; color:var(--text-soft); }
-  .score-row { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
-  .score-label { font-size:0.7rem; color:var(--text-soft); width:36px; }
-  .bar-wrap { flex:1; height:5px; background:var(--accent-soft); border-radius:3px; overflow:hidden; }
-  .bar { height:100%; background:var(--accent); border-radius:3px; }
-  .score-val { font-size:1.1rem; font-weight:700; color:var(--accent); min-width:34px; text-align:right; }
-  .score-note { font-size:0.75rem; color:var(--text-soft); padding-left:46px; margin-bottom:6px; }
-  .check-tags { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
-  .check-tag { font-size:0.68rem; color:var(--accent); background:var(--accent-soft); border-radius:10px; padding:2px 8px; }
-  .visit-item { display:flex; gap:8px; align-items:flex-start; font-size:0.82rem; padding:4px 0; }
-  .visit-icon { color:var(--text-soft); flex-shrink:0; }
-  .visit-place { font-weight:600; }
-  .visit-time { color:var(--text-soft); font-size:0.72rem; }
-
-  /* 振り返り記録 */
-  .review-form {
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 14px; padding: 16px; margin-bottom: 16px;
-  }
-  .prev-review {
-    font-size: 0.78rem; color: var(--text-soft); margin-bottom: 14px;
-    padding: 8px 12px; background: var(--accent-soft);
-    border-radius: 8px;
-  }
+  /* 振り返り記録フォーム */
+  .review-form { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:16px; }
+  .prev-review { font-size:0.78rem; color:var(--text-soft); margin-bottom:14px; padding:8px 12px; background:var(--accent-soft); border-radius:8px; }
   .score-row-input { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
   .score-big { font-size:2.5rem; font-weight:800; color:var(--accent); min-width:52px; text-align:center; line-height:1; }
   .range-wrap { flex:1; }
@@ -71,11 +29,27 @@
     border-radius:50%; background:var(--accent); cursor:pointer;
     box-shadow:0 1px 4px rgba(0,0,0,0.15);
   }
-  .btn-record {
-    width:100%; padding:12px; background:var(--accent); color:#fff;
-    border:none; border-radius:10px; font-size:0.95rem; font-weight:600; cursor:pointer;
-  }
+  .btn-record { width:100%; padding:12px; background:var(--accent); color:#fff; border:none; border-radius:10px; font-size:0.95rem; font-weight:600; cursor:pointer; }
   .record-saved { font-size:0.78rem; color:var(--accent); text-align:center; margin-top:8px; min-height:1.2em; }
+
+  /* 振り返り履歴 */
+  .review-hist-item {
+    display:flex; align-items:center; gap:12px;
+    padding:10px 0; border-bottom:1px solid var(--border);
+  }
+  .review-hist-item:last-child { border-bottom:none; }
+  .review-hist-date { font-size:0.85rem; font-weight:600; color:var(--text); min-width:80px; }
+  .review-hist-bar-wrap { flex:1; height:5px; background:var(--accent-soft); border-radius:3px; overflow:hidden; }
+  .review-hist-bar { height:100%; background:var(--accent); border-radius:3px; }
+  .review-hist-score { font-size:0.9rem; font-weight:700; color:var(--accent); min-width:34px; text-align:right; }
+
+  .section-label { font-size:0.68rem; font-weight:600; color:var(--text-soft); letter-spacing:0.08em; text-transform:uppercase; margin:18px 0 8px 2px; }
+  .nav-cards { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+  a.nav-card { display:block; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:14px 18px; text-decoration:none; color:var(--text); transition:border-color 0.15s; }
+  a.nav-card:hover { border-color:var(--accent); }
+  .nav-card-title { font-size:0.95rem; font-weight:600; margin-bottom:2px; }
+  .nav-card-desc { font-size:0.78rem; color:var(--text-soft); }
+
   .empty { text-align:center; color:var(--text-soft); font-size:0.85rem; padding:20px 0; }
   .updated { font-size:0.72rem; color:var(--text-soft); margin-top:32px; text-align:right; }
 </style>
@@ -86,11 +60,11 @@
 
   <div class="hero">
     <div class="hero-icon">🔁</div>
-    <div class="hero-title">振り返りの日</div>
+    <div class="hero-title">振り返り</div>
     <div class="hero-sub" id="heroDate"></div>
   </div>
 
-  <!-- 振り返り記録 -->
+  <!-- 振り返り記録フォーム -->
   <div class="review-form">
     <div class="prev-review" id="prevReview">前回の振り返り日を確認中...</div>
     <div class="score-row-input">
@@ -103,6 +77,14 @@
     <div class="record-saved" id="recordSaved"></div>
   </div>
 
+  <!-- 振り返り履歴 -->
+  <div class="section-label">振り返り履歴</div>
+  <div class="section" style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+    <div id="reviewHistList"></div>
+    <p class="empty" id="reviewHistEmpty" style="display:none;">まだ記録がありません</p>
+  </div>
+
+  <!-- ここから始める -->
   <div class="section-label">ここから始める</div>
   <div class="nav-cards">
     <a class="nav-card" href="../m2/">
@@ -111,20 +93,16 @@
     </a>
     <a class="nav-card" href="../m1/">
       <div class="nav-card-title">m1 — 記録一覧</div>
-      <div class="nav-card-desc">過去の記録を振り返る</div>
+      <div class="nav-card-desc">過去のスコア・訪問記録を振り返る</div>
     </a>
   </div>
 
-  <div class="section-label">直近の記録</div>
-  <div id="historyList"></div>
-  <p class="empty" id="emptyMsg" style="display:none;">記録がまだありません</p>
-
-  <p class="updated">更新: 2026-06-28 08:41</p>
+  <p class="updated">更新: 2026-06-28 09:05</p>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, setDoc, orderBy, query, limit }
+import { getFirestore, collection, getDocs, doc, setDoc, orderBy, query }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app = initializeApp({
@@ -133,158 +111,88 @@ const app = initializeApp({
   projectId: "ab01-9f35a"
 });
 const db = getFirestore(app);
-
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-  const REVIEW_COL = "ab_reviews";
-
-  // スライダー連動
-  const reviewSlider = document.getElementById("reviewSlider");
-  const reviewScoreNum = document.getElementById("reviewScoreNum");
-  reviewSlider.addEventListener("input", () => {
-    reviewScoreNum.textContent = reviewSlider.value;
-  });
-
-  // 前回の振り返り日を取得して表示
-  async function loadPrevReview() {
-    const prevEl = document.getElementById("prevReview");
-    try {
-      const snap = await getDocs(collection(db, REVIEW_COL));
-      const rows = [];
-      snap.forEach(d => rows.push(d.data()));
-      const past = rows
-        .filter(r => r.date && r.date < today)
-        .sort((a, b) => b.date.localeCompare(a.date));
-      if (past.length > 0) {
-        const prev = past[0];
-        const [y, m, d2] = prev.date.split("-");
-        prevEl.textContent = `前回の振り返り: ${parseInt(m)}/${parseInt(d2)}（スコア ${prev.score ?? "—"}）`;
-      } else {
-        prevEl.textContent = "前回の振り返り記録はありません";
-      }
-    } catch(e) {
-      prevEl.textContent = "前回の振り返り記録を取得できませんでした";
-    }
-  }
-
-  // 振り返りを記録
-  document.getElementById("btnRecord").addEventListener("click", async () => {
-    const score = Number(reviewSlider.value);
-    const savedEl = document.getElementById("recordSaved");
-    const btn = document.getElementById("btnRecord");
-    btn.disabled = true;
-    try {
-      await setDoc(doc(db, REVIEW_COL, today), {
-        date: today,
-        score,
-        createdAt: new Date().toISOString()
-      });
-      savedEl.textContent = "✓ 記録しました（スコア " + score + "）";
-      loadPrevReview();
-    } catch(e) {
-      savedEl.textContent = "エラー: " + e.message;
-    }
-    btn.disabled = false;
-  });
+const REVIEW_COL = "ab_reviews";
 const DOW = ["日","月","火","水","木","金","土"];
 
-// 今日の日付表示
 const today = new Date().toLocaleDateString("sv-SE");
 const todayDisp = new Date().toLocaleDateString("ja-JP", { month:"long", day:"numeric", weekday:"short" });
 document.getElementById("heroDate").textContent = todayDisp;
 
-async function load() {
-  const [scoreSnap, visitSnap, checkSnap] = await Promise.all([
-    getDocs(collection(db, "ab_items2")),
-    getDocs(query(collection(db, "ab_visits"), orderBy("createdAt", "desc"))),
-    getDocs(collection(db, "ab_checks"))
-  ]);
+// スライダー連動
+const slider = document.getElementById("reviewSlider");
+const scoreNum = document.getElementById("reviewScoreNum");
+slider.addEventListener("input", () => { scoreNum.textContent = slider.value; });
 
-  const scoreMap = {};
-  scoreSnap.forEach(d => {
-    const id = d.id; const data = d.data();
-    if (DATE_RE.test(id) && !isNaN(Number(data.col2))) {
-      scoreMap[id] = { score: Number(data.col2), note: data.col3 || "" };
-    }
-  });
+// 振り返り履歴を読み込む
+async function loadReviews() {
+  const snap = await getDocs(collection(db, REVIEW_COL));
+  const rows = [];
+  snap.forEach(d => rows.push(d.data()));
+  rows.sort((a, b) => b.date.localeCompare(a.date));
 
-  const visitMap = {};
-  visitSnap.forEach(d => {
-    const data = d.data();
-    if (!data.date) return;
-    if (!visitMap[data.date]) visitMap[data.date] = [];
-    visitMap[data.date].push({ place: data.place||"—", time: data.time||"", memo: data.memo||"" });
-  });
-
-  const checkMap = {};
-  checkSnap.forEach(d => { checkMap[d.id] = d.data(); });
-
-  const allDates = [...new Set([...Object.keys(scoreMap), ...Object.keys(visitMap)])]
-    .sort((a, b) => b.localeCompare(a))
-    .slice(0, 5);
-
-  const listEl = document.getElementById("historyList");
-  if (allDates.length === 0) {
-    document.getElementById("emptyMsg").style.display = "block";
-    return;
+  // 前回の振り返り日
+  const prevEl = document.getElementById("prevReview");
+  const past = rows.filter(r => r.date < today);
+  if (past.length > 0) {
+    const [y, m, d2] = past[0].date.split("-");
+    prevEl.textContent = `前回の振り返り: ${parseInt(m)}/${parseInt(d2)}（スコア ${past[0].score ?? "—"}）`;
+  } else {
+    prevEl.textContent = "前回の振り返り記録はありません";
   }
 
-  allDates.forEach(date => {
-    const [y, m, d] = date.split("-");
-    const dow = DOW[new Date(date).getDay()];
-    const label = `${y}年${parseInt(m)}月${parseInt(d)}日`;
-    const score  = scoreMap[date];
-    const visits = visitMap[date] || [];
-    const chk    = checkMap[date];
+  // 今日すでに記録があればスライダーに反映
+  const todayRec = rows.find(r => r.date === today);
+  if (todayRec) {
+    slider.value = todayRec.score;
+    scoreNum.textContent = todayRec.score;
+    document.getElementById("btnRecord").textContent = "📝 更新する";
+  }
 
-    const card = document.createElement("div");
-    card.className = "day-card";
-    card.innerHTML = `<div class="day-header"><span class="day-date">${label}</span><span class="day-dow">${dow}曜</span></div>`;
-
-    if (score) {
-      const s = document.createElement("div");
-      s.innerHTML = `
-        <div class="score-row">
-          <span class="score-label">スコア</span>
-          <div class="bar-wrap"><div class="bar" style="width:${score.score}%"></div></div>
-          <span class="score-val">${score.score}</span>
-        </div>
-        ${score.note ? `<div class="score-note">${score.note}</div>` : ""}
-      `;
-      card.appendChild(s);
-    }
-
-    if (chk) {
-      const tags = [];
-      if (chk.crossed_midnight) tags.push("日を跨いだ");
-      if (chk.ate_meal)         tags.push("ご飯食べた");
-      if (tags.length) {
-        const tagDiv = document.createElement("div");
-        tagDiv.className = "check-tags";
-        tagDiv.innerHTML = tags.map(t => `<span class="check-tag">✓ ${t}</span>`).join("");
-        card.appendChild(tagDiv);
-      }
-    }
-
-    visits.sort((a, b) => a.time.localeCompare(b.time));
-    visits.forEach(v => {
-      const vDiv = document.createElement("div");
-      vDiv.className = "visit-item";
-      vDiv.innerHTML = `
-        <span class="visit-icon">📍</span>
-        <div>
-          <div class="visit-place">${v.place}</div>
-          ${v.time ? `<div class="visit-time">${v.time}</div>` : ""}
-        </div>
-      `;
-      card.appendChild(vDiv);
-    });
-
-    listEl.appendChild(card);
+  // 履歴一覧
+  const listEl = document.getElementById("reviewHistList");
+  const emptyEl = document.getElementById("reviewHistEmpty");
+  if (rows.length === 0) {
+    emptyEl.style.display = "block";
+    return;
+  }
+  emptyEl.style.display = "none";
+  listEl.innerHTML = "";
+  rows.forEach(r => {
+    const [y, m, d2] = r.date.split("-");
+    const dow = DOW[new Date(r.date).getDay()];
+    const label = `${parseInt(m)}/${parseInt(d2)}（${dow}）`;
+    const score = r.score ?? 0;
+    const row = document.createElement("div");
+    row.className = "review-hist-item";
+    row.innerHTML = `
+      <span class="review-hist-date">${label}</span>
+      <div class="review-hist-bar-wrap"><div class="review-hist-bar" style="width:${score}%"></div></div>
+      <span class="review-hist-score">${score}</span>
+    `;
+    listEl.appendChild(row);
   });
 }
 
-loadPrevReview();
-load();
+// 振り返りを記録
+document.getElementById("btnRecord").addEventListener("click", async () => {
+  const score = Number(slider.value);
+  const savedEl = document.getElementById("recordSaved");
+  const btn = document.getElementById("btnRecord");
+  btn.disabled = true;
+  try {
+    await setDoc(doc(db, REVIEW_COL, today), {
+      date: today, score, createdAt: new Date().toISOString()
+    });
+    savedEl.textContent = "✓ 記録しました（スコア " + score + "）";
+    btn.textContent = "📝 更新する";
+    loadReviews();
+  } catch(e) {
+    savedEl.textContent = "エラー: " + e.message;
+  }
+  btn.disabled = false;
+});
+
+loadReviews();
 </script>
 </body>
 </html>
