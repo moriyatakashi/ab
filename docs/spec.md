@@ -118,10 +118,13 @@ JS配列（PAGES）でカードを生成。ページ追加は1行追加するだ
 | ab_checks | 日付 | 日次チェック（crossed_midnight・ate_meal・reviewDate） |
 | ab_reviews | 日付 | 振り返りスコア（score 0〜100、後勝ち） |
 | ab_tasks | 自動採番 | タスク（col1=タイトル・col2=カテゴリ・col3=メモ） |
-| ab_invader_history/hi | - | m6プレイ履歴・最高得点 |
-| ab_runner_history/hi | - | m8プレイ履歴・最高得点 |
+| ab_invader_history | 自動採番 | m6プレイ履歴 |
+| ab_invader_hi | record | m6最高得点（ドキュメント固定） |
+| ab_runner_history | 自動採番 | m8プレイ履歴 |
+| ab_runner_hi | record | m8最高得点（ドキュメント固定） |
 | ab_sandbox | - | 実験用（現在未使用） |
-| ab_lib_test_hist/hi | - | テスト用（定期削除推奨） |
+| ab_lib_test_hist | 自動採番 | テスト用プレイ履歴（定期削除推奨） |
+| ab_lib_test_hi | record | テスト用最高得点（定期削除推奨） |
 
 **重要：** ab_memosのcreatedAtと対象dateが異なる場合は「後から追加した記録」として表示で区別。
 
