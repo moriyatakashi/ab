@@ -96,11 +96,11 @@
     </div>
   </div>
 
-  <div class="section-label">訪問記録（緯度経度あり）</div>
+  <div class="section-label">訪問記録</div>
   <div class="visit-list" id="visitList"></div>
-  <p class="empty" id="emptyMsg" style="display:none;">緯度経度のある訪問記録がありません</p>
+  <p class="empty" id="emptyMsg" style="display:none;">訪問記録がありません</p>
 
-  <p class="updated">更新: 2026-06-28 12:30</p>
+  <p class="updated">更新: 2026-06-28 12:56</p>
 </div>
 
 <script type="module">
@@ -238,35 +238,39 @@ async function main() {
     }
   });
 
-  // 訪問リスト
-  if (withLatLng.length === 0) {
+  // 訪問リスト（全件表示）
+  const listEl = document.getElementById("visitList");
+  if (allVisits.length === 0) {
     document.getElementById("emptyMsg").style.display = "block";
     return;
   }
 
-  const listEl = document.getElementById("visitList");
-  withLatLng.forEach((v, i) => {
+  allVisits.forEach(v => {
+    const hasPin = v.lat && v.lng;
     const row = document.createElement("div");
     row.className = "visit-row";
     row.innerHTML = `
-      <span class="visit-row-icon">📍</span>
+      <span class="visit-row-icon" style="${hasPin ? "" : "opacity:0.3;"}"">📍</span>
       <div class="visit-row-body">
         <div class="visit-row-place">${v.place || "—"}</div>
-        <div class="visit-row-meta">${v.date || ""} ${v.time || ""}</div>
+        <div class="visit-row-meta">${v.date || ""} ${v.time || ""}${hasPin ? "" : " （地図なし）"}</div>
       </div>
     `;
-    row.addEventListener("click", () => {
-      document.querySelectorAll(".visit-row").forEach(r => r.classList.remove("active"));
-      row.classList.add("active");
-      const pt = points[i];
-      if (pt) {
-        document.getElementById("popupPlace").textContent = v.place || "—";
-        document.getElementById("popupMeta").textContent  = `${v.date || ""} ${v.time || ""}`;
-        popup.style.left = Math.min(pt.x + 10, W - 200) + "px";
-        popup.style.top  = Math.max(pt.y - 60, 10) + "px";
-        popup.classList.add("show");
-      }
-    });
+    if (hasPin) {
+      const ptIdx = withLatLng.findIndex(w => w.id === v.id);
+      row.addEventListener("click", () => {
+        document.querySelectorAll(".visit-row").forEach(r => r.classList.remove("active"));
+        row.classList.add("active");
+        const pt = points[ptIdx];
+        if (pt) {
+          document.getElementById("popupPlace").textContent = v.place || "—";
+          document.getElementById("popupMeta").textContent  = `${v.date || ""} ${v.time || ""}`;
+          popup.style.left = Math.min(pt.x + 10, W - 200) + "px";
+          popup.style.top  = Math.max(pt.y - 60, 10) + "px";
+          popup.classList.add("show");
+        }
+      });
+    }
     listEl.appendChild(row);
   });
 }
