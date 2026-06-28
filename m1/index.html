@@ -116,24 +116,12 @@
   <p class="sub" id="status">読み込み中...</p>
   <div class="list" id="list"></div>
   <p class="empty" id="emptyMsg" style="display:none;">記録はまだありません</p>
-  <p class="updated">更新: 2026-06-27 17:20</p>
+  <p class="updated">更新: 2026-06-28 10:29</p>
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
-    authDomain: "ab01-9f35a.firebaseapp.com",
-    projectId: "ab01-9f35a",
-    storageBucket: "ab01-9f35a.firebasestorage.app",
-    messagingSenderId: "502154862201",
-    appId: "1:502154862201:web:4ca0c72225af6bd0147ea8"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  import { db } from "../lib/firebase.js";
+  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
   const DOW = ["日","月","火","水","木","金","土"];
