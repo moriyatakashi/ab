@@ -188,6 +188,13 @@
     padding: 2px 8px; pointer-events: none;
   }
 
+  /* 出来事メモ */
+  .memo-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .memo-item { display: flex; gap: 8px; align-items: flex-start; }
+  .memo-date-tag { font-size: 0.68rem; color: var(--accent); background: var(--accent-soft); border-radius: 6px; padding: 2px 7px; flex-shrink: 0; margin-top: 2px; white-space: nowrap; }
+  .memo-text { font-size: 0.85rem; color: var(--text); flex: 1; }
+  .memo-input-date { width: 130px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem; background: var(--bg); color: var(--text); }
+  .memo-input-date:focus { outline: none; border-color: var(--accent); }
   .updated { font-size:0.72rem; color:var(--text-soft); margin-top:32px; text-align:right; }
 
   /* チェック項目 */
@@ -303,6 +310,20 @@
     <div class="status" id="visitStatus"></div>
   </div>
 
+  <!-- 出来事メモ -->
+  <div class="section">
+    <div class="section-title">出来事メモ</div>
+    <div class="visit-form">
+      <div class="visit-row-inputs">
+        <input class="memo-input-date" type="date" id="memoDateInput">
+        <input type="text" id="memoTextInput" placeholder="メモを入力" style="flex:1;">
+      </div>
+      <button class="btn-add-visit" id="btnAddMemo">＋ メモを追加</button>
+    </div>
+    <div class="status" id="memoStatus"></div>
+    <div class="memo-list" id="memoList"></div>
+  </div>
+
   <!-- 履歴 -->
   <div class="history-section">
     <div class="history-label">直近の記録</div>
@@ -311,7 +332,7 @@
     <a href="../m1/" style="display:block; text-align:center; font-size:0.8rem; color:var(--accent); padding:12px 0; text-decoration:none;">もっと見る →</a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 10:36</p>
+  <p class="updated">更新: 2026-06-28 11:11</p>
 </div>
 
 <script type="module">
@@ -319,6 +340,7 @@
   import { collection, getDocs, doc, setDoc, getDoc, addDoc, orderBy, query }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   const SCORE_COL = "ab_items2";
+  const MEMO_COL  = "ab_memos";
   const VISIT_COL = "ab_visits";
   const DATE_RE   = /^\d{4}-\d{2}-\d{2}$/;
   const DOW       = ["日","月","火","水","木","金","土"];
@@ -337,6 +359,10 @@
   const elVisitStatus  = $("visitStatus");
   const elHistoryList  = $("historyList");
   const elEmptyMsg     = $("emptyMsg");
+  const elMemoDateInput = $("memoDateInput");
+  const elMemoTextInput = $("memoTextInput");
+  const elMemoStatus    = $("memoStatus");
+  const elMemoList      = $("memoList");
   const elTimeInput    = $("timeInput");
   const elSlider       = $("slider");
   const elScoreNum     = $("scoreNum");
@@ -353,6 +379,7 @@
   const today = new Date().toLocaleDateString("sv-SE");
   elScoreDate.textContent = today;
   elDateInput.value = today;
+  elMemoDateInput.value = today;
   const now = new Date();
   elTimeInput.value =
     String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
@@ -542,6 +569,39 @@
     }
   });
 
+  // メモ追加
+  $("btnAddMemo").addEventListener("click", async () => {
+    const date = elMemoDateInput.value;
+    const memo = elMemoTextInput.value.trim();
+    if (!memo) { elMemoTextInput.focus(); return; }
+    try {
+      await addDoc(collection(db, MEMO_COL), {
+        date, memo, createdAt: new Date().toISOString()
+      });
+      elMemoTextInput.value = "";
+      elMemoStatus.textContent = "✓ 追加しました";
+      setTimeout(() => elMemoStatus.textContent = "", 2000);
+      loadTodayMemos();
+      loadHistory();
+    } catch(e) { elMemoStatus.textContent = "エラー: " + e.message; }
+  });
+
+  // 今日のメモを読み込んで表示
+  async function loadTodayMemos() {
+    try {
+      const snap = await getDocs(query(collection(db, MEMO_COL), orderBy("createdAt", "desc")));
+      const todayItems = [];
+      snap.forEach(d => { if (d.data().date === today) todayItems.push(d.data()); });
+      elMemoList.innerHTML = "";
+      todayItems.forEach(m => {
+        const div = document.createElement("div");
+        div.className = "memo-item";
+        div.innerHTML = `<span class="memo-date-tag">今日</span><span class="memo-text">${m.memo}</span>`;
+        elMemoList.appendChild(div);
+      });
+    } catch(e) {}
+  }
+
   // GPS
   elBtnGps.addEventListener("click", () => {
     if (!navigator.geolocation) { alert("位置情報非対応"); return; }
@@ -703,6 +763,7 @@
 
   loadChecks(today);
   loadTodayScore(today);
+  loadTodayMemos();
 
   // 日付を手動変更したときも再読み込み
   elDateInput.addEventListener("change", (e) => {
