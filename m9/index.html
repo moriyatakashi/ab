@@ -63,6 +63,27 @@
   }
   .task-title { font-size: 0.88rem; color: var(--text); flex: 1; }
   .task-memo { font-size: 0.75rem; color: var(--text-soft); margin-top: 2px; }
+  .task-item { display:flex; align-items:flex-start; gap:8px; padding:10px 0; border-bottom:1px solid var(--border); }
+  .task-item:last-child { border-bottom:none; }
+  .task-item-body { flex:1; min-width:0; }
+  .task-cat { font-size:0.65rem; font-weight:700; color:var(--accent); background:var(--accent-soft); border-radius:8px; padding:2px 8px; display:inline-block; margin-bottom:4px; }
+  .task-title-text { font-size:0.88rem; color:var(--text); }
+  .task-edit-area { display:none; flex-direction:column; gap:6px; margin-top:6px; }
+  .task-edit-area.show { display:flex; }
+  .task-edit-input { padding:7px 10px; border:1px solid var(--border); border-radius:8px; font-size:0.85rem; background:var(--bg); color:var(--text); }
+  .task-edit-input:focus { outline:none; border-color:var(--accent); }
+  .task-edit-row { display:flex; gap:6px; }
+  .task-btn { font-size:0.72rem; padding:4px 10px; border-radius:6px; cursor:pointer; border:1px solid; white-space:nowrap; }
+  .task-btn-edit   { background:var(--panel); border-color:var(--border); color:var(--text-soft); }
+  .task-btn-save   { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .task-btn-cancel { background:var(--panel); border-color:var(--border); color:var(--text-soft); }
+  .task-btn-del    { background:#fdf0f0; border-color:#f5c6c6; color:#b34444; }
+  .task-actions { display:flex; gap:4px; flex-shrink:0; margin-top:2px; }
+  .task-add-form { display:flex; flex-direction:column; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
+  .task-add-row { display:flex; gap:8px; }
+  .task-add-input { flex:1; padding:9px 10px; border:1px solid var(--border); border-radius:8px; font-size:0.85rem; background:var(--bg); color:var(--text); }
+  .task-add-input:focus { outline:none; border-color:var(--accent); }
+  .task-add-btn { padding:9px 16px; background:var(--accent); color:#fff; border:none; border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer; white-space:nowrap; }
   .task-empty { font-size: 0.82rem; color: var(--text-soft); text-align: center; padding: 16px 0; }
   .next-review-row {
     display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px;
@@ -134,12 +155,12 @@
     </a>
   </div>
 
-  <p class="updated">更新: 2026-06-28 11:24</p>
+  <p class="updated">更新: 2026-06-28 11:42</p>
 </div>
 
 <script type="module">
 import { db } from "../lib/firebase.js";
-import { collection, getDocs, doc, setDoc, getDoc, orderBy, query }
+import { collection, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc, orderBy, query, addDoc }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const REVIEW_COL = "ab_reviews";
   const TASK_COL = "ab_tasks";
