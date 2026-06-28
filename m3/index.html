@@ -181,7 +181,7 @@ TRUNCATE ab_sandbox
     <button class="sql-run" id="sqlRun">▶ 実行</button>
     <div class="sql-log" id="sqlLog"></div>
   </div>
-  <p style="font-size:0.72rem;color:var(--text-soft);text-align:right;margin-top:24px;">更新: 2026-06-28 16:06</p>
+  <p style="font-size:0.72rem;color:var(--text-soft);text-align:right;margin-top:24px;">更新: 2026-06-28 16:09</p>
 </div>
 
 <script type="module">
@@ -200,7 +200,7 @@ TRUNCATE ab_sandbox
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  const COLLECTIONS = ["ab_items2", "ab_sandbox", "ab_visits", "ab_checks", "ab_reviews"];
+  const COLLECTIONS = ["ab_items2", "ab_sandbox", "ab_visits", "ab_checks", "ab_reviews", "ab_tasks", "ab_memos"];
   const SKIP_FIELDS = ["createdAt", "updatedAt"];
   const FIELD_ORDER = ["col1", "col2", "col3"];
 
