@@ -1,5 +1,5 @@
 # roreki 仕様書 — アーキテクチャ編
-## 更新日: 2026-06-28（第5版）
+## 更新日: 2026-07-01（第6版）
 
 ---
 
@@ -32,7 +32,7 @@
 
 ```
 ab/
-├── index.html          # トップ（JS配列PAGESでカード生成）
+├── index.html          # トップ（CATEGORIESでカテゴリ別カード生成）
 ├── style.css           # 共通CSS
 ├── docs/
 │   ├── spec.md         # 本ファイル（アーキテクチャ・設計）
@@ -56,8 +56,10 @@ ab/
 ├── m4/index.html       # トリビア
 ├── m5/index.html       # 訪問地図（Canvas自作、GeoJSON境界線）
 ├── m6/index.html       # インベーダーゲーム
+├── m7/index.html       # 日次スコア（折れ線グラフ）
 ├── m8/index.html       # ランナー（横スクロールアクション）
-└── m9/index.html       # 振り返り（スコア記録・タスク管理・次回日設定）
+├── m9/index.html       # 振り返り（スコア記録・タスク管理・次回日設定）
+└── m10/index.html      # カレンダー（今月・来月表示）
 ```
 
 ### moriyatakashi/ac
@@ -67,28 +69,41 @@ ab/
 ```
 ac/
 ├── index.html          # 日本地図5地域カラーマップ
-└── faithjs/            # NESエミュレーター（参考実装、PC作業前提）
-    ├── public/
-    │   ├── index.html
-    │   ├── js/main.js  # ビルド済み
-    │   └── rom/        # フリーROM4本
-    ├── src/js/
-    │   ├── NES.js      # エミュレーター本体
-    │   ├── main.js
-    │   └── Mapper/     # マッパー55ファイル
-    ├── package.json
-    ├── webpack.config.js
-    └── .babelrc
+├── faithjs/            # NESエミュレーター（vanilla JS版、Mapper4のみ対応）
+│   ├── public/
+│   │   ├── index.html  # エミュレーター本体（vanilla JS inlined）
+│   │   └── rom/        # フリーROM・自作ROM
+│   ├── tools/
+│   │   └── nes_emu.py  # Pythonミニエミュレーター（89命令版）
+│   └── test/           # Jestテスト
+├── nes_py/             # faithjs初期版のPython移植（Claude実行・デバッグ用）
+│   ├── cpu.py          # 6502 CPU・メモリマップ・ジョイパッド
+│   ├── ppu.py          # PPU（スキャンライン描画・静的レンダリング）
+│   ├── mapper4.py      # Mapper4（MMC3）
+│   ├── nes.py          # iNES読み込み・結線・フレームループ
+│   └── README.md
+└── nes_py_capture/     # Bad Apple霊夢シルエット抜き取り実験
+    ├── capture.py
+    ├── reimu_f0060.png
+    ├── reimu_f0150.png
+    ├── reimu_f0300.png
+    └── README.md
 ```
 
 ---
 
 ## 4. トップページの設計思想
 
-JS配列（PAGES）でカードを生成。ページ追加は1行追加するだけ。
+JS配列（CATEGORIES）でカテゴリ別カードを生成。カテゴリ追加・ページ追加は配列1行追加するだけ。
+
+**現在のカテゴリ構成：**
+- 記録する: m2・m9
+- 見る・振り返る: m1・m7・m5
+- ツール: m10
+- その他: play/・admin/
 
 **ナビゲーション設計：**
-- トップは6枚程度のカードに絞る
+- トップはカテゴリグループで整理
 - ゲームは `play/` サブページにまとめる
 - 管理ツールは `admin/` サブページにまとめる
 - 全ページ2ステップ以内で到達できる
@@ -150,6 +165,7 @@ JS配列（PAGES）でカードを生成。ページ追加は1行追加するだ
 
 - 「ズンドコベロンチョわかる？」→ 確認の合言葉
 - 「ズンドコベロンチョお願い」→ PAT込みの引き継ぎプロンプトを出力
+- 「ズンドコベロンチョ＋リポジトリ名」→ そのリポジトリ限定の引き継ぎ
 - テンプレート（PATなし）: Google Driveの `roreki_handover_template.md`
 
 ---
@@ -163,3 +179,4 @@ JS配列（PAGES）でカードを生成。ページ追加は1行追加するだ
 - m1・m2・m9はlib/firebase.jsを使用。m6・m8はまだ直接初期化（後回し）
 - Firestore REST APIはClaude環境から直接アクセス不可
   → データ確認はm3のコピーボタン経由でJSONをClaudeに貼る
+
