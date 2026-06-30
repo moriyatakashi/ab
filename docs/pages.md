@@ -1,5 +1,5 @@
 # roreki 仕様書 — ページ一覧編
-## 更新日: 2026-06-28（第5版）
+## 更新日: 2026-07-01（第6版）
 
 ---
 
@@ -8,13 +8,14 @@
 ### トップ（index.html）
 URL: https://moriyatakashi.github.io/ab/
 
-JS配列（PAGES）でカード生成。6枚構成：
-- 📝 m2 — 今日の記録
-- 🔁 m9 — 振り返り
-- 📋 m1 — 記録一覧
-- 🗺️ m5 — 訪問地図
-- 🎮 遊ぶ（play/）
-- ⚙️ 管理（admin/）
+JS配列（CATEGORIES）でカテゴリ別カード生成。現在の構成：
+
+| カテゴリ | ページ |
+|---|---|
+| 記録する | m2・m9 |
+| 見る・振り返る | m1・m7・m5 |
+| ツール | m10 |
+| その他 | 遊ぶ（play/）・管理（admin/） |
 
 今日が振り返り日のとき最上部に茶色バナー → m9へリンク。
 
@@ -68,6 +69,14 @@ URL: https://moriyatakashi.github.io/ab/m1/
 
 ---
 
+### m7 — 日次スコア
+URL: https://moriyatakashi.github.io/ab/m7/
+使用: ab_items2
+
+日次スコアの折れ線グラフ。期間切り替え（直近7日・30日・全件等）対応。
+
+---
+
 ### m3 — Firestoreビューア＋SQLコンソール
 URL: https://moriyatakashi.github.io/ab/m3/
 使用: 全コレクション（0件非表示）
@@ -88,6 +97,13 @@ URL: https://moriyatakashi.github.io/ab/m5/
 - リストは全件表示（lat/lngなしは「地図なし」と表示）
 - ピンタップでポップアップ、リスト行タップで地図ズーム
 - 現在のGeoJSON: 東大阪市・大阪市
+
+---
+
+### m10 — カレンダー
+URL: https://moriyatakashi.github.io/ab/m10/
+
+今月・来月のカレンダー表示。
 
 ---
 
@@ -116,10 +132,11 @@ URL: https://moriyatakashi.github.io/ac/
 使用: ac_map（ac01-fab17）
 5地域をタップで色塗り・Firestoreに保存。
 
-### faithjs（NESエミュレーター参考実装）
-PATH: ac/faithjs/
-sairoutine/faithjsをコピー。PC作業前提でwebpack現代版に更新予定。
-ROMはフリー素材（bad_apple_2_5.nes・megaari.nes・nestest.nes・nittori.nes）。
+### faithjs（NESエミュレーター）
+PATH: ac/faithjs/public/index.html
+URL: https://moriyatakashi.github.io/ac/faithjs/public/
+vanilla JS inlined版（webpack/Babel不要）。Mapper4のみ対応。
+ROMはフリー素材＋自作ROM（hello_nes4.nes等）。
 
 ---
 
@@ -128,8 +145,11 @@ ROMはフリー素材（bad_apple_2_5.nes・megaari.nes・nestest.nes・nittori.
 | 旧ページ | 処置 | 理由 |
 |---------|------|------|
 | main/（CRUD） | 削除 | m9タスク管理・m3SQLで代替 |
-| mm/・m5/・m7/ | m2に統合 | m2でカバー |
+| mm/・旧m5/・旧m7/ | m2に統合 | m2でカバー（※注） |
 | hub/ | 廃止 | 不要 |
 | auth.js | 廃止 | 相性問題（要再検証） |
 | トップにm3直リンク | admin/経由に変更 | トップをシンプルに |
 | m2の次回振り返り日 | m9に移動 | 振り返り系はm9に集約 |
+
+※ 旧m7は旧称で現在のm7（日次スコアグラフ）とは別のページ。現在のm7はm2統合後に新規作成したもの。
+
