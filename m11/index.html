@@ -17,10 +17,21 @@
   body {
     min-height: 100vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 24px;
   }
+  .back-link {
+    display: block;
+    width: 100%;
+    max-width: 420px;
+    font-size: 0.8rem;
+    color: var(--text-soft);
+    text-decoration: none;
+    margin-bottom: 12px;
+  }
+  .back-link:hover { color: var(--accent); }
   .card {
     width: 100%;
     max-width: 420px;
@@ -51,7 +62,7 @@
   .grid-line { stroke: var(--border); stroke-width: 1; fill: none; }
   .spoke { stroke: var(--border); stroke-width: 1; }
   .shape {
-    fill: var(--accent-soft);
+    fill: rgba(181, 101, 29, 0.16);
     stroke: var(--accent);
     stroke-width: 2;
     stroke-linejoin: round;
@@ -111,6 +122,7 @@
 </style>
 </head>
 <body>
+<a class="back-link" href="../">← ab トップ</a>
 <div class="card">
   <p class="eyebrow">RADAR / 5 AXES</p>
   <h1>五角形レーダーチャート（仮値）</h1>
@@ -121,6 +133,7 @@
   </div>
   <div class="legend" id="legend"></div>
 </div>
+<p class="updated" style="width:100%;max-width:420px;">更新: 2026-07-02 06:05</p>
 
 <script>
 // ── 設定（このブロックだけ差し替えれば本番値に切り替えられる） ──
@@ -245,6 +258,5 @@ document.getElementById('randomizeBtn').addEventListener('click', randomize);
 renderCaption();
 randomize();
 </script>
-<!-- updated: 2026-07-02 05:52 JST -->
 </body>
 </html>
