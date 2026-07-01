@@ -1,5 +1,5 @@
 # roreki 仕様書 — ページ一覧編
-## 更新日: 2026-07-01（第6版）
+## 更新日: 2026-07-02（第7版）
 
 ---
 
@@ -14,20 +14,20 @@ JS配列（CATEGORIES）でカテゴリ別カード生成。現在の構成：
 |---|---|
 | 記録する | m2・m9 |
 | 見る・振り返る | m1・m7・m5 |
-| ツール | m10 |
-| その他 | 遊ぶ（play/）・管理（admin/） |
+| ツール | m10・m11 |
+| その他 | 遊ぶ（b/）・管理（a/） |
 
 今日が振り返り日のとき最上部に茶色バナー → m9へリンク。
 
 ---
 
-### play/（遊ぶサブページ）
-URL: https://moriyatakashi.github.io/ab/play/
-m8・m6・m4へのリンク一覧。
+### b/（遊ぶサブページ）
+URL: https://moriyatakashi.github.io/ab/b/
+b1・b2・b3へのリンク一覧。
 
-### admin/（管理サブページ）
-URL: https://moriyatakashi.github.io/ab/admin/
-m3・lib/testへのリンク一覧。
+### a/（管理サブページ）
+URL: https://moriyatakashi.github.io/ab/a/
+a1・a2へのリンク一覧。
 
 ---
 
@@ -77,8 +77,8 @@ URL: https://moriyatakashi.github.io/ab/m7/
 
 ---
 
-### m3 — Firestoreビューア＋SQLコンソール
-URL: https://moriyatakashi.github.io/ab/m3/
+### a1 — Firestoreビューア＋SQLコンソール（旧m3）
+URL: https://moriyatakashi.github.io/ab/a1/
 使用: 全コレクション（0件非表示）
 
 - コレクション選択チェックボックスで選択的コピー（Claude連携用）
@@ -107,20 +107,20 @@ URL: https://moriyatakashi.github.io/ab/m10/
 
 ---
 
-### m4 — トリビア
-URL: https://moriyatakashi.github.io/ab/m4/
+### b1 — トリビア（旧m4）
+URL: https://moriyatakashi.github.io/ab/b1/
 鉄道・地理・乗り物のトリビア。
 
-### m6 — インベーダー
-URL: https://moriyatakashi.github.io/ab/m6/
+### b2 — インベーダー（旧m6）
+URL: https://moriyatakashi.github.io/ab/b2/
 使用: ab_invader_history・ab_invader_hi
 
-### m8 — ランナー
-URL: https://moriyatakashi.github.io/ab/m8/
+### b3 — ランナー（旧m8）
+URL: https://moriyatakashi.github.io/ab/b3/
 使用: ab_runner_history・ab_runner_hi
 
-### lib/test — テスト
-URL: https://moriyatakashi.github.io/ab/lib/test.html
+### a2 — テスト（旧lib/test.html）
+URL: https://moriyatakashi.github.io/ab/a2/
 正常系・異常系・手動テスト。テストデータリセットボタンあり。
 
 ---
@@ -150,6 +150,7 @@ ROMはフリー素材＋自作ROM（hello_nes4.nes等）。
 | auth.js | 廃止 | 相性問題（要再検証） |
 | トップにm3直リンク | admin/経由に変更 | トップをシンプルに |
 | m2の次回振り返り日 | m9に移動 | 振り返り系はm9に集約 |
+| m3・m4・m6・m8・admin/・play/ | a1・b1・b2・b3・a/・b/にリネーム | 管理=a系、ゲーム=b系で命名を整理 |
 
 ※ 旧m7は旧称で現在のm7（日次スコアグラフ）とは別のページ。現在のm7はm2統合後に新規作成したもの。
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>m6 / INVADER</title>
+<title>b2 / INVADER</title>
 <link rel="stylesheet" href="../style.css">
 <style>
   body { padding: 0; background: #0a0a0f; color: #e8e8e8; overflow: hidden; }
@@ -120,7 +120,7 @@
 
 <div id="overlay">
   <div class="overlay-title">INVADER</div>
-  <div class="overlay-sub">m6 · space shooter</div>
+  <div class="overlay-sub">b2 · space shooter</div>
   <div class="overlay-score" id="overlayScore"></div>
   <div class="overlay-hi" id="overlayHi"></div>
   <button id="btnStart">START</button>
@@ -398,7 +398,7 @@ function showOverlay(isGameOver) {
   const ol = document.getElementById("overlay");
   ol.classList.remove("hidden");
   document.querySelector(".overlay-title").textContent = isGameOver ? "GAME OVER" : "INVADER";
-  document.querySelector(".overlay-sub").textContent   = isGameOver ? `WAVE ${wave}` : "m6 · space shooter";
+  document.querySelector(".overlay-sub").textContent   = isGameOver ? `WAVE ${wave}` : "b2 · space shooter";
   document.getElementById("overlayScore").textContent  = isGameOver ? `SCORE  ${score.toLocaleString()}` : "";
   document.getElementById("overlayHi").textContent     = hiScore > 0 ? `BEST  ${hiScore.toLocaleString()}` : "";
   document.getElementById("btnStart").textContent      = isGameOver ? "RETRY" : "START";

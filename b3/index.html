@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>m8 / RUNNER</title>
+<title>b3 / RUNNER</title>
 <link rel="stylesheet" href="../style.css">
 <style>
   * { margin: 0; padding: 0; }
@@ -82,7 +82,7 @@
 
 <div id="overlay">
   <div class="ov-title">RUNNER</div>
-  <div class="ov-sub">m8 · platformer</div>
+  <div class="ov-sub">b3 · platformer</div>
   <div class="ov-score" id="ovScore"></div>
   <div class="ov-hi"    id="ovHi"></div>
   <button id="btnStart">START</button>
@@ -510,7 +510,7 @@ function showOverlay(isOver) {
   const ol = document.getElementById("overlay");
   ol.classList.remove("hidden");
   document.querySelector(".ov-title").textContent = isOver ? "GAME OVER" : "RUNNER";
-  document.querySelector(".ov-sub").textContent   = isOver ? `Lv${level}  🪙${coins}` : "m8 · platformer";
+  document.querySelector(".ov-sub").textContent   = isOver ? `Lv${level}  🪙${coins}` : "b3 · platformer";
   document.getElementById("ovScore").textContent  = isOver ? `SCORE  ${score.toLocaleString()}` : "";
   document.getElementById("ovHi").textContent     = hiScore > 0 ? `BEST  ${hiScore.toLocaleString()}` : "";
   document.getElementById("btnStart").textContent = isOver ? "RETRY" : "START";

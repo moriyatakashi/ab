@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>lib / test</title>
+<title>a2 / test</title>
 <style>
   body { font-family: -apple-system, monospace; background: #0f0f14; color: #ccc; padding: 20px; }
   h1 { font-size: 1rem; color: #f0c040; margin-bottom: 4px; }
@@ -80,7 +80,7 @@
 </head>
 <body>
 <a class="back" href="../">← ab</a>
-<h1>lib / test</h1>
+<h1>a2 / test</h1>
 <p class="sub">各ライブラリの動作確認。ブラウザで開くだけでテストが走ります。</p>
 
 <div id="results"></div>
@@ -125,10 +125,10 @@
 
 
 <script type="module">
-import { db }          from "./firebase.js";
-import { ScoreManager } from "./score.js";
-import { Input }        from "./input.js";
-import { GameLoop }     from "./gameloop.js";
+import { db }          from "../lib/firebase.js";
+import { ScoreManager } from "../lib/score.js";
+import { Input }        from "../lib/input.js";
+import { GameLoop }     from "../lib/gameloop.js";
 
 const results = document.getElementById("results");
 let passed = 0, failed = 0;
