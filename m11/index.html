@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>m11 — レーダーチャート</title>
+<style>
+  :root {
+    --ink: #2b2b26;
+    --paper: #f6f3ec;
+    --line: #c9c2b2;
+    --accent: #b1502f;
+    --accent-soft: rgba(177, 80, 47, 0.16);
+    --warn: #c22a2a;
+    --sub: #8a8374;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+  }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+    background: #fffdf9;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 28px 20px 22px;
+  }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--sub);
+    margin: 0 0 4px;
+  }
+  h1 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 20px;
+    letter-spacing: 0.02em;
+  }
+  svg { display: block; margin: 0 auto; }
+  .caption {
+    text-align: center;
+    font-size: 11px;
+    color: var(--sub);
+    margin: 8px 0 0;
+  }
+  .grid-line { stroke: var(--line); stroke-width: 1; fill: none; }
+  .spoke { stroke: var(--line); stroke-width: 1; }
+  .shape {
+    fill: var(--accent-soft);
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-linejoin: round;
+  }
+  .dot { fill: var(--accent); }
+  .dot.below { fill: var(--warn); }
+  .label { font-size: 12px; fill: var(--ink); text-anchor: middle; }
+  .label.below { fill: var(--warn); font-weight: 600; }
+  .baseline {
+    fill: none;
+    stroke: var(--sub);
+    stroke-width: 1.2;
+    stroke-dasharray: 4 3;
+  }
+  .value {
+    font-size: 11px;
+    fill: var(--sub);
+    text-anchor: middle;
+  }
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 18px;
+  }
+  button {
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 16px;
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  button:active { opacity: 0.8; }
+  .total {
+    font-size: 12px;
+    color: var(--sub);
+  }
+  .legend {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    row-gap: 8px;
+    column-gap: 12px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 12px;
+  }
+  .legend-key {
+    color: var(--accent);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .legend-key.below { color: var(--warn); }
+  .legend-name {
+    color: var(--ink);
+  }
+  .legend-name.below { color: var(--warn); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="card">
+  <p class="eyebrow">RADAR / 5 AXES</p>
+  <h1>五角形レーダーチャート（仮値）</h1>
+  <svg id="chart" width="340" height="340" viewBox="0 0 340 340"></svg>
+  <p class="caption">点線＝基準（3.8） ／ 赤＝基準未満（3.8未満）</p>
+  <div class="footer">
+    <button onclick="randomize()">値を振り直す</button>
+  </div>
+  <div class="legend" id="legend"></div>
+</div>
+
+<script>
+const labels = ["軸A", "軸B", "軸C", "軸D", "軸E"];
+const legendNames = [
+  "取り組みやすさ",
+  "効果の大きさ",
+  "手間の少なさ",
+  "継続のしやすさ",
+  "後戻りのしにくさ"
+];
+const maxVal = 5;
+const minVal = 3;
+const baseline = 3.8; // 基準線＝3.8（固定）
+const cx = 170, cy = 165, radius = 110;
+const n = 5;
+
+function renderLegend(values) {
+  const legend = document.getElementById('legend');
+  legend.innerHTML = labels.map((l, i) => {
+    const below = values[i] < baseline;
+    const cls = below ? ' below' : '';
+    return `<div class="legend-item"><span class="legend-key${cls}">${l}</span><span class="legend-name${cls}">${legendNames[i]}</span></div>`;
+  }).join('');
+}
+
+function randomValues() {
+  return Array.from({length: n}, () => minVal + Math.floor(Math.random() * (maxVal - minVal + 1)));
+}
+
+function pointFor(i, value) {
+  const angle = (Math.PI * 2 * i) / n - Math.PI / 2;
+  const r = (value / maxVal) * radius;
+  return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
+}
+
+function outerPointFor(i, r) {
+  const angle = (Math.PI * 2 * i) / n - Math.PI / 2;
+  return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
+}
+
+function draw(values) {
+  const svg = document.getElementById('chart');
+  svg.innerHTML = '';
+  const ns = 'http://www.w3.org/2000/svg';
+
+  // grid rings
+  const rings = 4;
+  for (let ring = 1; ring <= rings; ring++) {
+    const r = (radius * ring) / rings;
+    const pts = [];
+    for (let i = 0; i < n; i++) pts.push(outerPointFor(i, r).join(','));
+    const poly = document.createElementNS(ns, 'polygon');
+    poly.setAttribute('points', pts.join(' '));
+    poly.setAttribute('class', 'grid-line');
+    svg.appendChild(poly);
+  }
+
+  // baseline (reference = half of max)
+  const basePts = [];
+  for (let i = 0; i < n; i++) basePts.push(pointFor(i, baseline).join(','));
+  const baseShape = document.createElementNS(ns, 'polygon');
+  baseShape.setAttribute('points', basePts.join(' '));
+  baseShape.setAttribute('class', 'baseline');
+  svg.appendChild(baseShape);
+
+  // spokes + labels
+  for (let i = 0; i < n; i++) {
+    const [x, y] = outerPointFor(i, radius);
+    const line = document.createElementNS(ns, 'line');
+    line.setAttribute('x1', cx);
+    line.setAttribute('y1', cy);
+    line.setAttribute('x2', x);
+    line.setAttribute('y2', y);
+    line.setAttribute('class', 'spoke');
+    svg.appendChild(line);
+
+    const below = values[i] < baseline;
+    const [lx, ly] = outerPointFor(i, radius + 24);
+    const text = document.createElementNS(ns, 'text');
+    text.setAttribute('x', lx);
+    text.setAttribute('y', ly);
+    text.setAttribute('class', 'label' + (below ? ' below' : ''));
+    text.textContent = labels[i];
+    svg.appendChild(text);
+  }
+
+  // data shape
+  const dataPts = values.map((v, i) => pointFor(i, v));
+  const poly = document.createElementNS(ns, 'polygon');
+  poly.setAttribute('points', dataPts.map(p => p.join(',')).join(' '));
+  poly.setAttribute('class', 'shape');
+  svg.appendChild(poly);
+
+  dataPts.forEach(([x, y], i) => {
+    const below = values[i] < baseline;
+    const dot = document.createElementNS(ns, 'circle');
+    dot.setAttribute('cx', x);
+    dot.setAttribute('cy', y);
+    dot.setAttribute('r', below ? 4.5 : 3.5);
+    dot.setAttribute('class', 'dot' + (below ? ' below' : ''));
+    svg.appendChild(dot);
+  });
+
+  renderLegend(values);
+}
+
+function randomize() {
+  draw(randomValues());
+}
+
+randomize();
+</script>
+</body>
+</html>
