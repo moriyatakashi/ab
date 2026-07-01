@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>a3 - URL受け口テスト</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .result-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-top: 16px;
+  }
+  .result-label {
+    font-size: 0.72rem;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 8px;
+  }
+  .result-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    word-break: break-all;
+  }
+  .empty-note {
+    color: var(--text-soft);
+    font-size: 0.85rem;
+  }
+  .param-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+  }
+  .param-row:last-child { border-bottom: none; }
+  .param-key { color: var(--text-soft); flex-shrink: 0; }
+  .param-val { text-align: right; word-break: break-all; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="../">← ab トップ</a>
+  <h1>a3 — URL受け口テスト</h1>
+  <p class="sub">Firestoreには一切触れません。URLのクエリパラメータを受け取って表示するだけの検証ページです。</p>
+
+  <div class="result-box">
+    <div class="result-label">受け取った内容</div>
+    <div id="output"></div>
+  </div>
+
+  <p class="updated" id="loadedAt"></p>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const output = document.getElementById("output");
+
+  if ([...params].length === 0) {
+    output.innerHTML = '<p class="empty-note">クエリパラメータがありません。例: <code>?msg=こんにちは</code> を末尾につけて開いてみてください。</p>';
+  } else {
+    output.innerHTML = [...params].map(([k, v]) =>
+      `<div class="param-row"><span class="param-key">${k}</span><span class="param-val">${v}</span></div>`
+    ).join("");
+  }
+
+  document.getElementById("loadedAt").textContent =
+    "このページが読み込まれた時刻: " + new Date().toLocaleString("ja-JP");
+</script>
+</body>
+</html>
