@@ -46,27 +46,80 @@
 <div class="wrap">
   <a class="back-link" href="../">← ab トップ</a>
   <h1>a3 — URL受け口テスト</h1>
-  <p class="sub">Firestoreには一切触れません。URLのクエリパラメータを受け取って表示するだけの検証ページです。</p>
+  <p class="sub">
+    パラメータなし: 受け取った内容をそのまま表示。<br>
+    <code>?col=コレクション名&doc=ドキュメントID</code>: Firestoreから該当ドキュメントを読み取り表示。<br>
+    <code>?col=コレクション名</code>のみ: 先頭10件を一覧表示。
+  </p>
 
   <div class="result-box">
-    <div class="result-label">受け取った内容</div>
-    <div id="output"></div>
+    <div class="result-label" id="resultLabel">受け取った内容</div>
+    <div id="output">読み込み中...</div>
   </div>
 
   <p class="updated" id="loadedAt"></p>
 </div>
 
-<script>
+<script type="module">
+  import { db } from "../lib/firebase.js";
+  import { doc, getDoc, collection, getDocs, limit, query }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
   const params = new URLSearchParams(window.location.search);
   const output = document.getElementById("output");
+  const resultLabel = document.getElementById("resultLabel");
+  const col = params.get("col");
+  const docId = params.get("doc");
 
-  if ([...params].length === 0) {
-    output.innerHTML = '<p class="empty-note">クエリパラメータがありません。例: <code>?msg=こんにちは</code> を末尾につけて開いてみてください。</p>';
-  } else {
-    output.innerHTML = [...params].map(([k, v]) =>
-      `<div class="param-row"><span class="param-key">${k}</span><span class="param-val">${v}</span></div>`
+  function renderFields(data) {
+    const entries = Object.entries(data);
+    if (entries.length === 0) return '<p class="empty-note">（フィールドなし）</p>';
+    return entries.map(([k, v]) =>
+      `<div class="param-row"><span class="param-key">${k}</span><span class="param-val">${typeof v === "object" ? JSON.stringify(v) : v}</span></div>`
     ).join("");
   }
+
+  async function run() {
+    if (!col) {
+      // Firestoreパラメータなし → 元の汎用エコー表示
+      resultLabel.textContent = "受け取った内容";
+      if ([...params].length === 0) {
+        output.innerHTML = '<p class="empty-note">クエリパラメータがありません。例: <code>?msg=こんにちは</code> または <code>?col=ab_checks&doc=xxxx</code> を末尾につけて開いてみてください。</p>';
+      } else {
+        output.innerHTML = [...params].map(([k, v]) =>
+          `<div class="param-row"><span class="param-key">${k}</span><span class="param-val">${v}</span></div>`
+        ).join("");
+      }
+      return;
+    }
+
+    try {
+      if (docId) {
+        // 単一ドキュメント読み取り
+        resultLabel.textContent = `${col} / ${docId}`;
+        const snap = await getDoc(doc(db, col, docId));
+        output.innerHTML = snap.exists()
+          ? renderFields(snap.data())
+          : '<p class="empty-note">（該当ドキュメントが見つかりません）</p>';
+      } else {
+        // コレクション先頭10件
+        resultLabel.textContent = `${col}（先頭10件）`;
+        const snap = await getDocs(query(collection(db, col), limit(10)));
+        if (snap.empty) {
+          output.innerHTML = '<p class="empty-note">（0件）</p>';
+        } else {
+          output.innerHTML = snap.docs.map(d =>
+            `<div class="result-box" style="margin-top:8px;"><div class="result-label">${d.id}</div>${renderFields(d.data())}</div>`
+          ).join("");
+        }
+      }
+    } catch (e) {
+      resultLabel.textContent = "エラー";
+      output.innerHTML = `<p class="empty-note">読み取りに失敗しました: ${e.message}</p>`;
+    }
+  }
+
+  run();
 
   document.getElementById("loadedAt").textContent =
     "このページが読み込まれた時刻: " + new Date().toLocaleString("ja-JP");
