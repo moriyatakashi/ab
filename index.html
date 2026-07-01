@@ -68,7 +68,7 @@
   <!-- カード一覧（JS で生成） -->
   <div class="cards" id="cards"></div>
 
-  <p class="updated">更新: 2026-07-02 05:38</p>
+  <p class="updated">更新: 2026-07-02 05:52</p>
 </div>
 
 <script type="module">
@@ -130,18 +130,12 @@ CATEGORIES.forEach(cat => {
 });
 
 // 振り返りバナー（今日が振り返り日かチェック）
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { db } from "./lib/firebase.js";
+import { todayStr } from "./lib/date.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 try {
-  const app = initializeApp({
-    apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
-    authDomain: "ab01-9f35a.firebaseapp.com",
-    projectId: "ab01-9f35a"
-  });
-  const db = getFirestore(app);
-  const today = new Date().toLocaleDateString("sv-SE");
+  const today = todayStr();
 
   const snap = await getDocs(collection(db, "ab_checks"));
   snap.forEach(d => {
@@ -149,7 +143,7 @@ try {
       document.getElementById("reviewBanner").style.display = "flex";
     }
   });
-} catch(e) {}
+} catch(e) { console.warn("reviewBanner check failed:", e); }
 </script>
 </body>
 </html>

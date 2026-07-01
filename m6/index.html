@@ -127,16 +127,11 @@
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, setDoc, getDoc, orderBy, query, limit }
+import { db } from "../lib/firebase.js";
+import { todayStr } from "../lib/date.js";
+import { collection, addDoc, getDocs, doc, setDoc, getDoc, orderBy, query, limit }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const app = initializeApp({
-  apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
-  authDomain: "ab01-9f35a.firebaseapp.com",
-  projectId: "ab01-9f35a"
-});
-const db = getFirestore(app);
 const COL_HIST = "ab_invader_history";
 const DOC_HI   = "ab_invader_hi";
 
@@ -163,13 +158,13 @@ async function loadHi() {
   try {
     const d = await getDoc(doc(db, DOC_HI, "record"));
     if (d.exists()) hiScore = d.data().score || 0;
-  } catch(e) {}
+  } catch(e) { console.warn("loadHi failed:", e); }
   updateHUD();
   loadHistory();
 }
 
 async function saveResult(s) {
-  const date = new Date().toLocaleDateString("sv-SE");
+  const date = todayStr();
   try {
     await addDoc(collection(db, COL_HIST), {
       score: s, date, wave,
@@ -179,7 +174,7 @@ async function saveResult(s) {
       hiScore = s;
       await setDoc(doc(db, DOC_HI, "record"), { score: s, date });
     }
-  } catch(e) {}
+  } catch(e) { console.warn("saveResult failed:", e); }
   updateHUD();
   loadHistory();
 }
@@ -199,7 +194,7 @@ async function loadHistory() {
       row.innerHTML = `<span>${data.score.toLocaleString()} pt</span><span>W${data.wave||1}</span><span class="hist-date">${data.date}</span>`;
       list.appendChild(row);
     });
-  } catch(e) {}
+  } catch(e) { console.warn("loadHistory failed:", e); }
 }
 
 // ── HUD ───────────────────────────────────────────────
@@ -456,5 +451,6 @@ document.addEventListener("keyup", e => {
 loadHi();
 draw();
 </script>
+<!-- updated: 2026-07-02 05:52 JST -->
 </body>
 </html>

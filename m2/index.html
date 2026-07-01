@@ -337,6 +337,7 @@
 
 <script type="module">
   import { db } from "../lib/firebase.js";
+  import { todayStr } from "../lib/date.js";
   import { collection, getDocs, doc, setDoc, getDoc, addDoc, orderBy, query }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
   const SCORE_COL = "ab_items2";
@@ -376,7 +377,7 @@
   const elDateConfirmNo   = $("dateConfirmNo");
 
   // 今日の日付をセット
-  const today = new Date().toLocaleDateString("sv-SE");
+  const today = todayStr();
   elScoreDate.textContent = today;
   elDateInput.value = today;
   elMemoDateInput.value = today;
@@ -396,7 +397,7 @@
         const data = d.data();
         checkData = { ...checkData, ...data };
         if (data.reviewDate) {
-          const todayVal = new Date().toLocaleDateString("sv-SE");
+          const todayVal = todayStr();
           if (reviewDateVal === todayVal) {
             elReviewBanner.style.display = "flex";
           } else {
@@ -409,16 +410,16 @@
         try {
           const revSnap = await getDocs(collection(db, "ab_reviews"));
           const past = [];
-          revSnap.forEach(d => { if (d.id < new Date().toLocaleDateString("sv-SE")) past.push(d.data()); });
+          revSnap.forEach(d => { if (d.id < todayStr()) past.push(d.data()); });
           past.sort((a, b) => b.date.localeCompare(a.date));
           if (past.length > 0) {
             const [y, m, d2] = past[0].date.split("-");
             elReviewBannerSub.textContent =
               `前回: ${parseInt(m)}/${parseInt(d2)} → m9 振り返りページへ →`;
           }
-        } catch(e) {}
+        } catch(e) { console.warn("review banner sub failed:", e); }
       }
-    } catch(e) {}
+    } catch(e) { console.warn("loadChecks failed:", e); }
     renderChecks();
   }
 
@@ -486,7 +487,7 @@
       textEl.textContent = `⚠️ ${m2}/${d}（昨日）の記録ですか？`;
       // 「はい」で前日にセット
       elDateConfirmYes.addEventListener("click", () => {
-        const yStr = yesterday.toLocaleDateString("sv-SE");
+        const yStr = todayStr(yesterday);
         elDateInput.value  = yStr;
         elScoreDate.textContent = yStr;
         loadChecks(yStr);
@@ -594,10 +595,8 @@
         div.innerHTML = `<span class="memo-date-tag">今日</span><span class="memo-text">${m.memo}</span>`;
         elMemoList.appendChild(div);
       });
-    } catch(e) {}
+    } catch(e) { console.warn("loadTodayMemos failed:", e); }
   }
-
-  // GPS
   let _lat = null, _lng = null;  // GPSで取得した座標を保持
 
   elBtnGps.addEventListener("click", () => {

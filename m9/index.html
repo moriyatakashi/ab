@@ -160,13 +160,14 @@
 
 <script type="module">
 import { db } from "../lib/firebase.js";
+import { todayStr } from "../lib/date.js";
 import { collection, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc, orderBy, query, addDoc }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const REVIEW_COL = "ab_reviews";
   const TASK_COL = "ab_tasks";
 const DOW = ["日","月","火","水","木","金","土"];
 
-const today = new Date().toLocaleDateString("sv-SE");
+const today = todayStr();
 const todayDisp = new Date().toLocaleDateString("ja-JP", { month:"long", day:"numeric", weekday:"short" });
 document.getElementById("heroDate").textContent = todayDisp;
 
@@ -319,23 +320,23 @@ async function loadReviews() {
   
   async function loadNextReview() {
     try {
-      const todayStr = new Date().toLocaleDateString("sv-SE");
-      const d = await getDoc(doc(db, "ab_checks", todayStr));
+      const todayKey = todayStr();
+      const d = await getDoc(doc(db, "ab_checks", todayKey));
       if (d.exists() && d.data().reviewDate) {
         document.getElementById("nextReviewDate").value = d.data().reviewDate;
       }
-    } catch(e) {}
+    } catch(e) { console.warn("loadNextReview failed:", e); }
   }
 
   // 次回振り返り日を保存（ab_checksに書く）
   document.getElementById("nextReviewDate").addEventListener("change", async () => {
-    const todayStr = new Date().toLocaleDateString("sv-SE");
+    const todayKey = todayStr();
     const reviewDate = document.getElementById("nextReviewDate").value;
     const savedEl = document.getElementById("nextReviewSaved");
     try {
       // ab_checksの今日のドキュメントにreviewDateをmerge
-      await setDoc(doc(db, "ab_checks", todayStr), {
-        date: todayStr,
+      await setDoc(doc(db, "ab_checks", todayKey), {
+        date: todayKey,
         reviewDate: reviewDate || null,
         updatedAt: new Date().toISOString()
       }, { merge: true });
