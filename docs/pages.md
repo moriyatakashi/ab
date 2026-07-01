@@ -27,7 +27,7 @@ b1・b2・b3へのリンク一覧。
 
 ### a/（管理サブページ）
 URL: https://moriyatakashi.github.io/ab/a/
-a1・a2へのリンク一覧。
+a1・a2・a3・a4へのリンク一覧。
 
 ---
 
@@ -122,6 +122,14 @@ URL: https://moriyatakashi.github.io/ab/b3/
 ### a2 — テスト（旧lib/test.html）
 URL: https://moriyatakashi.github.io/ab/a2/
 正常系・異常系・手動テスト。テストデータリセットボタンあり。
+
+### a3 — URL受け口テスト
+URL: https://moriyatakashi.github.io/ab/a3/
+URLクエリパラメータの受け取り確認用（?msg=xxx）。`?col=コレクション名`（&`doc=ID`任意）でFirestore読み取りにも対応。書き込みは行わない。
+
+### a4 — URLからメモ書き込み
+URL: https://moriyatakashi.github.io/ab/a4/
+`?memo=本文`（&`date=YYYY-MM-DD`任意）を付けたURLを開くと、内容をプレビュー表示し、ボタンを押すとab_memosに書き込む（自動書き込みはしない2段階方式）。Claudeが生成したURLをSafariで開いて記録する、という運用の検証用に作成。
 
 ---
 

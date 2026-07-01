@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>a4 - URLからメモ書き込み</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .result-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-top: 16px;
+  }
+  .result-label {
+    font-size: 0.72rem;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 8px;
+  }
+  .preview-memo {
+    font-size: 1rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-bottom: 4px;
+  }
+  .preview-date {
+    font-size: 0.78rem;
+    color: var(--text-soft);
+  }
+  .empty-note { color: var(--text-soft); font-size: 0.85rem; }
+  .btn-write {
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+    padding: 14px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: inherit;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+  }
+  .btn-write:active { opacity: 0.85; }
+  .btn-write:disabled { background: var(--border); color: var(--text-soft); cursor: default; }
+  .status-msg {
+    margin-top: 12px;
+    font-size: 0.85rem;
+  }
+  .status-msg.ok   { color: #2e7d32; }
+  .status-msg.err  { color: var(--danger); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="../">← ab トップ</a>
+  <h1>a4 — URLからメモ書き込み</h1>
+  <p class="sub">
+    <code>?memo=本文</code>（任意で<code>&date=YYYY-MM-DD</code>）を付けて開くと、下に内容が表示されます。<br>
+    ボタンを押すまでは書き込まれません。
+  </p>
+
+  <div class="result-box" id="resultBox">
+    <div class="result-label">プレビュー</div>
+    <div id="preview"></div>
+  </div>
+
+  <button class="btn-write" id="btnWrite" style="display:none;">この内容で書き込む</button>
+  <div class="status-msg" id="statusMsg"></div>
+
+  <p class="updated">更新: 2026-07-02 07:54</p>
+  <p class="empty-note" id="loadedAt" style="text-align:right;margin-top:4px;"></p>
+</div>
+
+<script type="module">
+  import { db } from "../lib/firebase.js";
+  import { todayStr } from "../lib/date.js";
+  import { collection, addDoc }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const MEMO_COL = "ab_memos";
+  const params = new URLSearchParams(window.location.search);
+  const memo = params.get("memo");
+  const date = params.get("date") || todayStr();
+
+  const preview   = document.getElementById("preview");
+  const btnWrite  = document.getElementById("btnWrite");
+  const statusMsg = document.getElementById("statusMsg");
+
+  if (!memo || memo.trim() === "") {
+    preview.innerHTML = '<p class="empty-note">memoパラメータがありません。例: <code>?memo=買い物リストを確認</code> を末尾につけて開いてください。</p>';
+  } else if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    preview.innerHTML = `<p class="empty-note">dateパラメータの形式が不正です（YYYY-MM-DD形式で指定してください）: ${date}</p>`;
+  } else {
+    preview.innerHTML = `
+      <div class="preview-memo">${memo}</div>
+      <div class="preview-date">日付: ${date}</div>
+    `;
+    btnWrite.style.display = "block";
+  }
+
+  btnWrite.addEventListener("click", async () => {
+    btnWrite.disabled = true;
+    btnWrite.textContent = "書き込み中...";
+    try {
+      await addDoc(collection(db, MEMO_COL), {
+        date, memo, createdAt: new Date().toISOString()
+      });
+      btnWrite.textContent = "✓ 書き込み済み";
+      statusMsg.textContent = "ab_memos に保存しました。";
+      statusMsg.className = "status-msg ok";
+    } catch (e) {
+      btnWrite.disabled = false;
+      btnWrite.textContent = "この内容で書き込む";
+      statusMsg.textContent = "書き込みに失敗しました: " + e.message;
+      statusMsg.className = "status-msg err";
+    }
+  });
+
+  document.getElementById("loadedAt").textContent =
+    "このページが読み込まれた時刻: " + new Date().toLocaleString("ja-JP");
+</script>
+</body>
+</html>
