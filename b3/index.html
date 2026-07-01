@@ -89,13 +89,9 @@
 </div>
 
 <script type="module">
-import { db } from "../lib/firebase.js";
-import { todayStr } from "../lib/date.js";
-import { collection, addDoc, getDocs, doc, setDoc, getDoc, orderBy, query, limit }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { ScoreManager } from "../lib/score.js";
 
-const COL_HIST = "ab_runner_history";
-const DOC_HI   = "ab_runner_hi";
+const sm = new ScoreManager(undefined, "ab_runner_history", "ab_runner_hi");
 
 // ── Canvas ────────────────────────────────────────────
 const canvas = document.getElementById("gameCanvas");
@@ -122,43 +118,29 @@ let keys = { left: false, right: false, jump: false };
 let jumpPressed = false;
 let frameId, lastTime = 0;
 
-// ── Firestore ─────────────────────────────────────────
+// ── Firestore（ScoreManager経由）───────────────────────
 async function loadHi() {
-  try {
-    const d = await getDoc(doc(db, DOC_HI, "record"));
-    if (d.exists()) hiScore = d.data().score || 0;
-  } catch(e) { console.warn("loadHi failed:", e); }
+  hiScore = await sm.loadHi();
   updateHUD();
   loadHistory();
 }
 async function saveResult(s) {
-  const date = todayStr();
-  try {
-    await addDoc(collection(db, COL_HIST), { score: s, coins, level, date, createdAt: new Date().toISOString() });
-    if (s > hiScore) {
-      hiScore = s;
-      await setDoc(doc(db, DOC_HI, "record"), { score: s, date });
-    }
-  } catch(e) { console.warn("saveResult failed:", e); }
+  hiScore = await sm.saveResult(s, { coins, level });
   updateHUD();
   loadHistory();
 }
 async function loadHistory() {
-  try {
-    const q = query(collection(db, COL_HIST), orderBy("createdAt","desc"), limit(8));
-    const snap = await getDocs(q);
-    const list = document.getElementById("histList");
-    list.innerHTML = "";
-    let maxS = 0;
-    snap.forEach(d => { if (d.data().score > maxS) maxS = d.data().score; });
-    snap.forEach(d => {
-      const dt = d.data();
-      const row = document.createElement("div");
-      row.className = "hist-row" + (dt.score === maxS ? " best" : "");
-      row.innerHTML = `<span>${dt.score.toLocaleString()} pt</span><span>🪙${dt.coins||0}</span><span>Lv${dt.level||1}</span><span>${dt.date}</span>`;
-      list.appendChild(row);
-    });
-  } catch(e) { console.warn("loadHistory failed:", e); }
+  const rows = await sm.loadHistory(8);
+  const list = document.getElementById("histList");
+  list.innerHTML = "";
+  let maxS = 0;
+  rows.forEach(r => { if (r.score > maxS) maxS = r.score; });
+  rows.forEach(r => {
+    const row = document.createElement("div");
+    row.className = "hist-row" + (r.score === maxS ? " best" : "");
+    row.innerHTML = `<span>${r.score.toLocaleString()} pt</span><span>🪙${r.coins||0}</span><span>Lv${r.level||1}</span><span>${r.date}</span>`;
+    list.appendChild(row);
+  });
 }
 
 // ── HUD ───────────────────────────────────────────────
@@ -561,6 +543,6 @@ resize();
 loadHi();
 draw();
 </script>
-<!-- updated: 2026-07-02 05:52 JST -->
+<!-- updated: 2026-07-02 07:18 JST -->
 </body>
 </html>

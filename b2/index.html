@@ -127,13 +127,9 @@
 </div>
 
 <script type="module">
-import { db } from "../lib/firebase.js";
-import { todayStr } from "../lib/date.js";
-import { collection, addDoc, getDocs, doc, setDoc, getDoc, orderBy, query, limit }
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { ScoreManager } from "../lib/score.js";
 
-const COL_HIST = "ab_invader_history";
-const DOC_HI   = "ab_invader_hi";
+const sm = new ScoreManager(undefined, "ab_invader_history", "ab_invader_hi");
 
 // ── Canvas setup ──────────────────────────────────────
 const canvas = document.getElementById("gameCanvas");
@@ -153,48 +149,31 @@ let fireCD = 0, invFireCD = 0;
 let invMoveTimer = 0, invMoveInterval = 800;
 let wave = 1;
 
-// ── Firestore ─────────────────────────────────────────
+// ── Firestore（ScoreManager経由）───────────────────────
 async function loadHi() {
-  try {
-    const d = await getDoc(doc(db, DOC_HI, "record"));
-    if (d.exists()) hiScore = d.data().score || 0;
-  } catch(e) { console.warn("loadHi failed:", e); }
+  hiScore = await sm.loadHi();
   updateHUD();
   loadHistory();
 }
 
 async function saveResult(s) {
-  const date = todayStr();
-  try {
-    await addDoc(collection(db, COL_HIST), {
-      score: s, date, wave,
-      createdAt: new Date().toISOString()
-    });
-    if (s > hiScore) {
-      hiScore = s;
-      await setDoc(doc(db, DOC_HI, "record"), { score: s, date });
-    }
-  } catch(e) { console.warn("saveResult failed:", e); }
+  hiScore = await sm.saveResult(s, { wave });
   updateHUD();
   loadHistory();
 }
 
 async function loadHistory() {
-  try {
-    const q = query(collection(db, COL_HIST), orderBy("createdAt","desc"), limit(10));
-    const snap = await getDocs(q);
-    const list = document.getElementById("historyList");
-    list.innerHTML = "";
-    let maxScore = 0;
-    snap.forEach(d => { if (d.data().score > maxScore) maxScore = d.data().score; });
-    snap.forEach(d => {
-      const data = d.data();
-      const row = document.createElement("div");
-      row.className = "hist-row" + (data.score === maxScore ? " best" : "");
-      row.innerHTML = `<span>${data.score.toLocaleString()} pt</span><span>W${data.wave||1}</span><span class="hist-date">${data.date}</span>`;
-      list.appendChild(row);
-    });
-  } catch(e) { console.warn("loadHistory failed:", e); }
+  const rows = await sm.loadHistory(10);
+  const list = document.getElementById("historyList");
+  list.innerHTML = "";
+  let maxScore = 0;
+  rows.forEach(r => { if (r.score > maxScore) maxScore = r.score; });
+  rows.forEach(r => {
+    const row = document.createElement("div");
+    row.className = "hist-row" + (r.score === maxScore ? " best" : "");
+    row.innerHTML = `<span>${r.score.toLocaleString()} pt</span><span>W${r.wave||1}</span><span class="hist-date">${r.date}</span>`;
+    list.appendChild(row);
+  });
 }
 
 // ── HUD ───────────────────────────────────────────────
@@ -451,6 +430,6 @@ document.addEventListener("keyup", e => {
 loadHi();
 draw();
 </script>
-<!-- updated: 2026-07-02 05:52 JST -->
+<!-- updated: 2026-07-02 07:18 JST -->
 </body>
 </html>
