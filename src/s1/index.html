@@ -49,6 +49,11 @@
   .due{margin-left:auto;color:var(--sub)}
   .due.set{color:var(--warn)}
 
+  .gist-row{margin-top:6px;font-size:11.5px;color:var(--sub);border-top:1px dashed var(--line);padding-top:6px}
+  .gist-row .gist-text{white-space:pre-wrap}
+  .btn-expand{background:none;border:none;color:var(--accent);font-size:11.5px;
+    cursor:pointer;padding:0;margin-left:4px;text-decoration:underline}
+
   .empty{color:var(--sub);font-size:13px;text-align:center;padding:24px 0}
   .state{color:var(--sub);font-size:13px;text-align:center;padding:24px 0}
   .state.err{color:var(--danger)}
@@ -126,6 +131,12 @@
     return m ? (m[2]+"-"+m[3]) : String(s);
   }
   function whoKey(a){ return (a && a.trim()) ? a.trim() : "未"; }
+  function esc(s){
+    return String(s==null?"":s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  var GIST_PREVIEW_LEN = 45;
 
   function visible(){
     return ITEMS.filter(function(d){
@@ -133,6 +144,16 @@
       if(filter==="mine") return whoKey(d.assignee)==="すま";
       return true;
     });
+  }
+  function gistRowHtml(gist){
+    if (gist.length <= GIST_PREVIEW_LEN) {
+      return '<div class="gist-row"><span class="gist-text">'+esc(gist)+'</span></div>';
+    }
+    var preview = esc(gist.slice(0, GIST_PREVIEW_LEN))+'…';
+    return '<div class="gist-row" data-full="'+esc(gist)+'">'+
+      '<span class="gist-text">'+preview+'</span>'+
+      '<button class="btn-expand">続きを読む</button>'+
+    '</div>';
   }
   function render(){
     var vs = visible();
@@ -152,6 +173,7 @@
           '<span class="reg">登 '+mmdd(d.createdAt)+'</span>'+
           '<span class="chip due'+(d.plannedDate?' set':'')+'">'+due+'</span>'+
         '</div>'+
+        (d.gist ? gistRowHtml(d.gist) : '')+
       '</div>';
     }).join("");
     document.getElementById('count').textContent = vs.length+" 件アクティブ";
@@ -177,15 +199,25 @@
     ]).then(function(res){
       var s1 = res[0], ba = res[1];
       var titleById = {};
+      // gist: type="gist"のentryはref=threadIdを持ち、"new"entryはthreadId==自分のidなので
+      // ref(==元のbaId)をキーに、最新のtext(createdAt比較)を採用する(_ba_current_gist相当)。
+      var gistByBaId = {};
       BA_BY_SEQ = {};
       ba.forEach(function(e){
         titleById[e.id] = e.title;
         if (e.seq != null) BA_BY_SEQ[e.seq] = { id: e.id, title: e.title };
+        if (e.type === "gist" && e.text && e.ref) {
+          var prev = gistByBaId[e.ref];
+          if (!prev || (e.createdAt||"") > (prev.createdAt||"")) {
+            gistByBaId[e.ref] = { text: e.text, createdAt: e.createdAt };
+          }
+        }
       });
       ITEMS = s1.map(function(d){
         // WipTasksのbaIdはba側の実id(RowKey、タイムスタンプ文字列)。
         // ba番号(seq)そのものではない(2026-08-01、混同していたバグを修正)。
         d.title = titleById[d.baId] || null;
+        d.gist = (gistByBaId[d.baId] || {}).text || null;
         return d;
       });
       loading.style.display = "none";
@@ -198,6 +230,13 @@
   loadItems();
 
   list.addEventListener('click', function(e){
+    var expandBtn = e.target.closest('.btn-expand');
+    if (expandBtn) {
+      var row = expandBtn.closest('.gist-row');
+      row.querySelector('.gist-text').textContent = row.dataset.full;
+      expandBtn.remove();
+      return;
+    }
     var btn = e.target.closest('.btn-remove');
     if (!btn) return;
     if (!window.__credential) {
