@@ -57,6 +57,11 @@
   .theme-block ul{margin:0 0 10px;padding-left:1.1em;font-size:13px}
   .theme-block ul:last-child{margin-bottom:0}
   .theme-block li{margin:5px 0}
+  .scope-note{
+    background:var(--bg);border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;font-size:12px;color:var(--sub);margin:8px 0 0;
+  }
+  .scope-note b{color:var(--ink);font-weight:600}
 
   .panel#solid .theme-block{border-left:3px solid var(--solid)}
   .panel#beta .theme-block{border-left:3px solid var(--beta)}
@@ -112,9 +117,9 @@
     <div class="theme-block">
       <h2>今日の得点(表示のみ) <span class="src">ba-70</span></h2>
       <ul>
-        <li>n1/Scoresの既存データを見せるだけ。新しい入力機構は不要</li>
-        <li>目標や運勢と違い、「何を出すか」自体に未決定点がない</li>
+        <li>n1/Scoresテーブル関連の、その日のスコア表示(ba-70本文)</li>
       </ul>
+      <div class="scope-note"><b>範囲の明記:</b> ba-70の「未検討・未決定の点」一覧(急ぎタスク抽出ロジック/目標値の定義/運勢の連動有無/ページ構成)に、得点表示に関する項目は含まれていない。</div>
     </div>
   </div>
 
