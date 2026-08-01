@@ -57,6 +57,11 @@
   .theme-block ul{margin:0 0 10px;padding-left:1.1em;font-size:13px}
   .theme-block ul:last-child{margin-bottom:0}
   .theme-block li{margin:5px 0}
+  .scope-note{
+    background:var(--bg);border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;font-size:12px;color:var(--sub);margin:8px 0 0;
+  }
+  .scope-note b{color:var(--ink);font-weight:600}
 
   .panel#solid .theme-block{border-left:3px solid var(--solid)}
   .panel#beta .theme-block{border-left:3px solid var(--beta)}
@@ -102,7 +107,7 @@
           <text x="150" y="25" text-anchor="middle" font-size="10.5">入力層: Keyboard / Touch / GamePad</text>
           <text x="150" y="46" text-anchor="middle" font-size="12">↓</text>
           <rect x="10" y="52" width="280" height="26" rx="4" fill="none" stroke="currentColor"/>
-          <text x="150" y="69" text-anchor="middle" font-size="10.5">中間層: キーバインド・接続状態表示</text>
+          <text x="150" y="69" text-anchor="middle" font-size="10.5">中間層: 接続/切断イベント監視・状態表示</text>
           <text x="150" y="90" text-anchor="middle" font-size="12">↓</text>
           <rect x="10" y="96" width="280" height="26" rx="4" fill="none" stroke="currentColor"/>
           <text x="150" y="113" text-anchor="middle" font-size="10.5">統一インターフェース: cpu.joy1[0-7]</text>
@@ -112,6 +117,7 @@
         <li>Phase1: GamePad Poller、本番反映確認済み</li>
         <li>Phase2: 接続/切断の状態表示、本番反映確認済み</li>
       </ul>
+      <div class="scope-note"><b>既知の制約(ba-52記載):</b> keyboard/touch/GamePadが同じjoy1配列に直接書き込むため、複数入力ソース併用時の押しっぱなし判定は厳密には独立していない。実機コントローラーでの動作確認はtakashi側テスト待ち(未実施、ベータ版参照)。</div>
     </div>
     <div class="theme-block">
       <h2>n2 訪問地図の拡張 <span class="src">ba-55</span></h2>
@@ -129,6 +135,7 @@
         <li>尼崎市の行政境界geojson追加・地図描画に組み込み、本番反映確認済み</li>
         <li>兵庫県のVisits登録、Azure側で完了確認済み</li>
       </ul>
+      <div class="scope-note"><b>範囲の明記:</b> ここまでは「地図データの整備」の完了。ba-55が企図する<b>ゲーム本体(コントローラで移動・訪問済み判定によるロック・大阪→神奈川ゴール到達)は、記録されている範囲では未着手</b>。Phase1のタスク5項目のうち、完了報告があるのは「県の図形データ」「訪問データ取得(Visits登録)」の2つのみで、「隣接情報の定義」「コントローラ移動の実装」「移動ロック判定ロジック」の完了報告はまだ無い。</div>
     </div>
   </div>
 
