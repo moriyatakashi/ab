@@ -69,6 +69,19 @@
   .panel#beta .theme-block{border-left:3px solid var(--beta)}
   .panel#toss .theme-block{border-left:3px solid var(--toss)}
 
+  /* 視点軸(bj=利尻/bm=すまさん)。成熟度軸の色(--solid/--beta/--toss)とは別チャンネルにするため、
+     色でなくラベル文言で区別する(2026-08-02、takashiとの整理)。 */
+  .persp-split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:480px){.persp-split{grid-template-columns:1fr}}
+  .persp-card{border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:12px 14px}
+  .persp-tag{
+    font-size:10.5px;letter-spacing:.04em;color:var(--sub);border:1px solid var(--line);
+    border-radius:999px;padding:2px 9px;display:inline-block;margin-bottom:8px;
+  }
+  .persp-card h3{font-size:13px;margin:0 0 8px}
+  .persp-card ul{margin:0;padding-left:1.1em;font-size:12.5px}
+  .persp-card li{margin:5px 0}
+
   .diagram{margin:6px 0 12px;color:var(--sub)}
   .diagram svg{width:100%;height:auto;display:block}
   .diagram text{fill:currentColor;font-family:"Hiragino Kaku Gothic ProN",sans-serif}
@@ -197,8 +210,29 @@
 
     <div class="theme-block">
       <h2>bjとbm、それぞれの立ち位置</h2>
-      <p><strong>bj(利尻版・分析)</strong>: 2026-07-29時点、台帳176スレッドの静的スナップショットを集計。5分類を状態機械として観測、実際の遷移は4件(2.3%)のみ確認、うち3件は「成熟」でなく「誤タグの訂正」だった。気づき: 「5分類は本当は2軸(成熟度×現役/退役)かもしれない」。</p>
-      <p><strong>bm(すま版・モデル)</strong>: bjの五角形を2軸・6分類に描き直した提案。活動側(気づき/案件/保留論点)と参照側(確定仕様/旧仕様/記録)。「記録」を新設し3対3の対称形に。bj本人の「2軸かもしれない」という気づきを実際に形にしたもの。</p>
+      <p style="font-size:12px;color:var(--sub);margin-bottom:10px">上下関係ではなく、同じテーマの2つの視点(成熟度軸のタブとは別の軸)。</p>
+      <div class="persp-split">
+        <div class="persp-card">
+          <span class="persp-tag">利尻版 · 分析(bj)</span>
+          <h3>ba分類の遷移分析</h3>
+          <ul>
+            <li>2026-07-29時点、台帳176スレッドの静的スナップショットを集計</li>
+            <li>5分類を状態機械として観測。実際の遷移は4件(2.3%)のみ確認</li>
+            <li>4件中3件は「成熟」ではなく「誤タグの訂正」だった</li>
+            <li>気づき: 「5分類は本当は2軸(成熟度×現役/退役)かもしれない」</li>
+          </ul>
+        </div>
+        <div class="persp-card">
+          <span class="persp-tag">すま版 · モデル(bm)</span>
+          <h3>六角形の台帳</h3>
+          <ul>
+            <li>bjの五角形を、2軸・6分類に描き直した提案</li>
+            <li>活動側(気づき/案件/保留論点)と参照側(確定仕様/旧仕様/記録)</li>
+            <li>「記録」を新設し、3対3の対称形に</li>
+            <li>bj本人の「2軸かもしれない」という気づきを、実際に形にしたもの</li>
+          </ul>
+        </div>
+      </div>
       <div class="quote-src"><b>bmページ本文より:</b> 「これはモデル図です（すま版）。利尻版（遷移分析）は bj。同じ「分類」テーマの別の見え方で、後勝ちさせず両方を残しています。」</div>
     </div>
 
