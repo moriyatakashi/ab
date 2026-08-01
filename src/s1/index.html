@@ -164,6 +164,8 @@
   document.getElementById('fMine').addEventListener('click',function(){setF('mine',this);});
   document.getElementById('fReset').addEventListener('click',function(){setF('all',this);});
 
+  var BA_BY_SEQ = {}; // ba番号(seq、人間が入力する方)から実idを引くための対応表
+
   function loadItems(){
     return Promise.all([
       fetch(API+"/s1").then(function(r){ if(!r.ok) throw new Error("s1 "+r.status); return r.json(); }),
@@ -171,8 +173,14 @@
     ]).then(function(res){
       var s1 = res[0], ba = res[1];
       var titleById = {};
-      ba.forEach(function(e){ titleById[e.id] = e.title; });
+      BA_BY_SEQ = {};
+      ba.forEach(function(e){
+        titleById[e.id] = e.title;
+        if (e.seq != null) BA_BY_SEQ[e.seq] = { id: e.id, title: e.title };
+      });
       ITEMS = s1.map(function(d){
+        // WipTasksのbaIdはba側の実id(RowKey、タイムスタンプ文字列)。
+        // ba番号(seq)そのものではない(2026-08-01、混同していたバグを修正)。
         d.title = titleById[d.baId] || null;
         return d;
       });
@@ -194,10 +202,16 @@
       if (window.aaShowLoginGate) window.aaShowLoginGate();
       return;
     }
-    var baId = document.getElementById('addBaId').value;
-    if (!baId) {
+    var seqInput = document.getElementById('addBaId').value;
+    if (!seqInput) {
       statusEl.className = 'add-status err';
       statusEl.textContent = 'ba番号を入力してください';
+      return;
+    }
+    var match = BA_BY_SEQ[Number(seqInput)];
+    if (!match) {
+      statusEl.className = 'add-status err';
+      statusEl.textContent = 'ba-'+seqInput+' が見つかりません(存在しない番号の可能性)';
       return;
     }
     statusEl.textContent = '登録中…';
@@ -205,8 +219,8 @@
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        baId: baId,
-        seq: Number(baId),
+        baId: match.id,
+        seq: Number(seqInput),
         important: document.getElementById('addImportant').checked,
         assignee: document.getElementById('addAssignee').value,
         plannedDate: document.getElementById('addPlannedDate').value,
