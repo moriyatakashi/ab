@@ -1,0 +1,20 @@
+:root {
+  --paper: #14170f;
+  --ink: #eeeeee;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --paper: #f7f6f0;
+    --ink: #22261c;
+  }
+}
+
+body {
+  font-family: sans-serif;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+  background: var(--paper);
+  color: var(--ink);
+}
