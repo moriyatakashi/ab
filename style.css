@@ -34,6 +34,14 @@ body {
 a { color: var(--accent); }
 h1, h2 { text-wrap: balance; }
 
+/* トップページ: aa本体へのリンク行 */
+.aa-link-row {
+  display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--dim);
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; margin: 0 0 16px;
+}
+.aa-link-row a { font-weight: bold; text-decoration: none; }
+.aa-link-row a:hover { text-decoration: underline; }
+
 /* トップページのカードリンク一覧 */
 .nav-list { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
 .nav-item {

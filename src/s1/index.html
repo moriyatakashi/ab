@@ -19,7 +19,9 @@
     font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",system-ui,sans-serif;
     padding:18px 14px 60px;line-height:1.55}
   .wrap{max-width:640px;margin:0 auto}
-  .eyebrow{font-size:11px;letter-spacing:.18em;color:var(--sub);text-transform:uppercase;margin:0 0 3px}
+  .back{font-size:12px}
+  .back a{color:var(--accent)}
+  .eyebrow{font-size:11px;letter-spacing:.18em;color:var(--sub);text-transform:uppercase;margin:14px 0 3px}
   h1{font-size:21px;margin:0 0 3px}
   .lede{color:var(--sub);font-size:12.5px;margin:0 0 14px}
 
@@ -79,12 +81,12 @@
 </head>
 <body>
 <div class="wrap">
+  <p class="back"><a href="../../">&larr; 戻る</a></p>
   <p class="eyebrow">roreki · WIP 作業台 · s1 · ベータ版</p>
   <h1>いま手を動かすものだけ</h1>
   <p class="lede">baから抽出した作業中の項目。★=重要（takashiが決める）。※この画面は<b>ライブ表示</b>（実データ）。</p>
 
 <script>window.AA_PUBLIC_VIEW = true; window.AA_AUTH_EVENT = "s1-login-success";</script>
-<!-- LOGIN_GATE:START -->
   <div id="login-gate" style="display:none;">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <div id="g_id_onload"
@@ -95,7 +97,6 @@
     <div class="g_id_signin"></div>
     <p id="status">未ログイン(ログインすると自分で候補を追加できます)</p>
   </div>
-<!-- LOGIN_GATE:END -->
 
   <div class="add-form">
     <input type="number" id="addBaId" placeholder="ba番号" min="1">
