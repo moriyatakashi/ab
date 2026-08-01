@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<script src="../common/config.js?v=202608012000"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>WIP作業台 · s1（ベータ）</title>
@@ -49,13 +50,49 @@
   .state{color:var(--sub);font-size:13px;text-align:center;padding:24px 0}
   .state.err{color:var(--danger)}
   .note{margin-top:20px;font-size:11.5px;color:var(--sub);border-top:1px solid var(--line);padding-top:12px}
+
+  .add-form{border:1px solid var(--line);border-radius:12px;background:var(--card);
+    padding:12px 13px;margin:0 0 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .add-form input[type="number"]{width:78px}
+  .add-form input[type="text"]{width:110px}
+  .add-form input{background:var(--bg);border:1px solid var(--line);color:var(--ink);
+    border-radius:7px;padding:5px 8px;font-size:12.5px}
+  .add-form label{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--sub)}
+  .add-form button{background:var(--accent);border:none;color:#0c1210;font-weight:700;
+    border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer}
+  .add-status{width:100%;font-size:11.5px;color:var(--sub)}
+  .add-status.err{color:var(--danger)}
+  .add-status.ok{color:var(--accent)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <p class="eyebrow">roreki · WIP 作業台 · s1 · ベータ版</p>
   <h1>いま手を動かすものだけ</h1>
-  <p class="lede">baから抽出した作業中の項目。★=重要（takashiが決める）。※この画面は<b>ライブ表示</b>（実データ）。追加・編集は当面API経由（会話で「足して/重要にして」）。画面からの編集は次段で対応予定。</p>
+  <p class="lede">baから抽出した作業中の項目。★=重要（takashiが決める）。※この画面は<b>ライブ表示</b>（実データ）。</p>
+
+<script>window.AA_PUBLIC_VIEW = true; window.AA_AUTH_EVENT = "s1-login-success";</script>
+<!-- LOGIN_GATE:START -->
+  <div id="login-gate" style="display:none;">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <div id="g_id_onload"
+      data-callback="handleCredentialResponse"
+      data-auto_prompt="false">
+    </div>
+    <script>document.getElementById('g_id_onload').setAttribute('data-client_id', window.AA_GOOGLE_CLIENT_ID);</script>
+    <div class="g_id_signin"></div>
+    <p id="status">未ログイン(ログインすると自分で候補を追加できます)</p>
+  </div>
+<!-- LOGIN_GATE:END -->
+
+  <div class="add-form">
+    <input type="number" id="addBaId" placeholder="ba番号" min="1">
+    <label><input type="checkbox" id="addImportant"> ★重要</label>
+    <input type="text" id="addAssignee" placeholder="担当(任意)">
+    <input type="date" id="addPlannedDate">
+    <button type="button" id="btnAdd">作業台に足す</button>
+    <span class="add-status" id="addStatus"></span>
+  </div>
 
   <div class="toolbar">
     <span class="count" id="count"></span>
@@ -127,23 +164,71 @@
   document.getElementById('fMine').addEventListener('click',function(){setF('mine',this);});
   document.getElementById('fReset').addEventListener('click',function(){setF('all',this);});
 
-  Promise.all([
-    fetch(API+"/s1").then(function(r){ if(!r.ok) throw new Error("s1 "+r.status); return r.json(); }),
-    fetch(API+"/ba?minimal=1").then(function(r){ if(!r.ok) throw new Error("ba "+r.status); return r.json(); })
-  ]).then(function(res){
-    var s1 = res[0], ba = res[1];
-    var titleById = {};
-    ba.forEach(function(e){ titleById[e.id] = e.title; });
-    ITEMS = s1.map(function(d){
-      d.title = titleById[d.baId] || null;
-      return d;
+  function loadItems(){
+    return Promise.all([
+      fetch(API+"/s1").then(function(r){ if(!r.ok) throw new Error("s1 "+r.status); return r.json(); }),
+      fetch(API+"/ba?minimal=1").then(function(r){ if(!r.ok) throw new Error("ba "+r.status); return r.json(); })
+    ]).then(function(res){
+      var s1 = res[0], ba = res[1];
+      var titleById = {};
+      ba.forEach(function(e){ titleById[e.id] = e.title; });
+      ITEMS = s1.map(function(d){
+        d.title = titleById[d.baId] || null;
+        return d;
+      });
+      loading.style.display = "none";
+      render();
+    }).catch(function(err){
+      loading.className = "state err";
+      loading.textContent = "読み込み失敗: "+err.message+"（時間をおくか、APIの状態を確認）";
     });
-    loading.style.display = "none";
-    render();
-  }).catch(function(err){
-    loading.className = "state err";
-    loading.textContent = "読み込み失敗: "+err.message+"（時間をおくか、APIの状態を確認）";
+  }
+  loadItems();
+
+  document.getElementById('btnAdd').addEventListener('click', function(){
+    var statusEl = document.getElementById('addStatus');
+    statusEl.className = 'add-status';
+    if (!window.__credential) {
+      statusEl.className = 'add-status err';
+      statusEl.textContent = 'ログインしてください(右上のリンクから)';
+      if (window.aaShowLoginGate) window.aaShowLoginGate();
+      return;
+    }
+    var baId = document.getElementById('addBaId').value;
+    if (!baId) {
+      statusEl.className = 'add-status err';
+      statusEl.textContent = 'ba番号を入力してください';
+      return;
+    }
+    statusEl.textContent = '登録中…';
+    fetch(API+"/s1", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        baId: baId,
+        seq: Number(baId),
+        important: document.getElementById('addImportant').checked,
+        assignee: document.getElementById('addAssignee').value,
+        plannedDate: document.getElementById('addPlannedDate').value,
+        credential: window.__credential,
+      }),
+    }).then(function(r){
+      if (!r.ok) throw new Error('登録失敗 '+r.status);
+      return r.json();
+    }).then(function(){
+      statusEl.className = 'add-status ok';
+      statusEl.textContent = '追加しました';
+      document.getElementById('addBaId').value = '';
+      document.getElementById('addImportant').checked = false;
+      document.getElementById('addAssignee').value = '';
+      document.getElementById('addPlannedDate').value = '';
+      loadItems();
+    }).catch(function(err){
+      statusEl.className = 'add-status err';
+      statusEl.textContent = err.message;
+    });
   });
 </script>
+<script src="../common/auth.js?v=202607201000"></script>
 </body>
 </html>
