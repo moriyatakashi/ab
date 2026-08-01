@@ -31,6 +31,10 @@
   .card{position:relative;border:1px solid var(--line);border-radius:12px;background:var(--card);
     padding:12px 13px;margin:9px 0}
   .card.important{border-left:3px solid var(--warn)}
+  .card.voided{opacity:.45}
+  .card.voided .title{text-decoration:line-through;text-decoration-color:var(--sub)}
+  .void-badge{flex:none;font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--sub);border:1px solid var(--sub);border-radius:999px;padding:1px 7px}
   .row1{display:flex;align-items:baseline;gap:9px}
   .baid{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--accent);font-weight:700;flex:none}
   .title{font-size:14px;font-weight:600;flex:1}
@@ -161,10 +165,11 @@
       var who = whoKey(d.assignee);
       var seqLabel = (d.seq!=null? ("ba-"+d.seq) : "ba-?");
       var due = d.plannedDate ? ("〆"+mmdd(d.plannedDate)) : "予定日 未";
-      return '<div class="card'+(d.important?' important':'')+'">'+
+      return '<div class="card'+(d.important?' important':'')+(d.voided?' voided':'')+'">'+
         '<div class="row1">'+
           '<span class="baid">'+seqLabel+'</span>'+
           '<span class="title">'+(d.title||seqLabel)+'</span>'+
+          (d.voided ? '<span class="void-badge" title="ba本体でvoid済み(もう見なくていい)">void</span>' : '')+
           '<span class="star'+(d.important?' on':'')+'" title="重要(takashiが決める)">★</span>'+
           '<button class="btn-remove" data-baid="'+d.baId+'" title="作業台から外す">&times;</button>'+
         '</div>'+
@@ -202,6 +207,10 @@
       // gist: type="gist"のentryはref=threadIdを持ち、"new"entryはthreadId==自分のidなので
       // ref(==元のbaId)をキーに、最新のtext(createdAt比較)を採用する(_ba_current_gist相当)。
       var gistByBaId = {};
+      // void: 通常はref、一部の古い投稿はthreadId直指定で無効化している(rbookの
+      // _ba_is_voidedと同じ判定、2026-08-01追加)。voidは外さずグレー表示に留める
+      // (見なくていい、と分かった上で本人が見返したい場合もあるため)。
+      var voidedIds = {};
       BA_BY_SEQ = {};
       ba.forEach(function(e){
         titleById[e.id] = e.title;
@@ -212,11 +221,16 @@
             gistByBaId[e.ref] = { text: e.text, createdAt: e.createdAt };
           }
         }
+        if (e.type === "void") {
+          if (e.ref) voidedIds[e.ref] = true;
+          if (e.threadId) voidedIds[e.threadId] = true;
+        }
       });
       ITEMS = s1.map(function(d){
         // WipTasksのbaIdはba側の実id(RowKey、タイムスタンプ文字列)。
         // ba番号(seq)そのものではない(2026-08-01、混同していたバグを修正)。
         d.title = titleById[d.baId] || null;
+        d.voided = !!voidedIds[d.baId];
         d.gist = (gistByBaId[d.baId] || {}).text || null;
         return d;
       });

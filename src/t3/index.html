@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>t3 / bjとbm、どちらが「答え」に近いか</title>
+<title>t3 / 状態遷移について — bj/bm比較と「もう見なくていい」の境界線</title>
 <style>
   :root {
     --paper: #f1efe9;
@@ -138,6 +138,32 @@
     color: var(--sub); font-size: 0.88rem;
   }
 
+  .section-intro { color: var(--sub); font-size: 0.9rem; margin: -6px 0 18px; max-width: 58ch; }
+  .void-compare { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .vc-row {
+    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+    padding: 12px 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel);
+  }
+  .vc-row .vc-tag { flex: none; font-size: 0.78rem; font-weight: 700; min-width: 200px; }
+  .vc-row.vc-void { border-color: var(--sub); }
+  .vc-row.vc-void .vc-tag { color: var(--sub); }
+  .vc-row.vc-active .vc-tag { color: var(--warm-ink); }
+  .vc-row.vc-ref { border-color: var(--cool); background: var(--cool-tint); }
+  .vc-row.vc-ref .vc-tag { color: var(--cool-ink); }
+  .vc-row p { margin: 0; font-size: 0.88rem; flex: 1; min-width: 200px; }
+
+  .case-study {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px; margin-bottom: 44px;
+  }
+  .cs-label {
+    font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sub);
+    font-weight: 700; margin-bottom: 8px;
+  }
+  .case-study p { margin: 0 0 8px; font-size: 0.9rem; }
+  .case-study p:last-child { margin-bottom: 0; }
+  .case-study .hint { color: var(--sub); font-size: 0.84rem; }
+
   code {
     font-family: ui-monospace, Consolas, monospace; font-size: 0.86em;
     background: var(--panel); border: 1px solid var(--line);
@@ -150,9 +176,9 @@
 
   <p class="back"><a href="../../">&larr; 戻る</a></p>
 
-  <div class="eyebrow">bj / bm 比較メモ</div>
-  <h1>bjとbm、どちらが「答え」に近いか</h1>
-  <p class="lede">ba-32の分類規約をめぐる2枚のページ ── bj(遷移分析)とbm(モデル図)を読み比べた結果。</p>
+  <div class="eyebrow">ba分類 · 状態遷移メモ</div>
+  <h1>状態遷移について</h1>
+  <p class="lede">ba-32の分類規約が実際にどう動くか(bj/bmの比較)と、スレッドが「もう見なくていい」状態になったとどう判定するか(void)の整理。</p>
 
   <div class="verdict">
     <div class="label">結論</div>
@@ -269,6 +295,30 @@
       <span class="status open">未解決</span>
       <p><strong>案件→確定仕様の正しい手順。</strong>bjの観測では、タグの書き換えでなく「決定事項を新スレッドへ切り出す」やり方が実際に使われていた。この手順自体をba-32規約に明文化する、という改善案はまだ着手されていない。</p>
     </div>
+  </div>
+
+  <div class="section-label">「もう見なくていい」をどう判定するか</div>
+  <p class="section-intro">上の3つは「まだ動いている分類」の宿題だった。もう一つ別の軸として、「このスレッド自体、もう見なくていい」をどう判定するか、という問いがある。</p>
+
+  <div class="void-compare">
+    <div class="vc-row vc-void">
+      <span class="vc-tag">void</span>
+      <p>見る価値: <strong>無い。</strong>記述自体が無効という、唯一の確実な除外シグナル。</p>
+    </div>
+    <div class="vc-row vc-active">
+      <span class="vc-tag">活動側(気づき/案件/保留論点)がclose済み</span>
+      <p>見る価値: <strong>薄い。</strong>作業は終わっているが、voidと違い「間違いだった」わけではない。</p>
+    </div>
+    <div class="vc-row vc-ref">
+      <span class="vc-tag">参照側(確定仕様/旧仕様/記録)</span>
+      <p>見る価値: <strong>ある。</strong>そもそも「あえて見続けるために残す」設計。closeしないのはバグでなく仕様。</p>
+    </div>
+  </div>
+
+  <div class="case-study">
+    <div class="cs-label">実例 — ba-1</div>
+    <p>「deploy check」という、システム初期構築時の疎通テスト用エントリ。作成3分後に利尻自身が、翌日にtakashi本人が念押しでvoidにしており、<strong>2回voidされていた</strong>。単発のvoidより、この「二重void」の方が「間違いなく片付いている」という確信度が高い。</p>
+    <p class="hint">分類タグは元々付いていない(未分類)。もし付けるなら「記録」が近い(「だから次こうする」が無い、ただの動作報告のため)が、void済みなので実用上は付けても付けなくても差が無い。</p>
   </div>
 
   <div class="quote">
