@@ -234,6 +234,7 @@
         d.gist = (gistByBaId[d.baId] || {}).text || null;
         return d;
       });
+      ITEMS.sort(function(a, b){ return (b.seq||0) - (a.seq||0); }); // ba番号の降順(2026-08-01)
       loading.style.display = "none";
       render();
     }).catch(function(err){
