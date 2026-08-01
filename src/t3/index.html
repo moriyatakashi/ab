@@ -3,333 +3,177 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>t3 / 状態遷移について — bj/bm比較と「もう見なくていい」の境界線</title>
+<title>t3 / ba-32分類規約について(ba-32/ba-179)</title>
 <style>
-  :root {
-    --paper: #f1efe9;
-    --panel: #ffffff;
-    --ink: #26241f;
-    --sub: #6b6659;
-    --line: #ddd8cb;
-    --warm: #c8772f;
-    --warm-tint: #f4e3cd;
-    --warm-ink: #6b3d12;
-    --cool: #3f6b6e;
-    --cool-tint: #dbe8e7;
-    --cool-ink: #204545;
-    --gold: #b8862e;
-    --gold-tint: #f1e7cf;
+  :root{
+    --bg:#14171a; --card:#1c2024; --ink:#e7ebe9; --sub:#98a0a0; --line:#2c3237;
+    --solid:#7ce0c4; --beta:#66ccff; --toss:#ff6b6b;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --paper: #17181a;
-      --panel: #1e2022;
-      --ink: #e9e7e0;
-      --sub: #9a978d;
-      --line: #2e3134;
-      --warm: #d99a5c;
-      --warm-tint: #3a2c1c;
-      --warm-ink: #f0c896;
-      --cool: #6fa8ab;
-      --cool-tint: #1b2c2c;
-      --cool-ink: #a9d4d6;
-      --gold: #d4af5a;
-      --gold-tint: #332a17;
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#f3f1ea; --card:#fbfaf6; --ink:#23262b; --sub:#6b7160; --line:#dcd8cc;
+      --solid:#2a8f6f; --beta:#0a6c96; --toss:#c94545;
     }
   }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",system-ui,sans-serif;
+    padding:18px 16px 60px;line-height:1.65}
+  .wrap{max-width:700px;margin:0 auto}
+  .back{font-size:13px}
+  .back a{color:var(--beta)}
+  .mock-label{
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--sub);margin:14px 0 6px 0;display:flex;align-items:center;gap:10px;
+  }
+  .mock-label::after{content:"";flex:1;height:1px;background:var(--line)}
+  h1{font-size:19px;margin:0 0 4px}
+  .lede{font-size:13px;color:var(--sub);margin:0 0 22px}
 
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--paper); color: var(--ink);
-    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", system-ui, sans-serif;
-    line-height: 1.8; -webkit-font-smoothing: antialiased;
+  .tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+  .tab-btn{
+    font-size:13px;padding:9px 16px;border:none;background:none;color:var(--sub);
+    cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;
+    display:flex;align-items:center;gap:6px;
   }
-  .page { max-width: 780px; margin: 0 auto; padding: 24px 24px 96px; }
-  .back { font-size: 0.85rem; }
-  .back a { color: var(--cool); }
+  .tab-btn .dot{width:8px;height:8px;border-radius:50%;flex:none}
+  .tab-btn[data-tab="solid"] .dot{background:var(--solid)}
+  .tab-btn[data-tab="beta"] .dot{background:var(--beta)}
+  .tab-btn[data-tab="toss"] .dot{background:var(--toss)}
+  .tab-btn.on{color:var(--ink);font-weight:700}
+  .tab-btn.on[data-tab="solid"]{border-color:var(--solid)}
+  .tab-btn.on[data-tab="beta"]{border-color:var(--beta)}
+  .tab-btn.on[data-tab="toss"]{border-color:var(--toss)}
 
-  .eyebrow {
-    font-size: 0.72rem; letter-spacing: 0.16em; color: var(--sub); text-transform: uppercase;
-    display: flex; align-items: center; gap: 10px; margin: 24px 0 16px;
-  }
-  .eyebrow::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-  h1 {
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
-    font-weight: 600; font-size: clamp(1.55rem, 1.2rem + 1.3vw, 2rem);
-    margin: 0 0 14px; letter-spacing: 0.01em; text-wrap: balance;
-  }
-  .lede { color: var(--sub); font-size: 0.98rem; max-width: 60ch; margin: 0 0 40px; }
+  .panel{display:none}
+  .panel.on{display:block}
+  .panel-note{font-size:12.5px;color:var(--sub);margin:0 0 16px;padding:10px 14px;
+    border-radius:8px;border:1px dashed var(--line)}
 
-  .verdict {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
-    padding: 22px 24px; margin-bottom: 44px;
+  .theme-block{border:1px solid var(--line);border-radius:12px;background:var(--card);
+    padding:14px 16px;margin:0 0 14px}
+  .theme-block h2{font-size:14px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+  .theme-block .src{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--sub);font-weight:400}
+  .theme-block p{font-size:13px;margin:0 0 8px}
+  .theme-block p:last-child{margin-bottom:0}
+  .theme-block ul{margin:0 0 10px;padding-left:1.1em;font-size:13px}
+  .theme-block ul:last-child{margin-bottom:0}
+  .theme-block li{margin:5px 0}
+  .quote-src{
+    background:var(--bg);border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;font-size:12px;color:var(--sub);margin:8px 0 0;
   }
-  .verdict .label {
-    font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold);
-    font-weight: 700; margin-bottom: 10px;
-  }
-  .verdict p { margin: 0 0 10px; font-size: 0.98rem; }
-  .verdict p:last-child { margin-bottom: 0; }
+  .quote-src b{color:var(--ink);font-weight:600}
 
-  .diagram-wrap {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
-    padding: 18px 16px 8px; margin-bottom: 20px;
-  }
-  .diagram-wrap svg { width: 100%; height: auto; display: block; }
-  .diagram-legend {
-    display: flex; flex-wrap: wrap; gap: 14px 22px; font-size: 0.78rem; color: var(--sub);
-    padding: 12px 4px 4px;
-  }
-  .diagram-legend .k { display: flex; align-items: center; gap: 7px; }
-  .diagram-legend .ln { width: 20px; height: 0; border-top: 2.4px solid; display: inline-block; }
-  .diagram-legend .ln.observed { border-color: var(--ink); }
-  .diagram-legend .ln.correction { border-color: var(--warm); border-top-style: dashed; }
-  .diagram-legend .ln.blocked { border-color: var(--sub); border-top-style: dotted; }
-  .diagram-caption { font-size: 0.82rem; color: var(--sub); margin: 0 0 44px; }
+  .panel#solid .theme-block{border-left:3px solid var(--solid)}
+  .panel#beta .theme-block{border-left:3px solid var(--beta)}
+  .panel#toss .theme-block{border-left:3px solid var(--toss)}
 
-  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 44px; }
-  @media (max-width: 620px) { .split { grid-template-columns: 1fr; } }
-  .card {
-    border-radius: 14px; padding: 20px 20px 22px; border: 1px solid;
-  }
-  .card.bj { background: var(--warm-tint); border-color: var(--warm); }
-  .card.bm { background: var(--cool-tint); border-color: var(--cool); }
-  .card .tag {
-    font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700;
-    display: inline-block; padding: 2px 10px; border-radius: 999px; margin-bottom: 10px;
-  }
-  .card.bj .tag { color: var(--warm-ink); background: var(--paper); }
-  .card.bm .tag { color: var(--cool-ink); background: var(--paper); }
-  .card h2 { font-size: 1.05rem; margin: 0 0 4px; }
-  .card.bj h2 { color: var(--warm-ink); }
-  .card.bm h2 { color: var(--cool-ink); }
-  .card .sub { font-size: 0.8rem; color: var(--sub); margin: 0 0 12px; }
-  .card ul { margin: 0; padding-left: 1.15em; font-size: 0.9rem; }
-  .card li { margin: 6px 0; }
+  .diagram{margin:6px 0 12px;color:var(--sub)}
+  .diagram svg{width:100%;height:auto;display:block}
+  .diagram text{fill:currentColor;font-family:"Hiragino Kaku Gothic ProN",sans-serif}
 
-  .section-label {
-    font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sub);
-    margin: 0 0 16px;
-  }
-
-  .findings { display: flex; flex-direction: column; gap: 10px; margin-bottom: 44px; }
-  .finding {
-    display: grid; grid-template-columns: 90px 1fr; gap: 16px;
-    padding: 12px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
-    align-items: baseline;
-  }
-  @media (max-width: 520px) { .finding { grid-template-columns: 1fr; gap: 4px; } }
-  .finding .status {
-    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em;
-  }
-  .finding .status.open { color: var(--warm); }
-  .finding .status.partial { color: var(--gold); }
-  .finding p { margin: 0; font-size: 0.9rem; }
-
-  .quote {
-    border-left: 3px solid var(--gold); background: var(--gold-tint);
-    border-radius: 0 10px 10px 0; padding: 14px 18px; margin: 0 0 44px;
-    font-size: 0.92rem;
-  }
-  .quote .src { display: block; margin-top: 8px; font-size: 0.76rem; color: var(--sub); }
-
-  .close {
-    padding-top: 24px; border-top: 1px solid var(--line);
-    color: var(--sub); font-size: 0.88rem;
-  }
-
-  .section-intro { color: var(--sub); font-size: 0.9rem; margin: -6px 0 18px; max-width: 58ch; }
-  .void-compare { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-  .vc-row {
-    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
-    padding: 12px 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel);
-  }
-  .vc-row .vc-tag { flex: none; font-size: 0.78rem; font-weight: 700; min-width: 200px; }
-  .vc-row.vc-void { border-color: var(--sub); }
-  .vc-row.vc-void .vc-tag { color: var(--sub); }
-  .vc-row.vc-active .vc-tag { color: var(--warm-ink); }
-  .vc-row.vc-ref { border-color: var(--cool); background: var(--cool-tint); }
-  .vc-row.vc-ref .vc-tag { color: var(--cool-ink); }
-  .vc-row p { margin: 0; font-size: 0.88rem; flex: 1; min-width: 200px; }
-
-  .case-study {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-    padding: 16px 18px; margin-bottom: 44px;
-  }
-  .cs-label {
-    font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sub);
-    font-weight: 700; margin-bottom: 8px;
-  }
-  .case-study p { margin: 0 0 8px; font-size: 0.9rem; }
-  .case-study p:last-child { margin-bottom: 0; }
-  .case-study .hint { color: var(--sub); font-size: 0.84rem; }
-
-  code {
-    font-family: ui-monospace, Consolas, monospace; font-size: 0.86em;
-    background: var(--panel); border: 1px solid var(--line);
-    padding: 1px 6px; border-radius: 5px;
-  }
+  .toss-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:480px){.toss-grid{grid-template-columns:1fr}}
+  .toss-card{border:1px solid var(--line);border-radius:12px;background:var(--card);padding:14px;text-align:center}
+  .toss-card .icon{width:44px;height:44px;margin:0 auto 8px;color:var(--toss)}
+  .toss-card .icon svg{width:100%;height:100%}
+  .toss-card h3{font-size:12px;margin:0 0 6px}
+  .toss-card p{font-size:11px;color:var(--sub);margin:0}
 </style>
 </head>
 <body>
-<div class="page">
+<div class="wrap">
 
   <p class="back"><a href="../../">&larr; 戻る</a></p>
 
-  <div class="eyebrow">ba分類 · 状態遷移メモ</div>
-  <h1>状態遷移について</h1>
-  <p class="lede">ba-32の分類規約が実際にどう動くか(bj/bmの比較)と、スレッドが「もう見なくていい」状態になったとどう判定するか(void)の整理。</p>
+  <p class="mock-label">確定仕様の可視化パターン</p>
+  <h1>ba-32分類規約について(ba-32 / ba-179)</h1>
+  <p class="lede">確定事項タブは、baのgistに文字通り書かれていることだけに絞っている。</p>
 
-  <div class="verdict">
-    <div class="label">結論</div>
-    <p><strong>分類の形（何個・どの軸）</strong>については、bmが答えに近い。bmが提案した6分類・2軸(活動側/参照側)は、実際に今のコード(<code>BA_CLASSIFICATIONS</code>)に採用済みで、「記録」も含めて6個とも実装されている。</p>
-    <p><strong>運用の細部（どう遷移するか）</strong>については、bjが洗い出した3つの疑問のうち2つが、bmを読んだ後もまだ未解決のまま残っている。</p>
-    <p>なので「どちらか一方が正解」ではなく、<strong>形の答えはbm、運用の答えはまだ無い</strong>、というのが実態に近い。</p>
+  <div class="tabs">
+    <button type="button" class="tab-btn on" data-tab="solid"><span class="dot"></span>確定事項</button>
+    <button type="button" class="tab-btn" data-tab="beta"><span class="dot"></span>ベータ版</button>
+    <button type="button" class="tab-btn" data-tab="toss"><span class="dot"></span>捨て案(お遊び)</button>
   </div>
 
-  <div class="section-label">合成遷移図 — bmの6分類にbjの観測結果を重ねたもの</div>
-  <div class="diagram-wrap">
-    <svg viewBox="0 0 500 460" role="img" aria-label="6分類の遷移図、観測された事例つき">
-      <rect x="0" y="0" width="250" height="460" fill="var(--warm)" opacity="0.05"/>
-      <rect x="250" y="0" width="250" height="460" fill="var(--cool)" opacity="0.06"/>
-      <line x1="250" y1="40" x2="250" y2="420" stroke="var(--line)" stroke-width="1.4" stroke-dasharray="2 6"/>
-      <text x="125" y="26" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--warm-ink)">活動側(閉じる)</text>
-      <text x="375" y="26" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--cool-ink)">参照側(残る)</text>
-
-      <defs>
-        <marker id="ah1" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
-          <path d="M0,0 L7,3 L0,6 Z" fill="var(--ink)"/>
-        </marker>
-        <marker id="ah2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
-          <path d="M0,0 L7,3 L0,6 Z" fill="var(--warm)"/>
-        </marker>
-      </defs>
-
-      <path d="M163,128 Q120,170 108,222" fill="none" stroke="var(--ink)" stroke-width="2.6" marker-end="url(#ah1)"/>
-      <text x="94" y="178" font-size="10.5" text-anchor="end" fill="var(--ink)">育つ・22件</text>
-
-      <path d="M198,95 Q260,60 302,92" fill="none" stroke="var(--ink)" stroke-width="2.2" marker-end="url(#ah1)"/>
-      <text x="250" y="58" font-size="10" text-anchor="middle" fill="var(--ink)">ba-39(格上げ)</text>
-
-      <path d="M340,132 Q360,250 340,348" fill="none" stroke="var(--ink)" stroke-width="2.2" marker-end="url(#ah1)"/>
-      <text x="368" y="242" font-size="10" text-anchor="start" fill="var(--ink)">ba-16(退役)</text>
-
-      <path d="M300,128 Q210,190 128,232" fill="none" stroke="var(--warm)" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ah2)"/>
-      <text x="214" y="205" font-size="10" text-anchor="middle" fill="var(--warm-ink)">ba-53(訂正・逆行)</text>
-
-      <path d="M292,100 Q220,75 190,92" fill="none" stroke="var(--warm)" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ah2)"/>
-      <text x="240" y="80" font-size="9.5" text-anchor="middle" fill="var(--warm-ink)">ba-171(誤タグ)</text>
-
-      <path d="M122,222 Q220,140 300,120" fill="none" stroke="var(--sub)" stroke-width="1.8" stroke-dasharray="1 5" marker-end="url(#ah1)"/>
-      <text x="214" y="152" font-size="9.5" text-anchor="middle" fill="var(--sub)">0件・実際は切り出し</text>
-
-      <text x="325" y="410" font-size="10" text-anchor="middle" fill="var(--sub)">出口の経路なし</text>
-
-      <g><circle cx="175" cy="105" r="44" fill="var(--warm-tint)" stroke="var(--warm)" stroke-width="2.2"/>
-        <text x="175" y="101" text-anchor="middle" font-size="15" font-weight="700" fill="var(--warm-ink)">気づき</text>
-        <text x="175" y="117" text-anchor="middle" font-size="10" fill="var(--warm-ink)">観察・学び</text></g>
-
-      <g><circle cx="100" cy="238" r="44" fill="var(--warm-tint)" stroke="var(--warm)" stroke-width="2.2"/>
-        <text x="100" y="234" text-anchor="middle" font-size="15" font-weight="700" fill="var(--warm-ink)">案件</text>
-        <text x="100" y="250" text-anchor="middle" font-size="10" fill="var(--warm-ink)">やること</text></g>
-
-      <g><circle cx="175" cy="368" r="44" fill="var(--warm-tint)" stroke="var(--warm)" stroke-width="2.2" stroke-dasharray="3 4"/>
-        <text x="175" y="364" text-anchor="middle" font-size="14" font-weight="700" fill="var(--warm-ink)">保留論点</text>
-        <text x="175" y="380" text-anchor="middle" font-size="10" fill="var(--warm-ink)">いつか考える</text></g>
-
-      <g><circle cx="325" cy="105" r="44" fill="var(--cool-tint)" stroke="var(--cool)" stroke-width="2.2"/>
-        <text x="325" y="101" text-anchor="middle" font-size="14" font-weight="700" fill="var(--cool-ink)">確定仕様</text>
-        <text x="325" y="117" text-anchor="middle" font-size="10" fill="var(--cool-ink)">決めた規約</text></g>
-
-      <g><circle cx="398" cy="238" r="47" fill="var(--cool-tint)" stroke="var(--gold)" stroke-width="2.4" stroke-dasharray="4 4"/>
-        <text x="398" y="234" text-anchor="middle" font-size="15" font-weight="700" fill="var(--cool-ink)">記録</text>
-        <text x="398" y="250" text-anchor="middle" font-size="10" fill="var(--cool-ink)">ただの情報</text></g>
-
-      <g><circle cx="325" cy="368" r="44" fill="var(--cool-tint)" stroke="var(--cool)" stroke-width="2.2"/>
-        <text x="325" y="364" text-anchor="middle" font-size="15" font-weight="700" fill="var(--cool-ink)">旧仕様</text>
-        <text x="325" y="380" text-anchor="middle" font-size="10" fill="var(--cool-ink)">退役した参照</text></g>
-    </svg>
-    <div class="diagram-legend">
-      <span class="k"><span class="ln observed"></span>実際に観測された遷移</span>
-      <span class="k"><span class="ln correction"></span>訂正・逆行として観測</span>
-      <span class="k"><span class="ln blocked"></span>想定はあるが未観測/未定義</span>
+  <div class="panel on" id="solid">
+    <p class="panel-note">ba-32・ba-179のgistに、文字通り書かれていることだけ。</p>
+    <div class="theme-block">
+      <h2>分類の形 <span class="src">ba-32</span></h2>
+      <div class="diagram">
+        <svg viewBox="0 0 260 90">
+          <rect x="10" y="10" width="110" height="60" rx="8" fill="var(--solid)" opacity="0.15" stroke="currentColor"/>
+          <text x="65" y="26" text-anchor="middle" font-size="10" font-weight="700">活動側(閉じる)</text>
+          <text x="65" y="42" text-anchor="middle" font-size="9">気づき / 案件</text>
+          <text x="65" y="56" text-anchor="middle" font-size="9">保留論点</text>
+          <rect x="140" y="10" width="110" height="60" rx="8" fill="var(--solid)" opacity="0.15" stroke="currentColor"/>
+          <text x="195" y="26" text-anchor="middle" font-size="10" font-weight="700">参照側(残る)</text>
+          <text x="195" y="42" text-anchor="middle" font-size="9">確定仕様 / 旧仕様</text>
+          <text x="195" y="56" text-anchor="middle" font-size="9">記録</text>
+        </svg>
+      </div>
+      <p>新規スレッドは6分類のいずれか1つをtagで付ける。2軸(活動側/参照側)構造。</p>
+      <div class="quote-src"><b>ba-32 gist:</b> 「新規スレッドは6分類(案件/確定仕様/気づき/保留論点/旧仕様/記録)をtagで1つ付ける。気づき/案件/保留論点は閉じる活動側、確定仕様/旧仕様/記録は閉じずに残る参照側(bm六角形モデル)。」</div>
+    </div>
+    <div class="theme-block">
+      <h2>bjの評価 <span class="src">ba-179</span></h2>
+      <p>bjの発想・2軸仮説は良好と評価された。当初の「前提は4分類」という指摘は撤回済み。</p>
+      <div class="quote-src"><b>ba-179 gist:</b> 「bjの発想・2軸仮説は良好と評価。当初「前提は4分類」と指摘したが撤回、実際は5分類(旧仕様含む)が正しく、規約(ba-32)側が古かった。」</div>
     </div>
   </div>
-  <p class="diagram-caption">ノード配置と6分類・2軸の構成はbmの図をそのまま踏襲。矢印はbjが台帳から拾った実例(ba-39/16/53/171)と、bmが別途確認した「気づき→案件」22件を重ねた。案件→確定仕様の"想定ルート"は0件で、bjいわく実際は別スレッドへの切り出しで行われていた。</p>
 
-  <div class="split">
-    <div class="card bj">
-      <span class="tag">利尻版 · 分析</span>
-      <h2>bj — ba分類の遷移分析</h2>
-      <p class="sub">2026-07-29時点、台帳176スレッドの静的スナップショットを集計</p>
+  <div class="panel" id="beta">
+    <p class="panel-note">bj自身の分析での指摘・今日の会話での気づき。まだba側の規約本文には反映されていない。</p>
+    <div class="theme-block">
+      <h2>bjが残した3つの宿題 <span class="src">bjページ由来・ba未反映</span></h2>
       <ul>
-        <li>5分類を状態機械として観測。実際の遷移は4件(2.3%)のみ確認</li>
-        <li>4件中3件は「成熟」ではなく「誤タグの訂正」だった</li>
-        <li>気づき: 「5分類は本当は2軸(成熟度×現役/退役)かもしれない」</li>
+        <li>成熟による格上げと、誤分類の訂正が、tag変更としては見分けが付かない</li>
+        <li>旧仕様に入る経路はあるが、出る経路(復活)が未定義</li>
+        <li>案件→確定仕様の実際のやり方(新スレッド切り出し)が規約本文に明文化されていない</li>
       </ul>
     </div>
-    <div class="card bm">
-      <span class="tag">すま版 · モデル</span>
-      <h2>bm — 六角形の台帳</h2>
-      <p class="sub">bjの五角形を、2軸・6分類に描き直した提案</p>
+    <div class="theme-block">
+      <h2>「もう見なくていい」の整理 <span class="src">今日の会話・ba未反映</span></h2>
       <ul>
-        <li>活動側(気づき/案件/保留論点)と参照側(確定仕様/旧仕様/記録)</li>
-        <li>「記録」を新設し、3対3の対称形に</li>
-        <li>bj本人の「2軸かもしれない」という気づきを、実際に形にしたもの</li>
+        <li>void=見る価値なし、close≠見る価値なし(確定仕様は参照され続ける)、という整理</li>
+        <li>close(進行状態)と分類(確定仕様)は別軸(ba-36には既にこの一文があるが、ba-32側にはまだ無い)</li>
       </ul>
     </div>
   </div>
 
-  <div class="section-label">bjが残した3つの宿題、bmを読んだ後の状態</div>
-
-  <div class="findings">
-    <div class="finding">
-      <span class="status open">未解決</span>
-      <p><strong>成熟と訂正の区別。</strong>「気づき→確定仕様」のような正規の格上げと、「誤って確定仕様にしていた」訂正が、tag変更としては同じ記録にしか見えない。bmは分類の形は直したが、この区別を付ける仕組みには触れていない。</p>
+  <div class="panel" id="toss">
+    <p class="panel-note">お遊び枠。テーマから外れてよい。</p>
+    <div class="toss-grid">
+      <div class="toss-card">
+        <div class="icon"><svg viewBox="0 0 60 60"><circle cx="30" cy="24" r="12" fill="none" stroke="currentColor" stroke-width="2"/><path d="M18 44 q12 -14 24 0" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+        <h3>自動分類AI</h3>
+        <p>本文からAIが自動で気づき/案件等をタグ付けする構想。人が選ぶ手間を無くす。</p>
+      </div>
+      <div class="toss-card">
+        <div class="icon"><svg viewBox="0 0 60 60"><text x="30" y="38" text-anchor="middle" font-size="24">💡</text></svg></div>
+        <h3>分類ごとの絵文字バッジ</h3>
+        <p>気づき=💡、確定仕様=📌、記録=🗂のように、分類ごとに絵文字を割り当てて視認性を上げる。</p>
+      </div>
+      <div class="toss-card">
+        <div class="icon"><svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="6" fill="currentColor"/><circle cx="12" cy="14" r="4" fill="none" stroke="currentColor"/><circle cx="48" cy="14" r="4" fill="none" stroke="currentColor"/><circle cx="12" cy="46" r="4" fill="none" stroke="currentColor"/><circle cx="48" cy="46" r="4" fill="none" stroke="currentColor"/><line x1="30" y1="30" x2="12" y2="14" stroke="currentColor"/><line x1="30" y1="30" x2="48" y2="14" stroke="currentColor"/><line x1="30" y1="30" x2="12" y2="46" stroke="currentColor"/><line x1="30" y1="30" x2="48" y2="46" stroke="currentColor"/></svg></div>
+        <h3>六角形をスキルツリー風に</h3>
+        <p>bmの六角形図を、ゲームのスキルツリーのように「解放条件」付きで描き直す。</p>
+      </div>
     </div>
-    <div class="finding">
-      <span class="status partial">部分的</span>
-      <p><strong>旧仕様の出入り。</strong>bjは「旧仕様に入る経路しかなく、出る経路(復活)が未定義」と指摘。bmは"入り方"（確定仕様スレにnoteで旧仕様タグを付け直せば表現できる)には答えたが、"出る方"（復活させたい時どうするか)には触れていない。</p>
-    </div>
-    <div class="finding">
-      <span class="status open">未解決</span>
-      <p><strong>案件→確定仕様の正しい手順。</strong>bjの観測では、タグの書き換えでなく「決定事項を新スレッドへ切り出す」やり方が実際に使われていた。この手順自体をba-32規約に明文化する、という改善案はまだ着手されていない。</p>
-    </div>
-  </div>
-
-  <div class="section-label">「もう見なくていい」をどう判定するか</div>
-  <p class="section-intro">上の3つは「まだ動いている分類」の宿題だった。もう一つ別の軸として、「このスレッド自体、もう見なくていい」をどう判定するか、という問いがある。</p>
-
-  <div class="void-compare">
-    <div class="vc-row vc-void">
-      <span class="vc-tag">void</span>
-      <p>見る価値: <strong>無い。</strong>記述自体が無効という、唯一の確実な除外シグナル。</p>
-    </div>
-    <div class="vc-row vc-active">
-      <span class="vc-tag">活動側(気づき/案件/保留論点)がclose済み</span>
-      <p>見る価値: <strong>薄い。</strong>作業は終わっているが、voidと違い「間違いだった」わけではない。</p>
-    </div>
-    <div class="vc-row vc-ref">
-      <span class="vc-tag">参照側(確定仕様/旧仕様/記録)</span>
-      <p>見る価値: <strong>ある。</strong>そもそも「あえて見続けるために残す」設計。closeしないのはバグでなく仕様。</p>
-    </div>
-  </div>
-
-  <div class="case-study">
-    <div class="cs-label">実例 — ba-1</div>
-    <p>「deploy check」という、システム初期構築時の疎通テスト用エントリ。作成3分後に利尻自身が、翌日にtakashi本人が念押しでvoidにしており、<strong>2回voidされていた</strong>。単発のvoidより、この「二重void」の方が「間違いなく片付いている」という確信度が高い。</p>
-    <p class="hint">分類タグは元々付いていない(未分類)。もし付けるなら「記録」が近い(「だから次こうする」が無い、ただの動作報告のため)が、void済みなので実用上は付けても付けなくても差が無い。</p>
-  </div>
-
-  <div class="quote">
-    「これはモデル図です（すま版）。利尻版（遷移分析）は bj。同じ「分類」テーマの別の見え方で、<strong>後勝ちさせず両方を残しています</strong>。」
-    <span class="src">— bmページ本文より</span>
-  </div>
-
-  <div class="close">
-    bm自身が明言している通り、この2枚はそもそも「どちらが勝つか」を競う関係として作られていない。bjが見つけた歪みが、bmという形の答えを生んだ。その形の答えは既にコードに実装され定着したが、bjが残した運用面の宿題は、形が変わった後もそのまま残っている。
   </div>
 
 </div>
+
+<script>
+  document.querySelectorAll('.tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('on'); });
+      document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('on'); });
+      btn.classList.add('on');
+      document.getElementById(btn.dataset.tab).classList.add('on');
+    });
+  });
+</script>
 </body>
 </html>
