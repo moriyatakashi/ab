@@ -1,0 +1,17 @@
+# ab/config/values.yml
+# 案件ごとの設定値の記録。手順そのものはt1/t2のページを参照。
+# ここに書く値は秘密ではない前提（クライアントIDは公開前提の値のため）。
+#
+# 例（実際の値が発行されたらこの形で追加する）:
+# google_oauth:
+#   - id: "xxxxxxxxxx.apps.googleusercontent.com"
+#     purpose: "ab全体のSign in with Google用（caのログインゲートで使用）"
+#     type: "web application"
+#     created: "2026-08-01"
+#     authorized_origins:
+#       - "https://moriyatakashi.github.io"
+#     used_by:
+#       - "src/ca/index.html"
+#     note: "aaのクライアントIDとは別に新規発行。理由: abを別アプリとして見せたい／失効時の影響を分離したいため"
+
+google_oauth: []
