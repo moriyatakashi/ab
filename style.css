@@ -7,6 +7,8 @@
   --accent-soft: #1e2b28;
   --warn: #d99a68;
   --warn-soft: #2c231c;
+  --now: #c8ff4d;
+  --now-soft: #1e2a10;
 }
 
 @media (prefers-color-scheme: light) {
@@ -19,6 +21,8 @@
     --accent-soft: #e3efea;
     --warn: #a65d2e;
     --warn-soft: #f3e7db;
+    --now: #5f8a0a;
+    --now-soft: #eef7d8;
   }
 }
 
@@ -52,6 +56,29 @@ h1, h2 { text-wrap: balance; }
 .nav-item:hover { border-color: var(--accent); }
 .nav-code { font-weight: bold; color: var(--accent); }
 .nav-desc { color: var(--dim); font-size: 0.9rem; }
+
+/* トップページ: 熱量3段階(ba-222) */
+.tier { margin: 26px 0 6px; }
+.tier-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+.tier-title { font-size: 1rem; font-weight: 800; }
+.tier-note { font-size: 0.78rem; color: var(--dim); }
+.tier-head::after { content: ""; flex: 1; height: 1px; background: var(--line); align-self: center; }
+.tier.now .tier-title { color: var(--now); }
+.tier.asneeded .tier-title { color: var(--accent); }
+.tier.always .tier-title { color: var(--dim); }
+.tier.now .nav-list { gap: 8px; }
+.tier.now .nav-item { border-color: rgba(200,255,77,0.35); background: var(--now-soft); }
+.tier.now .nav-code { color: var(--now); }
+.tier.always .nav-item { background: var(--accent-soft); border-style: dashed; }
+
+/* トップページ: ツール・手順(sX)は熱量の階層に混ぜず控えめに */
+.tier.tools { margin: 34px 0 0; padding-top: 14px; border-top: 1px solid var(--line); }
+.tier.tools .tier-head::after { display: none; }
+.tier.tools .tier-title { font-size: 0.8rem; color: var(--dim); font-weight: 700; }
+.tier.tools .nav-list { gap: 6px; }
+.tier.tools .nav-item { padding: 6px 11px; opacity: 0.85; }
+.tier.tools .nav-code { font-size: 0.78rem; color: var(--dim); }
+.tier.tools .nav-desc { font-size: 0.8rem; }
 
 /* 手順ページの番号ステップ */
 .steps { display: flex; flex-direction: column; }
