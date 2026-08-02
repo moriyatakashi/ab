@@ -25,8 +25,8 @@
       <div class="step-body">
         <h2 class="step-title">新しいPATを発行する</h2>
         <ul>
-          <li>スコープ: 既存が <span class="field">delete_repo, gist, read:org, repo, workflow</span> だったので、同じ内容に合わせる。</li>
-          <li>有効期限: 要選択。次回また同じ手順を踏む前提で決める。</li>
+          <li>スコープ: <span class="field">repo, workflow</span>。rbook\runのPAT依存コマンド(repos/repo/dump/test)が実際に必要とする最小分(最新値は <span class="path">config/values.yml</span> のgithub_patを参照)。</li>
+          <li>有効期限: 選べるなら長め(fine-grainedなら最長1年、classicならNo expirationも選択肢)を選び、更新頻度そのものを減らす。</li>
         </ul>
       </div>
     </div>
