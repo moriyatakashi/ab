@@ -81,6 +81,10 @@
   .persp-card h3{font-size:13px;margin:0 0 8px}
   .persp-card ul{margin:0;padding-left:1.1em;font-size:12.5px}
   .persp-card li{margin:5px 0}
+  .persp-num{
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;color:var(--sub);
+    border:1px solid var(--line);border-radius:5px;padding:0 5px;margin-right:6px;
+  }
 
   .diagram{margin:6px 0 12px;color:var(--sub)}
   .diagram svg{width:100%;height:auto;display:block}
@@ -142,8 +146,8 @@
     <div class="theme-block">
       <h2>読み比べての結論 <span class="src">分析・ba未反映</span></h2>
       <p><strong>分類の形(何個・どの軸)</strong>については、bmが答えに近い。bmが提案した6分類・2軸(活動側/参照側)は、実際に今のコードに採用済みで、「記録」も含めて6個とも実装されている。</p>
-      <p><strong>運用の細部(どう遷移するか)</strong>については、bjが洗い出した3つの疑問のうち2つが、bmを読んだ後もまだ未解決のまま残っている。</p>
-      <p>「どちらか一方が正解」ではなく、<strong>形の答えはbm、運用の答えはまだ無い</strong>、というのが実態に近い。</p>
+      <p><strong>運用の細部(どう遷移するか)</strong>については、bjが洗い出した3つの疑問のうち1つ(旧仕様の出口)は問題視しない方針で決着、残り2つはba-220として切り出し・追跡中。</p>
+      <p>「どちらか一方が正解」ではなく、<strong>形の答えはbm、運用の細部はba-220で継続</strong>、というのが実態に近い。</p>
     </div>
 
     <div class="theme-block">
@@ -218,7 +222,7 @@
       <p style="font-size:12px;color:var(--sub);margin-bottom:10px">上下関係ではなく、同じテーマの2つの視点(成熟度軸のタブとは別の軸)。</p>
       <div class="persp-split">
         <div class="persp-card">
-          <span class="persp-tag">利尻版 · 分析(bj)</span>
+          <span class="persp-num">1</span><span class="persp-tag">利尻版 · 分析(bj)</span>
           <h3>ba分類の遷移分析</h3>
           <ul>
             <li>2026-07-29時点、台帳176スレッドの静的スナップショットを集計</li>
@@ -228,7 +232,7 @@
           </ul>
         </div>
         <div class="persp-card">
-          <span class="persp-tag">すま版 · モデル(bm)</span>
+          <span class="persp-num">2</span><span class="persp-tag">すま版 · モデル(bm)</span>
           <h3>六角形の台帳</h3>
           <ul>
             <li>bjの五角形を、2軸・6分類に描き直した提案</li>
