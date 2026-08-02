@@ -222,7 +222,17 @@
   </div>
 
   <div class="panel" id="toss">
-    <div class="empty-note">まだ何もないよ</div>
+    <div class="card">
+      <h2>📦 t0x・t1x・t2x…でバケツに分ける <span class="src">ba-97</span></h2>
+      <p class="caption">t3〜t18みたいにフォルダが1個ずつ増えていくと、VSCodeの左パネルが見づらくなる問題への案(たかしさん発案、まだ捨て案級・未着手)。</p>
+      <ul style="font-size:12.5px;color:var(--sub);padding-left:1.1em;margin:0">
+        <li><code>src/t0x/</code>・<code>src/t1x/</code>・<code>src/t2x/</code>…と10刻みでバケツフォルダに分ける</li>
+        <li>各バケツの中は<code>t3.html</code>のようにフラットなファイルにする(index.htmlフォルダをやめる)</li>
+        <li>「t/を1個にまとめる」案より、バケツの中身が一定サイズに収まるのでスケールする</li>
+        <li>番号範囲での機械的な区切りなので、ba-193(コードは意味を持たない番地)の原則とも矛盾しない</li>
+        <li>s系(現状4個)はまだ分割不要</li>
+      </ul>
+    </div>
   </div>
 
 </div>
