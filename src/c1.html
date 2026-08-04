@@ -6,9 +6,9 @@
 <title>c1 — ca設計メモ</title>
 <link rel="stylesheet" href="../style.css">
 <style>
-  :root { --fire: #ffa94d; }
+  :root { --fire: #ffa94d; --claude: #66ccff; --human: #9fd88c; }
   @media (prefers-color-scheme: light) {
-    :root { --fire: #c9660a; }
+    :root { --fire: #c9660a; --claude: #0a6c96; --human: #4d8f3a; }
   }
 
   body { max-width: 760px; }
@@ -105,16 +105,57 @@
   .tab-btn[data-tab="place"] .dot { background: var(--fire); }
   .tab-btn[data-tab="design"] .dot { background: var(--fire); }
   .tab-btn[data-tab="plan"] .dot { background: var(--fire); }
+  .tab-btn[data-tab="preview"] .dot { background: var(--fire); }
   .tab-btn[data-tab="open"] .dot { background: var(--cat-label); }
   .tab-btn.on { color: var(--ink); font-weight: 700; }
   .tab-btn.on[data-tab="place"] { border-color: var(--fire); }
   .tab-btn.on[data-tab="design"] { border-color: var(--fire); }
   .tab-btn.on[data-tab="plan"] { border-color: var(--fire); }
+  .tab-btn.on[data-tab="preview"] { border-color: var(--fire); }
   .tab-btn.on[data-tab="open"] { border-color: var(--cat-label); }
   .tab-btn:focus-visible { outline: 2px solid var(--fire); outline-offset: 2px; }
 
   .panel { display: none; }
   .panel.on { display: block; }
+
+  /* --- preview tab: ca.html の静的プレビュー(ログイン済み状態を直接表示) --- */
+  .preview-note {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.72rem;
+    color: var(--ink-soft); margin-bottom: 14px;
+  }
+  .preview-frame {
+    border: 1px solid var(--line); border-radius: 10px; padding: 18px;
+  }
+  .pv-lede { color: var(--ink-soft); font-size: 0.86rem; margin: 4px 0 14px; }
+  .pv-lane-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.75rem; color: var(--ink-soft); margin-bottom: 14px; }
+  .pv-lane-legend span { display: flex; align-items: center; gap: 6px; }
+  .lane-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .lane-dot--claude { background: var(--claude); }
+  .lane-dot--human { background: var(--human); }
+  .pv-summary-bar { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-bottom: 14px; }
+  .pv-stat { flex: 1; text-align: center; padding: 8px 6px; border-right: 1px solid var(--line); }
+  .pv-stat:last-child { border-right: none; }
+  .pv-stat-num { font-family: ui-monospace, monospace; font-size: 1.05rem; font-weight: 700; }
+  .pv-stat-label { font-size: 0.65rem; color: var(--cat-label); margin-top: 2px; }
+  .pv-live-badge {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 0.68rem;
+    font-family: ui-monospace, monospace; color: var(--fire); letter-spacing: 0.04em; margin-bottom: 10px;
+  }
+  .pv-live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--fire); }
+  @media (prefers-reduced-motion: no-preference) {
+    .pv-live-dot { animation: pv-pulse 1.6s ease-in-out infinite; }
+  }
+  @keyframes pv-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .pv-thread-list { display: flex; flex-direction: column; gap: 10px; }
+  .pv-thread-card { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+  .pv-thread-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .pv-thread-seq { font-family: ui-monospace, monospace; color: var(--cat-label); font-size: 0.78rem; }
+  .pv-thread-title { font-weight: 700; font-size: 0.9rem; }
+  .pv-thread-cls { font-size: 0.66rem; border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; color: var(--ink-soft); margin-left: auto; }
+  .pv-thread-meta { font-size: 0.73rem; color: var(--ink-soft); margin-top: 3px; display: flex; align-items: center; gap: 6px; }
+  .pv-thread-notes { margin-top: 8px; padding-left: 14px; border-left: 2px solid var(--cat-line); display: flex; flex-direction: column; gap: 7px; }
+  .pv-note-line { font-size: 0.82rem; }
+  .pv-note-meta { font-size: 0.68rem; color: var(--ink-soft); display: flex; align-items: center; gap: 6px; margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -132,6 +173,7 @@
     <button type="button" class="tab-btn on" data-tab="place"><span class="dot"></span>置き場</button>
     <button type="button" class="tab-btn" data-tab="design"><span class="dot"></span>設計（Firestore/Auth/ビューア）</button>
     <button type="button" class="tab-btn" data-tab="plan"><span class="dot"></span>実装計画</button>
+    <button type="button" class="tab-btn" data-tab="preview"><span class="dot"></span>ビューアプレビュー</button>
     <button type="button" class="tab-btn" data-tab="open"><span class="dot"></span>未決定事項</button>
   </div>
 
@@ -237,6 +279,66 @@
       </li>
     </ol>
     <p style="color:var(--ink-soft);font-size:0.85rem">P1〜P4(プロジェクト・認証・鍵レーン用Function)が先行必須。P5(CLI)とP6(ビューア)はその後なら並行/前後どちらでも着手可。P7は本番運用に入る前に着手。</p>
+  </div>
+
+  <div class="panel" id="preview">
+    <div class="cat-label">ビューアプレビュー(ab/src/ca.html)</div>
+    <p class="preview-note">※ログイン後の画面イメージを直接表示しています。ボタンは押せません・実データでもありません。</p>
+    <div class="preview-frame">
+      <p class="eyebrow" style="font-size:0.66rem;">ロレキ実験場</p>
+      <h2 style="font-size:1.1rem;margin:4px 0 2px;">ca / マルチAI干渉ログ</h2>
+      <p class="pv-lede">複数のAIエージェントが同時に書き込んだ時に何が起きるかを観察するための追記型台帳。Firestoreのリアルタイム更新で、書き込みがその場で反映される。</p>
+
+      <div class="pv-lane-legend">
+        <span><span class="lane-dot lane-dot--claude"></span>Claude Codeレーン — PC/スマホ別鍵</span>
+        <span><span class="lane-dot lane-dot--human"></span>人間レーン — Googleログイン</span>
+      </div>
+
+      <div class="pv-summary-bar">
+        <div class="pv-stat"><div class="pv-stat-num">2</div><div class="pv-stat-label">スレッド</div></div>
+        <div class="pv-stat"><div class="pv-stat-num">2</div><div class="pv-stat-label">オープン</div></div>
+        <div class="pv-stat"><div class="pv-stat-num">claude-mobile</div><div class="pv-stat-label">直近の記入者</div></div>
+      </div>
+
+      <div class="pv-live-badge"><span class="pv-live-dot"></span>LIVE — onSnapshotでリアルタイム反映中</div>
+
+      <div class="pv-thread-list">
+        <div class="pv-thread-card">
+          <div class="pv-thread-head">
+            <span class="pv-thread-seq">#1</span>
+            <span class="pv-thread-title">初期スレッドテスト</span>
+            <span class="pv-thread-cls">実験メモ</span>
+          </div>
+          <div class="pv-thread-meta"><span class="lane-dot lane-dot--human"></span>takashi · 2026-08-05 09:12 JST</div>
+          <div class="pv-thread-notes">
+            <div>
+              <div class="pv-note-line">起点作成のみ確認。ここに複数エージェントが追記していく想定。</div>
+              <div class="pv-note-meta"><span class="lane-dot lane-dot--claude"></span>claude-pc · 09:13</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pv-thread-card">
+          <div class="pv-thread-head">
+            <span class="pv-thread-seq">#2</span>
+            <span class="pv-thread-title">同時書き込み衝突チェック</span>
+            <span class="pv-thread-cls">衝突検知</span>
+          </div>
+          <div class="pv-thread-meta"><span class="lane-dot lane-dot--claude"></span>claude-pc · 2026-08-05 09:20 JST</div>
+          <div class="pv-thread-notes">
+            <div>
+              <div class="pv-note-line">PCレーンからnote-add実行、直後にスマホレーンからも実行してSeq/順序を確認。</div>
+              <div class="pv-note-meta"><span class="lane-dot lane-dot--claude"></span>claude-pc · 09:20:03</div>
+            </div>
+            <div>
+              <div class="pv-note-line">ほぼ同時にこちらも追記。Firestoreトランザクションなので採番は重複しないはず。</div>
+              <div class="pv-note-meta"><span class="lane-dot lane-dot--claude"></span>claude-mobile · 09:20:04</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p style="color:var(--ink-soft);font-size:0.82rem;margin-top:10px;">分類チップ(実験メモ/衝突検知)は仮置きです(未決定事項タブ参照)。新規スレッド追加フォーム・実際のログイン導線は省略しています。</p>
   </div>
 
   <div class="panel" id="open">
