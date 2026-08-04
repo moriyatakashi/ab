@@ -6,11 +6,16 @@
 <title>c1 — ca設計メモ</title>
 <link rel="stylesheet" href="../style.css">
 <style>
+  :root { --fire: #ffa94d; }
+  @media (prefers-color-scheme: light) {
+    :root { --fire: #c9660a; }
+  }
+
   body { max-width: 760px; }
   .back { font-size: 0.85rem; margin-bottom: 4px; }
   .eyebrow {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--link);
+    font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fire);
   }
   h1 { font-size: 1.5rem; margin: 0.3rem 0 0.2rem; }
   .subhead { color: var(--ink-soft); font-size: 0.92rem; margin: 0 0 1.4rem; }
@@ -22,26 +27,27 @@
 
   h2 { font-size: 1rem; margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
   .sec-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
-  .sec-no { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--link); font-size: 0.85rem; }
+  .sec-no { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--fire); font-size: 0.85rem; }
 
   .path {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    color: var(--link); font-size: 0.85rem;
+    color: var(--fire); font-size: 0.85rem;
   }
   .tree {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.82rem; border: 1px solid var(--line); border-radius: 6px;
     padding: 12px 16px; overflow-x: auto; color: var(--ink-soft); margin-bottom: 12px;
+    white-space: pre;
   }
-  .tree .new { color: var(--link); }
+  .tree .new { color: var(--fire); }
   .tree .dim { color: var(--cat-label); }
 
   .answer {
     display: flex; gap: 10px; align-items: flex-start;
-    border: 1px solid var(--line); border-left: 3px solid var(--link);
+    border: 1px solid var(--line); border-left: 3px solid var(--fire);
     border-radius: 4px; padding: 12px 14px; margin: 12px 0;
   }
-  .answer .mark { font-family: ui-monospace, monospace; color: var(--link); font-weight: 600; flex-shrink: 0; }
+  .answer .mark { font-family: ui-monospace, monospace; color: var(--fire); font-weight: 600; flex-shrink: 0; }
   .answer p { margin: 0; }
   .answer p + p { margin-top: 6px; }
 
@@ -54,14 +60,15 @@
   }
   td.mono, th.mono { font-family: ui-monospace, monospace; font-size: 0.85rem; }
   td.same { color: var(--cat-label); }
-  td.diff { color: var(--link); }
+  td.diff { color: var(--fire); }
+  td.gone { color: var(--ink-soft); text-decoration: line-through; }
 
   .flow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
   .flow .box {
     font-family: ui-monospace, monospace; font-size: 0.82rem;
     border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px;
   }
-  .flow .box.new { border-color: var(--link); color: var(--link); }
+  .flow .box.new { border-color: var(--fire); color: var(--fire); }
   .flow .arrow { color: var(--cat-label); }
   .flow-group { border: 1px dashed var(--line); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
   .flow-label { font-size: 0.75rem; color: var(--cat-label); margin-bottom: 8px; }
@@ -72,96 +79,208 @@
   ol.questions .qno { font-family: ui-monospace, monospace; color: var(--cat-label); font-size: 0.85rem; flex-shrink: 0; }
   ol.questions .qbody span { color: var(--ink-soft); display: block; font-size: 0.86rem; margin-top: 3px; }
 
+  .plan-list { padding-left: 0; list-style: none; margin: 0; }
+  .plan-list li { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .plan-list li:last-child { border-bottom: none; }
+  .plan-phase {
+    font-family: ui-monospace, monospace; color: var(--fire); font-size: 0.85rem;
+    flex-shrink: 0; width: 3.5em;
+  }
+  .plan-body b { font-size: 0.92rem; }
+  .plan-body span { color: var(--ink-soft); display: block; font-size: 0.86rem; margin-top: 3px; }
+
   footer {
     margin-top: 32px; padding-top: 12px; border-top: 1px solid var(--line);
     font-family: ui-monospace, monospace; font-size: 0.75rem; color: var(--cat-label);
   }
+
+  /* --- tabs (aa/src/w/tX.html パターンをab既存トークンへ移植) --- */
+  .tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .tab-btn {
+    font-family: sans-serif; font-size: 13px; padding: 9px 16px; border: none; background: none; color: var(--ink-soft);
+    cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tab-btn .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .tab-btn[data-tab="place"] .dot { background: var(--fire); }
+  .tab-btn[data-tab="design"] .dot { background: var(--fire); }
+  .tab-btn[data-tab="plan"] .dot { background: var(--fire); }
+  .tab-btn[data-tab="open"] .dot { background: var(--cat-label); }
+  .tab-btn.on { color: var(--ink); font-weight: 700; }
+  .tab-btn.on[data-tab="place"] { border-color: var(--fire); }
+  .tab-btn.on[data-tab="design"] { border-color: var(--fire); }
+  .tab-btn.on[data-tab="plan"] { border-color: var(--fire); }
+  .tab-btn.on[data-tab="open"] { border-color: var(--cat-label); }
+  .tab-btn:focus-visible { outline: 2px solid var(--fire); outline-offset: 2px; }
+
+  .panel { display: none; }
+  .panel.on { display: block; }
 </style>
 </head>
 <body>
   <div class="back"><a href="index.html">← ab トップへ</a></div>
-  <p class="eyebrow">design memo — 未着手・確認用</p>
-  <h1>ca をどこに、何を新設して置くか</h1>
-  <p class="subhead">ba-242 の続き。まだ何も作っていません — 置き場・ストレージ・API の要不要だけ先に固めるためのメモです。</p>
+  <p class="eyebrow">design memo — 計画確定・実装未着手</p>
+  <h1>ca を Firebase(Firestore)で作る</h1>
+  <p class="subhead">ba-242 の続き。当初はAzure Table Storage(baと同じ構成)を検討していたが、マルチAIエージェント干渉テストという目的にはFirestoreのリアルタイム更新・厳密なトランザクションの方が合うため、Firebaseで作る方針に変更。コード・インフラともにまだ何も作っていません。</p>
   <div class="status-row">
     <span class="chip">対象: ab/src/</span>
     <span class="chip">参照: ba-242</span>
-    <span class="chip">状態: 未着手</span>
+    <span class="chip">状態: 実装未着手(計画確定・Firebase版)</span>
   </div>
 
-  <div class="cat-label">置き場</div>
-  <div class="sec-head"><span class="sec-no">01</span></div>
-  <p>今の <span class="path">ab/src/</span> は <span class="path">index.html</span> 1本だけ(aa の srt.html への案内のみ)。ここに新しくフォルダを切ります。</p>
-  <div class="tree">ab/
+  <div class="tabs">
+    <button type="button" class="tab-btn on" data-tab="place"><span class="dot"></span>置き場</button>
+    <button type="button" class="tab-btn" data-tab="design"><span class="dot"></span>設計（Firestore/Auth/ビューア）</button>
+    <button type="button" class="tab-btn" data-tab="plan"><span class="dot"></span>実装計画</button>
+    <button type="button" class="tab-btn" data-tab="open"><span class="dot"></span>未決定事項</button>
+  </div>
+
+  <div class="panel on" id="place">
+    <div class="cat-label">置き場</div>
+    <div class="sec-head"><span class="sec-no">01</span></div>
+    <p>今の <span class="path">ab/src/</span> は <span class="path">index.html</span> と <span class="path">c1.html</span>(このページ)の2本。フォルダは切らず、フラットに1ファイル追加します。</p>
+    <div class="tree">ab/
 ├── index.html          <span class="dim">おまちください(トップ)</span>
 ├── style.css
 └── src/
     ├── index.html      <span class="dim">既存・aaへの案内</span>
     ├── c1.html         <span class="dim">このページ</span>
-    └── <span class="new">ca/</span>              <span class="new">← 新設(予定)</span>
-        └── <span class="new">index.html</span>   <span class="new">ca の実体(サイト側は後で)</span></div>
+    ├── <span class="new">ca.html</span>          <span class="new">← 新設(予定・ca の実体)</span>
+    └── <span class="new">ca-app.js</span>        <span class="new">← 新設(予定・Firestore SDK経由のread/write)</span></div>
+    <p style="color:var(--ink-soft);font-size:0.85rem">フォルダを切らなかった理由: 現状ca.html 1枚(+ロジックのca-app.js)で足りる規模で、2ファイル目が要るタイミングで初めて分割すればよいため。aa/src/common(auth.js等)への依存は無くなる ── 認証をFirebase Authenticationに置き換えるため。</p>
+  </div>
 
-  <div class="cat-label">ストレージテーブルは要るか / API は要るか</div>
-  <div class="answer">
-    <span class="mark">→</span>
-    <div>
-      <p><b>どちらも要る、というのが今の見立てです。</b>「ba的な追記型スレッド」を名乗る以上、書き込みが前提。書き込みがある時点で、認証を挟むサーバー(API)と、消えない置き場(テーブル)がセットで要ります。</p>
-      <p>逆に言うと、もし ca が当面「読むだけ・書かない」なら、どちらも今は不要で index.html だけで足ります。ここの前提(書き込み前提かどうか)を先に確認したいところです。</p>
+  <div class="panel" id="design">
+    <div class="cat-label">なぜFirebaseか</div>
+    <div class="answer">
+      <span class="mark">→</span>
+      <div>
+        <p><b>「サーバーを自分で書く」部分がほぼ消える。</b>読み取りと人間の書き込みは、ブラウザからFirestoreへ直接アクセス(Security Rulesが認可を担う)。サーバーが必要なのは、対話的ログインができないClaudeエージェント用の鍵レーンだけ ── そこだけ小さなCloud Functionを1本立てる。</p>
+        <p>マルチAIエージェント干渉テストが目的のcaにとって、Firestoreのトランザクション(Seq採番が厳密になる)とリアルタイムリスナー(書き込みの様子がその場で見える)は直接効いてくる。</p>
+      </div>
     </div>
-  </div>
 
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>要素</th><th class="mono">ba(既存)</th><th class="mono">ca(案)</th></tr></thead>
-      <tbody>
-        <tr><td>Function App</td><td class="mono same">ab-board-api</td><td class="mono same">同じものを流用</td></tr>
-        <tr><td>API エンドポイント</td><td class="mono">/api/ba</td><td class="mono diff">/api/ca(新設)</td></tr>
-        <tr><td>Table Storage</td><td class="mono">BaLog</td><td class="mono diff">CaLog(新設・別テーブル)</td></tr>
-        <tr><td>書き込み鍵</td><td class="mono">BA_CLAUDE_KEY_PC / MOBILE</td><td class="mono diff">CA_CLAUDE_KEY_PC / MOBILE(新設)</td></tr>
-        <tr><td>鍵の吸収先</td><td class="mono same">rbook: env var → ~/.rbook/*</td><td class="mono same">同じパターン</td></tr>
-      </tbody>
-    </table>
-  </div>
-  <p style="color:var(--ink-soft);font-size:0.85rem">Function App 自体は増やさない(インフラ増設なし)。テーブルとエンドポイントだけ ca 用に足す、が最小構成。</p>
-
-  <div class="cat-label">データの流れ(案)</div>
-  <div class="flow-group">
-    <div class="flow-label">ba(既存)</div>
-    <div class="flow">
-      <span class="box">rbook/run ba</span><span class="arrow">→</span>
-      <span class="box">/api/ba</span><span class="arrow">→</span>
-      <span class="box">BaLog</span>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>要素</th><th class="mono">当初案(Azure)</th><th class="mono">採用(Firebase)</th></tr></thead>
+        <tbody>
+          <tr><td>データストア</td><td class="mono gone">Table Storage(CaLog)</td><td class="mono diff">Firestore(caThreadsコレクション、ドキュメント/サブコレクション)</td></tr>
+          <tr><td>読み取り経路</td><td class="mono gone">/api/ca(Function経由)</td><td class="mono diff">ブラウザ→Firestore直読み(Security Rules)</td></tr>
+          <tr><td>人間の書き込み</td><td class="mono gone">/api/ca(Function経由、Google IDトークン検証)</td><td class="mono diff">ブラウザ→Firestore直書き(Firebase Auth+Security Rules)</td></tr>
+          <tr><td>Claudeレーンの書き込み</td><td class="mono gone">/api/ca(同じFunction、鍵は環境変数)</td><td class="mono diff">Cloud Functions 1本(claude_key照合→Admin SDKで書き込み)</td></tr>
+          <tr><td>認証(人間)</td><td class="mono gone">Google Identity Services + 自前セッション</td><td class="mono diff">Firebase Authentication(Google Sign-Inが標準搭載)</td></tr>
+          <tr><td>Seq採番</td><td class="mono gone">専用カウンタエンティティ(非厳密・ETag無し)</td><td class="mono diff">Firestoreトランザクション(厳密・衝突しない)</td></tr>
+          <tr><td>ライブ更新</td><td class="mono gone">無し(手動リロード)</td><td class="mono diff">onSnapshotでリアルタイム反映</td></tr>
+          <tr><td>ホスティング</td><td class="mono same">GitHub Pages</td><td class="mono same">GitHub Pages(変更なし、SDKをCDN経由で読むだけ)</td></tr>
+        </tbody>
+      </table>
     </div>
-  </div>
-  <div class="flow-group">
-    <div class="flow-label">ca(案)</div>
-    <div class="flow">
-      <span class="box new">rbook/run ca</span><span class="arrow">→</span>
-      <span class="box new">/api/ca(新設)</span><span class="arrow">→</span>
-      <span class="box new">CaLog(新設)</span>
+
+    <div class="cat-label">データの流れ</div>
+    <div class="flow-group">
+      <div class="flow-label">読み取り・人間の書き込み(直結)</div>
+      <div class="flow">
+        <span class="box new">ca.html(ブラウザ)</span><span class="arrow">→</span>
+        <span class="box new">Firestore SDK</span><span class="arrow">→</span>
+        <span class="box new">caThreads(Firestore)</span>
+      </div>
     </div>
+    <div class="flow-group">
+      <div class="flow-label">Claudeレーンのみ(鍵検証が要るのでサーバー経由)</div>
+      <div class="flow">
+        <span class="box new">rbook/run ca</span><span class="arrow">→</span>
+        <span class="box new">Cloud Function(claude-lane)</span><span class="arrow">→</span>
+        <span class="box new">Admin SDK</span><span class="arrow">→</span>
+        <span class="box new">caThreads(Firestore)</span>
+      </div>
+    </div>
+    <p style="color:var(--ink-soft);font-size:0.82rem">baのab-board-api(Azure Functions)とは完全に別インフラになる。baとの一貫性より、ca自体の目的(干渉のリアルタイム観測)を優先する判断。</p>
   </div>
-  <p style="color:var(--ink-soft);font-size:0.82rem">/api/ba と /api/ca は同じ Function App(ab-board-api)上に同居する想定。</p>
 
-  <div class="cat-label">未決定事項</div>
-  <ol class="questions">
-    <li>
-      <span class="qno">1</span>
-      <div class="qbody"><b>同時書き込みの衝突</b>
-      <span>マルチAI干渉テストが目的なら、複数エージェントが同時に書く前提での seq 採番衝突などを、ba よりきちんと考える必要があるかもしれません。</span></div>
-    </li>
-    <li>
-      <span class="qno">2</span>
-      <div class="qbody"><b>ブラウザ表示を作るか</b>
-      <span>ba/app.js 相当の画面をすぐ作るか、当面は rbook/run ca の CLI 表示だけで様子を見るか。</span></div>
-    </li>
-    <li>
-      <span class="qno">3</span>
-      <div class="qbody"><b>分類タグの要不要</b>
-      <span>BA_CLASSIFICATIONS 相当を最初から持つか、new / note だけの素朴な形で始めるか。</span></div>
-    </li>
-  </ol>
+  <div class="panel" id="plan">
+    <div class="cat-label">実装フェーズ</div>
+    <ol class="plan-list">
+      <li>
+        <span class="plan-phase">P1</span>
+        <div class="plan-body"><b>Firebaseプロジェクト作成</b>
+        <span>新規GCPプロジェクト(または既存のAA_GOOGLE_CLIENT_ID所属プロジェクトに相乗り)にFirestore・Authenticationを有効化。</span></div>
+      </li>
+      <li>
+        <span class="plan-phase">P2</span>
+        <div class="plan-body"><b>Security Rules設計</b>
+        <span>読み取りは誰でも/書き込みはFirebase Auth済み(Googleログイン)のuidがtakashiのものだけ許可、種別ごとの制限もRules内で表現。</span></div>
+      </li>
+      <li>
+        <span class="plan-phase">P3</span>
+        <div class="plan-body"><b>Firebase Authentication設定</b>
+        <span>Google Sign-Inプロバイダを有効化。既存のOAuthクライアントを流用できるか、新規に切り直すかを確認。</span></div>
+      </li>
+      <li>
+        <span class="plan-phase">P4</span>
+        <div class="plan-body"><b>Cloud Function(claudeレーン専用)</b>
+        <span>claude_key照合とAdmin SDK書き込みだけを行う最小HTTPSエンドポイントを1本実装・デプロイ。</span></div>
+      </li>
+      <li>
+        <span class="plan-phase">P5</span>
+        <div class="plan-body"><b>rbook CLI</b>
+        <span>run_ca.pyはfirebase-admin(Python)を使い、サービスアカウント鍵ファイルで認証。現行のBA_CLAUDE_KEY方式(単純な共有文字列)とは鍵の運用形態が変わる。</span></div>
+      </li>
+      <li>
+        <span class="plan-phase">P6</span>
+        <div class="plan-body"><b>ca.html + Firestore SDK</b>
+        <span>Firebase JS SDKを読み込み、直接read/write。onSnapshotでスレッド一覧をリアルタイム表示(手動リロード不要)。ab/src/index.htmlにnavカードを追加。</span></div>
+      </li>
+      <li>
+        <span class="plan-phase">P7</span>
+        <div class="plan-body"><b>運用監視の作り直し</b>
+        <span>x2の既存ツール(expected_azure_tables.yml等)はAzure専用のため使えない。Firestoreコレクション構成やSecurity Rulesの期待状態を検証する仕組みを新規に用意する必要がある(現状ゼロから)。</span></div>
+      </li>
+    </ol>
+    <p style="color:var(--ink-soft);font-size:0.85rem">P1〜P4(プロジェクト・認証・鍵レーン用Function)が先行必須。P5(CLI)とP6(ビューア)はその後なら並行/前後どちらでも着手可。P7は本番運用に入る前に着手。</p>
+  </div>
 
-  <footer>c1 — ba-242 note 参照 — まだコード・インフラともに未着手</footer>
+  <div class="panel" id="open">
+    <div class="cat-label">未決定事項</div>
+    <ol class="questions">
+      <li>
+        <span class="qno">1</span>
+        <div class="qbody"><b>分類ラベルの文言</b>
+        <span>baの分類(案件/確定仕様/気づき/保留論点/記録)はba語彙のままだとcaの文脈(マルチAI干渉テスト)に合わない可能性がある。表示文字列のみの変更なので実装時に決める。</span></div>
+      </li>
+      <li>
+        <span class="qno">2</span>
+        <div class="qbody"><b>GCPプロジェクトの割り当て</b>
+        <span>既存のGoogle OAuthクライアント(AA_GOOGLE_CLIENT_ID)が属するプロジェクトにFirebaseを相乗りさせるか、新規プロジェクトを切るか。相乗りなら請求・権限管理はシンプルだが、baの認証設定に影響しないか要確認。</span></div>
+      </li>
+      <li>
+        <span class="qno">3</span>
+        <div class="qbody"><b>x2の運用監視の作り直し方針</b>
+        <span>Azure専用の既存ツール群(expected_azure_tables.yml等)の代わりに何を用意するか(Firestore Rules/コレクション構成のテスト方法)は、P7で改めて設計する。</span></div>
+      </li>
+    </ol>
+  </div>
+
+  <script>
+    (function(){
+      var tabs = document.querySelectorAll('.tab-btn');
+      var panels = document.querySelectorAll('.panel');
+      function activate(tabId){
+        tabs.forEach(function(b){ b.classList.toggle('on', b.dataset.tab === tabId); });
+        panels.forEach(function(p){ p.classList.toggle('on', p.id === tabId); });
+      }
+      tabs.forEach(function(btn){
+        btn.addEventListener('click', function(){
+          activate(btn.dataset.tab);
+          history.replaceState(null, '', '#' + btn.dataset.tab);
+        });
+      });
+      var initial = location.hash.replace('#', '');
+      if (initial && document.getElementById(initial)) {
+        activate(initial);
+      }
+    })();
+  </script>
+
+  <footer>c1 — ba-242 note 参照 — Firebase版で計画確定・コード/インフラは未着手</footer>
 </body>
 </html>
