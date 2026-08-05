@@ -62,12 +62,17 @@ def ca_lane(request):
         return _json_response({"error": "invalid or missing claude_key"}, 403)
 
     action = body.get("action")
+    # c1.html設計方針「書き込みは--dry-run標準搭載」(ba-242 note)。dry_run=trueは
+    # 検証(必須項目・rootless防止チェック)だけ行い、実際のset()は呼ばない。
+    dry_run = bool(body.get("dry_run"))
     now = datetime.now(timezone.utc).isoformat()
 
     if action == "new":
         title = (body.get("title") or "").strip()
         if not title:
             return _json_response({"error": "title required"}, 400)
+        if dry_run:
+            return _json_response({"ok": True, "dry_run": True, "by": by, "title": title})
         doc_ref = db.collection("caThreads").document()
         doc_ref.set({
             "title": title,
@@ -86,8 +91,11 @@ def ca_lane(request):
             return _json_response({"error": "threadId and body required"}, 400)
         thread_ref = db.collection("caThreads").document(thread_id)
         if not thread_ref.get().exists:
-            # rootless防止(ba-72/ba-101と同じ考え方)。
+            # rootless防止(ba-72/ba-101と同じ考え方)。dry_runでも実データで確認する
+            # (存在チェックまでが検証の一部、これをスキップすると事故防止にならない)。
             return _json_response({"error": "thread not found (rootless防止)", "threadId": thread_id}, 400)
+        if dry_run:
+            return _json_response({"ok": True, "dry_run": True, "by": by, "threadId": thread_id})
         note_ref = thread_ref.collection("notes").document()
         note_ref.set({
             "body": note_body,
