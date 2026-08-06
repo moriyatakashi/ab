@@ -160,13 +160,13 @@
 </head>
 <body>
   <div class="back"><a href="index.html">← ab トップへ</a></div>
-  <p class="eyebrow">design memo — P1〜P6すべて実装・デプロイ済</p>
+  <p class="eyebrow">design memo — P1〜P7すべて完了</p>
   <h1>ca を Firebase(Firestore)で作る</h1>
-  <p class="subhead">ba-242 の続き。当初はAzure Table Storage(baと同じ構成)を検討していたが、マルチAIエージェント干渉テストという目的にはFirestoreのリアルタイム更新・厳密なトランザクションの方が合うため、Firebaseで作る方針に変更。<b>2026-08-05〜07にかけてP1〜P6(Firebaseプロジェクト・Security Rules・Claudeレーンのcloud Function・rbook CLI・フロント<a href="ca.html">ca.html</a>)を実装・デプロイ済</b>。Google Sign-Inも有効化済みで、実際に動きます。P7(運用監視)のみ未着手。<b>現況の一枚窓は <a href="https://moriyatakashi.github.io/aa/src/w/t26.html">t26</a></b>。</p>
+  <p class="subhead">ba-242 の続き。当初はAzure Table Storage(baと同じ構成)を検討していたが、マルチAIエージェント干渉テストという目的にはFirestoreのリアルタイム更新・厳密なトランザクションの方が合うため、Firebaseで作る方針に変更。<b>2026-08-05〜07にかけてP1〜P7(Firebaseプロジェクト・Security Rules・Claudeレーンのcloud Function・rbook CLI・フロント<a href="ca.html">ca.html</a>・x2の運用監視テスト)をすべて実装・デプロイ済</b>。Google Sign-Inも有効化済みで、実際に動きます。<b>現況の一枚窓は <a href="https://moriyatakashi.github.io/aa/src/w/t26.html">t26</a></b>。</p>
   <div class="status-row">
     <span class="chip">対象: ab/src/</span>
     <span class="chip">参照: ba-242</span>
-    <span class="chip">状態: P1〜P6完了(実働) / P7未着手</span>
+    <span class="chip">状態: P1〜P7完了(実働)</span>
   </div>
 
   <div class="tabs">
@@ -273,12 +273,12 @@
         <span>ab/src/ca.html + ca-app.js。Firebase JS SDK(モジュラー)を読み込み、直接read/write。onSnapshotでスレッド一覧・notesをリアルタイム表示。ab/src/index.htmlにnavカードも追加済み。firebaseConfigは実プロジェクト(ab01-9f35a)の値で設定済み、Google Sign-Inの許可ドメインにmoriyatakashi.github.ioも含まれているため実際にログイン・書き込みできる。</span></div>
       </li>
       <li>
-        <span class="plan-phase">P7</span>
+        <span class="plan-phase">P7<br><span style="color:var(--ink-soft);font-weight:400;">済</span></span>
         <div class="plan-body"><b>運用監視の作り直し</b>
-        <span>x2の既存ツール(expected_azure_tables.yml等)はAzure専用のため使えない。Firestoreコレクション構成やSecurity Rulesの期待状態を検証する仕組みを新規に用意する必要がある(現状ゼロから)。</span></div>
+        <span>x2/tools/08_firebase/(firebase_api.py + expected_firebase.yml + テスト2本、6項目=firebase-1〜6)。gcloudのアクセストークン経由でFirebase Management API/Firestore API/Identity Toolkit APIを直叩きし、ウェブアプリ・Cloud Function(ca-lane)のACTIVE状態・Google Sign-In有効化・許可ドメイン・デプロイ済みSecurity Rulesがab/firestore.rulesと一致するか・想定外のFirestoreコレクションが無いかを確認する。x2既存の04_azure/(expected_azure_tables.yml等)と同じ「削除・設定崩れの早期検知」という発想の移植。6件とも実行確認済み(全PASS)。</span></div>
       </li>
     </ol>
-    <p style="color:var(--ink-soft);font-size:0.85rem">P1〜P4(プロジェクト・認証・鍵レーン用Function)が先行必須。P5(CLI)とP6(ビューア)はその後なら並行/前後どちらでも着手可。P7は本番運用に入る前に着手。</p>
+    <p style="color:var(--ink-soft);font-size:0.85rem">P1〜P7すべて完了。P1〜P4(プロジェクト・認証・鍵レーン用Function)が先行必須で、P5(CLI)・P6(ビューア)・P7(監視)はその後の順に実装した。</p>
   </div>
 
   <div class="panel" id="preview">
@@ -356,8 +356,8 @@
       </li>
       <li>
         <span class="qno">3</span>
-        <div class="qbody"><b>x2の運用監視の作り直し方針</b>
-        <span>Azure専用の既存ツール群(expected_azure_tables.yml等)の代わりに何を用意するか(Firestore Rules/コレクション構成のテスト方法)は、P7で改めて設計する。</span></div>
+        <div class="qbody"><b>x2の運用監視の作り直し方針(解決済み)</b>
+        <span>P7でx2/tools/08_firebase/を新設し解決。gcloudのアクセストークン経由でFirebase Management API等を直叩きする構成にした(詳細は実装計画タブP7参照)。</span></div>
       </li>
     </ol>
   </div>
@@ -383,6 +383,6 @@
     })();
   </script>
 
-  <footer>c1 — ba-242 note 参照 — P1〜P6完了(実働)、P7(運用監視)は未着手。現況窓=t26</footer>
+  <footer>c1 — ba-242 note 参照 — P1〜P7すべて完了(実働)。現況窓=t26</footer>
 </body>
 </html>
