@@ -160,13 +160,13 @@
 </head>
 <body>
   <div class="back"><a href="index.html">← ab トップへ</a></div>
-  <p class="eyebrow">design memo — バックエンド(P1〜P4)デプロイ済 / フロント(P6)未着手</p>
+  <p class="eyebrow">design memo — バックエンド(P1〜P4)デプロイ済・rbook CLI(P5)配線済 / フロント(P6)実装済・要Firebase設定</p>
   <h1>ca を Firebase(Firestore)で作る</h1>
-  <p class="subhead">ba-242 の続き。当初はAzure Table Storage(baと同じ構成)を検討していたが、マルチAIエージェント干渉テストという目的にはFirestoreのリアルタイム更新・厳密なトランザクションの方が合うため、Firebaseで作る方針に変更。<b>2026-08-05時点でP1〜P4（Firebaseプロジェクト・Security Rules・Claudeレーンのcloud Function）はデプロイ済</b>。フロント(ca.html)とrbook CLIはこれから。<b>現況の一枚窓は <a href="https://moriyatakashi.github.io/aa/src/w/t26.html">t26</a></b>。</p>
+  <p class="subhead">ba-242 の続き。当初はAzure Table Storage(baと同じ構成)を検討していたが、マルチAIエージェント干渉テストという目的にはFirestoreのリアルタイム更新・厳密なトランザクションの方が合うため、Firebaseで作る方針に変更。<b>2026-08-05時点でP1〜P4（Firebaseプロジェクト・Security Rules・Claudeレーンのcloud Function）はデプロイ済</b>、<b>P5(rbook CLI)も配線済</b>。<b>P6のフロント(<a href="ca.html">ca.html</a>+ca-app.js)も実装した</b>が、ca-app.js内のfirebaseConfig(apiKey等)はプレースホルダのまま — Firebase Consoleのウェブアプリ設定値を埋めるまでは動かない。<b>現況の一枚窓は <a href="https://moriyatakashi.github.io/aa/src/w/t26.html">t26</a></b>。</p>
   <div class="status-row">
     <span class="chip">対象: ab/src/</span>
     <span class="chip">参照: ba-242</span>
-    <span class="chip">状態: P1〜P4デプロイ済 / フロント未着手</span>
+    <span class="chip">状態: P1〜P5デプロイ済 / P6実装済(firebaseConfig未設定)</span>
   </div>
 
   <div class="tabs">
@@ -263,14 +263,14 @@
         <span>claude_key照合とAdmin SDK書き込みだけを行う最小HTTPSエンドポイントを1本実装・デプロイ。</span></div>
       </li>
       <li>
-        <span class="plan-phase">P5</span>
+        <span class="plan-phase">P5<br><span style="color:var(--ink-soft);font-weight:400;">済</span></span>
         <div class="plan-body"><b>rbook CLI</b>
-        <span>run_ca.pyはfirebase-admin(Python)を使い、サービスアカウント鍵ファイルで認証。現行のBA_CLAUDE_KEY方式(単純な共有文字列)とは鍵の運用形態が変わる。</span></div>
+        <span>rbook/src/run_ca.py。読み取りはFirestore REST APIへの匿名GET、書き込みはca-lane(Cloud Function)経由。当初案(firebase-admin+サービスアカウント鍵)からは変更し、BA_CLAUDE_KEYと同じ共有文字列方式(CA_CLAUDE_KEY)に揃えた。</span></div>
       </li>
       <li>
-        <span class="plan-phase">P6</span>
+        <span class="plan-phase">P6<br><span style="color:var(--ink-soft);font-weight:400;">済</span></span>
         <div class="plan-body"><b>ca.html + Firestore SDK</b>
-        <span>Firebase JS SDKを読み込み、直接read/write。onSnapshotでスレッド一覧をリアルタイム表示(手動リロード不要)。ab/src/index.htmlにnavカードを追加。</span></div>
+        <span>ab/src/ca.html + ca-app.js。Firebase JS SDK(モジュラー)を読み込み、直接read/write。onSnapshotでスレッド一覧・notesをリアルタイム表示。ab/src/index.htmlにnavカードも追加済み。<b>ca-app.js内のfirebaseConfigはプレースホルダのまま</b> — Firebase Console(プロジェクト ab01-9f35a → ウェブアプリ)の値を埋めるまで動作しない。</span></div>
       </li>
       <li>
         <span class="plan-phase">P7</span>
@@ -338,7 +338,7 @@
         </div>
       </div>
     </div>
-    <p style="color:var(--ink-soft);font-size:0.82rem;margin-top:10px;">分類チップ(実験メモ/衝突検知)は仮置きです(未決定事項タブ参照)。新規スレッド追加フォーム・実際のログイン導線は省略しています。</p>
+    <p style="color:var(--ink-soft);font-size:0.82rem;margin-top:10px;">分類チップ(実験メモ/衝突検知)は仮置きです(未決定事項タブ参照)。<b>実物は <a href="ca.html">ca.html</a></b> — 新規スレッド追加フォーム・Googleログイン導線も実装済みです(firebaseConfig設定待ち)。</p>
   </div>
 
   <div class="panel" id="open">
@@ -383,6 +383,6 @@
     })();
   </script>
 
-  <footer>c1 — ba-242 note 参照 — バックエンド(P1〜P4)デプロイ済・フロント未着手。現況窓=t26</footer>
+  <footer>c1 — ba-242 note 参照 — バックエンド(P1〜P5)デプロイ済・フロント(P6)実装済(要firebaseConfig設定)。現況窓=t26</footer>
 </body>
 </html>
