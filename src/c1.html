@@ -160,13 +160,13 @@
 </head>
 <body>
   <div class="back"><a href="index.html">← ab トップへ</a></div>
-  <p class="eyebrow">design memo — 計画確定・実装未着手</p>
+  <p class="eyebrow">design memo — バックエンド(P1〜P4)デプロイ済 / フロント(P6)未着手</p>
   <h1>ca を Firebase(Firestore)で作る</h1>
-  <p class="subhead">ba-242 の続き。当初はAzure Table Storage(baと同じ構成)を検討していたが、マルチAIエージェント干渉テストという目的にはFirestoreのリアルタイム更新・厳密なトランザクションの方が合うため、Firebaseで作る方針に変更。コード・インフラともにまだ何も作っていません。</p>
+  <p class="subhead">ba-242 の続き。当初はAzure Table Storage(baと同じ構成)を検討していたが、マルチAIエージェント干渉テストという目的にはFirestoreのリアルタイム更新・厳密なトランザクションの方が合うため、Firebaseで作る方針に変更。<b>2026-08-05時点でP1〜P4（Firebaseプロジェクト・Security Rules・Claudeレーンのcloud Function）はデプロイ済</b>。フロント(ca.html)とrbook CLIはこれから。<b>現況の一枚窓は <a href="https://moriyatakashi.github.io/aa/src/w/t26.html">t26</a></b>。</p>
   <div class="status-row">
     <span class="chip">対象: ab/src/</span>
     <span class="chip">参照: ba-242</span>
-    <span class="chip">状態: 実装未着手(計画確定・Firebase版)</span>
+    <span class="chip">状態: P1〜P4デプロイ済 / フロント未着手</span>
   </div>
 
   <div class="tabs">
@@ -286,7 +286,7 @@
     <p class="preview-note">※ログイン後の画面イメージを直接表示しています。ボタンは押せません・実データでもありません。</p>
     <div class="preview-frame">
       <p class="eyebrow" style="font-size:0.66rem;">ロレキ実験場</p>
-      <h2 style="font-size:1.1rem;margin:4px 0 2px;">ca / マルチAI干渉ログ</h2>
+      <h2 style="font-size:1.1rem;margin:4px 0 2px;">ca / 複数AIの同時書き込みログ</h2><p style="font-size:0.72rem;color:var(--ink-soft);margin:2px 0 0;">※「マルチ」は外す方向(ba-242)。文言は未確定。</p>
       <p class="pv-lede">複数のAIエージェントが同時に書き込んだ時に何が起きるかを観察するための追記型台帳。Firestoreのリアルタイム更新で、書き込みがその場で反映される。</p>
 
       <div class="pv-lane-legend">
@@ -383,6 +383,6 @@
     })();
   </script>
 
-  <footer>c1 — ba-242 note 参照 — Firebase版で計画確定・コード/インフラは未着手</footer>
+  <footer>c1 — ba-242 note 参照 — バックエンド(P1〜P4)デプロイ済・フロント未着手。現況窓=t26</footer>
 </body>
 </html>
