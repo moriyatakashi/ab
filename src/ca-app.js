@@ -22,24 +22,21 @@ import {
   getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
-// --- ここをFirebase Consoleの値で埋めてください ------------------------------
 // プロジェクトは ab01-9f35a(rbook/src/run.yml参照、P1で既に作成・流用済み)。
-// Console → プロジェクト設定 → 全般 → 「マイアプリ」→ ウェブアプリが無ければ「アプリを追加」で
-// 1つ登録 → 表示される firebaseConfig をそのままコピー。
-// apiKeyは公開前提の値(クライアントに同梱される)。認可はSecurity Rulesが担うので、
-// ここに秘密情報は含まれない([[feedback_no_secrets_in_public_content]]の対象外)。
+// 値は Firebase Management API(projects.webApps.getConfig)から取得したもの
+// (登録済みウェブアプリ "ab" 1件のみ)。apiKeyは公開前提の値(クライアントに同梱される) —
+// 認可はSecurity Rulesが担うので、ここに秘密情報は含まれない。
 const firebaseConfig = {
-  apiKey: "PASTE_ME",
+  apiKey: "AIzaSyDuPw8nMuFWx8ghV5ZeBGETeiNII3uk4l8",
   authDomain: "ab01-9f35a.firebaseapp.com",
   projectId: "ab01-9f35a",
-  storageBucket: "ab01-9f35a.appspot.com",
-  messagingSenderId: "PASTE_ME",
-  appId: "PASTE_ME",
+  storageBucket: "ab01-9f35a.firebasestorage.app",
+  messagingSenderId: "502154862201",
+  appId: "1:502154862201:web:4ca0c72225af6bd0147ea8",
+  measurementId: "G-4L8FF69B1B",
 };
-// ------------------------------------------------------------------------
 
 const TAKASHI_EMAIL = "takashi.moriya@gmail.com";
-const CONFIG_MISSING = firebaseConfig.apiKey === "PASTE_ME";
 
 const $ = (id) => document.getElementById(id);
 const statusLine = $("status-line");
@@ -53,12 +50,6 @@ const signoutBtn = $("signout-btn");
 const newThreadBox = $("new-thread-box");
 const newThreadForm = $("new-thread-form");
 const threadList = $("thread-list");
-
-if (CONFIG_MISSING) {
-  statusLine.textContent =
-    "未設定: ca-app.js の firebaseConfig(apiKey等)を Firebase Console の値で埋めてください(P6の残作業)。";
-  throw new Error("ca-app.js: firebaseConfig is a placeholder — fill it in from the Firebase console.");
-}
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
